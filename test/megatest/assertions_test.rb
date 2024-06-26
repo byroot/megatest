@@ -8,7 +8,7 @@ module Megatest
       include Assertions
 
       def initialize(mega_state)
-        @__mega_state = mega_state
+        @__mega = mega_state
       end
     end
 

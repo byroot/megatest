@@ -6,7 +6,11 @@ require "megatest"
 require "minitest/autorun"
 
 class MegaTestCase < Minitest::Test
-  def teardown
+  def before_setup
+    @registry = Megatest.registry = Megatest::Registry.new
+  end
+
+  def after_teardown
     Object.send(:remove_const, :TestedApp) if defined?(::TestedApp)
   end
 

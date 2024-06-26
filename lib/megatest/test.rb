@@ -1,53 +1,24 @@
 # frozen_string_literal: true
 
+# Megatest::Test is meant to be subclassed by users, as such it's written in an
+# adversarial way, we expose as little methods, instance variable and constants
+# as possible, and always reference our own constants with their fully qualified name.
 module Megatest
-  class BlockTest
-    attr_reader :klass, :name, :block, :source_file, :source_line
-
-    def initialize(klass, name, block, source_file, source_line)
-      @klass = klass
-      @name = name
-      @block = block
-      @source_file = source_file
-      @source_line = source_line
-    end
-  end
-
-  class TestCaseState
-    attr_reader :tests
-
-    def initialize(test_case)
-      @test_case = test_case
-      @tests = []
-    end
-
-    def register_test(klass, name, block, source_path, source_line)
-      @tests << BlockTest.new(klass, name, block, source_path, source_line)
-    end
-  end
-
-  class TestState
-    attr_accessor :assertions
-
-    def initialize
-      @assertions = 0
-    end
-  end
-
   class Test
     class << self
-      def __mega_state
-        @__mega_state ||= ::Megatest::TestCaseState.new(self)
+      def inherited(subclass)
+        super
+        ::Megatest.registry.add_test_case(subclass)
       end
 
       def test(name, &block)
         location = caller_locations(1, 1).first
-        __mega_state.register_test(self, -name, block, location&.path, location&.lineno)
+        @__mega.register_test(self, -name, block, location&.path, location&.lineno)
       end
     end
 
     def initialize(mega_state)
-      @__mega_state = mega_state
+      @__mega = mega_state
     end
   end
 end

@@ -6,7 +6,7 @@ module Megatest
 
   module Assertions
     def assert(result, message: nil)
-      @__mega_state.assertions += 1
+      @__mega.assertions += 1
       return if result
 
       flunk(message)

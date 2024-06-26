@@ -13,7 +13,7 @@ class MegatestTest < MegaTestCase
 
   def test_loading
     load_fixture("simple.rb")
-    state = TestedApp::TruthTest.__mega_state
+    state = @registry.test_cases.last
 
     assert_equal 2, state.tests.size
 
