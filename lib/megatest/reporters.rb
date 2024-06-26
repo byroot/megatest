@@ -48,6 +48,7 @@ module Megatest
       @errors_count = 0
       @cases_count = 0
       @skips_count = 0
+      @failures = []
     end
 
     def start(executor)
@@ -64,18 +65,41 @@ module Megatest
       if result.error?
         @errors_count += 1
         @out.print("E")
+        @failures << result
       elsif result.failed?
         @failures_count += 1
         @out.print("F")
+        @failures << result
       else
         @out.print(".")
       end
     end
 
+    LABELS = {
+      error: "Error",
+      failure: "Failure",
+    }.freeze
+
     def summary(_executor)
       @out.puts
       @out.puts
 
+      unless @failures.empty?
+        @failures.sort_by!(&:test_case)
+        @failures.each do |result|
+          test_case = result.test_case
+          @out.print("#{LABELS.fetch(result.status)}: #{test_case.klass} #{test_case.name} ")
+          @out.puts("[#{Megatest.relative_path(test_case.source_file)}:#{test_case.source_line}]")
+
+          if result.error?
+            @out.puts("#{result.failure.cause.class}: #{result.failure.cause.message}")
+          end
+
+          @out.puts(Backtrace.clean(result.failure.backtrace).map { |f| "  #{f}" })
+
+          @out.puts
+        end
+      end
       total_time = now - @start_time
       @out.puts format(
         "Finished in %.2fs, %d cases/s, %d assertions/s.",

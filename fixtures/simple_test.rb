@@ -15,7 +15,7 @@ module TestedApp
     end
 
     test "the unexpected" do
-      raise "Oh no!"
+      1 + "1" # rubocop:disable Style/StringConcatenation
     end
   end
 end

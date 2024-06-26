@@ -41,12 +41,23 @@ module Megatest
   self.registry = Registry.new
 
   class TestCaseResult
+    attr_reader :test_case
     attr_accessor :assertions, :failure
 
     def initialize(test_case)
       @test_case = test_case
       @assertions = 0
       @failure = nil
+    end
+
+    def status
+      if error?
+        :error
+      elsif failed?
+        :failure
+      else
+        :success
+      end
     end
 
     def failed?
@@ -82,8 +93,8 @@ module Megatest
           instance.instance_exec(&@block)
         rescue Assertion
           raise
-        rescue Exception
-          raise UnexpectedError, "Unexpected exception"
+        rescue Exception => original_error
+          raise UnexpectedError, original_error
         end
       rescue Assertion => assertion
         result.failure = assertion

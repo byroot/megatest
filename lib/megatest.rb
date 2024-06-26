@@ -3,10 +3,16 @@
 require_relative "megatest/version"
 
 module Megatest
+  ROOT = -File.expand_path("../", __FILE__)
+  PWD = File.join(Dir.pwd, "/")
   @seed = Random.new(ENV.fetch("SEED", Random.rand(0xFFFF)).to_i)
 
   class << self
     attr_accessor :seed
+
+    def relative_path(absolute_path)
+      absolute_path.delete_prefix(PWD)
+    end
 
     def load_suites(argv)
       test_suites = argv.flat_map do |path|
@@ -36,5 +42,6 @@ end
 
 require "megatest/state"
 require "megatest/reporters"
+require "megatest/backtrace"
 require "megatest/executor"
 require "megatest/test"

@@ -5,6 +5,13 @@ module Megatest
   end
 
   class UnexpectedError < Assertion
+    attr_reader :cause
+
+    def initialize(cause)
+      super("Unexpected exception")
+      @cause = cause
+    end
+
     def backtrace
       cause.backtrace
     end
