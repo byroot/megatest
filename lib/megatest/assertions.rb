@@ -4,6 +4,16 @@ module Megatest
   class Assertion < Exception
   end
 
+  class UnexpectedError < Assertion
+    def backtrace
+      cause.backtrace
+    end
+
+    def backtrace_locations
+      cause.backtrace_locations
+    end
+  end
+
   module Assertions
     def assert(result, message: nil)
       @__mega.assertions += 1

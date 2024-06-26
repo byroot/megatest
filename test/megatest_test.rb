@@ -22,4 +22,26 @@ class MegatestTest < MegaTestCase
 
     assert_equal 2, @registry.test_cases.size
   end
+
+  def test_successful_run
+    load_fixture("simple.rb")
+
+    first_test = @registry.test_cases.first
+    assert_equal "the truth", first_test.name
+    result = first_test.run
+
+    assert_equal 1, result.assertions
+    refute_predicate result, :failed?
+  end
+
+  def test_failing_run
+    load_fixture("simple.rb")
+
+    first_test = @registry.test_cases[1]
+    assert_equal "the lie", first_test.name
+    result = first_test.run
+
+    assert_equal 1, result.assertions
+    assert_predicate result, :failed?
+  end
 end

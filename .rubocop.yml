@@ -20,5 +20,13 @@ Style/ExpandPathArguments:
   Enabled: false
 
 
-Lint/InheritException:
+Naming/RescuedExceptionsVariableName:
+  # Enforcing `e` as an exception name? WTF!
   Enabled: false
+
+
+Lint/RescueException:
+  Enabled: false # I know what I'm doing, thanks.
+
+Lint/InheritException:
+  Enabled: false # I know what I'm doing, thanks.

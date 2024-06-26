@@ -6,5 +6,4 @@ module Megatest
 end
 
 require "megatest/state"
-require "megatest/assertions"
 require "megatest/test"
