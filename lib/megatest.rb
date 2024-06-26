@@ -3,7 +3,7 @@
 require_relative "megatest/version"
 
 module Megatest
-  @seed = Random.new(Random.rand(0xFFFF))
+  @seed = Random.new(ENV.fetch("SEED", Random.rand(0xFFFF)).to_i)
 
   class << self
     attr_accessor :seed
