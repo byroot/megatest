@@ -6,3 +6,5 @@ module Megatest
   class Error < StandardError; end
   # Your code goes here...
 end
+
+require "megatest/test"

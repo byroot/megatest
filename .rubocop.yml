@@ -1,8 +1,21 @@
 AllCops:
-  TargetRubyVersion: 3.0
+  TargetRubyVersion: 2.6
+  NewCops: enable
+  SuggestExtensions: false
 
 Style/StringLiterals:
   EnforcedStyle: double_quotes
 
 Style/StringLiteralsInInterpolation:
   EnforcedStyle: double_quotes
+
+Style/Documentation:
+  Enabled: false
+
+Style/ExpandPathArguments:
+  # This cop is wrong, `__FILE__` and `__dir__` can't always be substitued
+  Enabled: false
+
+
+Metrics/AbcSize:
+  Enabled: false
