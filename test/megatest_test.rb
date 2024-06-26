@@ -3,10 +3,6 @@
 require "test_helper"
 
 class MegatestTest < MegaTestCase
-  def teardown
-    Object.send(:remove_const, :TestedApp) if defined?(::TestedApp)
-  end
-
   def test_that_it_has_a_version_number
     refute_nil ::Megatest::VERSION
   end
@@ -22,11 +18,5 @@ class MegatestTest < MegaTestCase
     assert_equal TestedApp::TruthTest, first_test.klass
     assert_equal fixture("simple.rb"), first_test.source_file
     assert_equal 9, first_test.source_line
-  end
-
-  private
-
-  def fixture(path)
-    File.join(File.expand_path("../fixtures", __FILE__), path)
   end
 end
