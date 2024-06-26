@@ -2,3 +2,6 @@
 # frozen_string_literal: true
 
 require "megatest"
+require "megatest/cli"
+
+Megatest::CLI.run!

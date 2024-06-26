@@ -64,6 +64,12 @@ module Megatest
       @source_file, @source_line = block.source_location
     end
 
+    def <=>(other)
+      cmp = @klass.name <=> other.klass.name
+      cmp = @name <=> other.name if cmp.zero?
+      cmp
+    end
+
     def run
       result = TestCaseResult.new(self)
       instance = klass.new(result)

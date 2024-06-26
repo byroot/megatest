@@ -6,7 +6,7 @@ require "megatest"
 require "minitest/autorun"
 
 class MegaTestCase < Minitest::Test
-  FIXTURES_PATH = File.expand_path("../fixtures", __FILE__)
+  FIXTURES_PATH = File.expand_path("../../fixtures", __FILE__)
 
   def before_setup
     @registry = Megatest.registry = Megatest::Registry.new
