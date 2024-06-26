@@ -9,14 +9,17 @@ class MegatestTest < MegaTestCase
 
   def test_loading
     load_fixture("simple.rb")
-    state = @registry.test_cases.last
+    suite = @registry.test_suites.last
 
-    assert_equal 2, state.tests.size
+    assert_equal TestedApp::TruthTest, suite.klass
+    assert_equal 2, suite.test_cases.size
 
-    first_test = state.tests.first
+    first_test = suite.test_cases.first
     assert_equal "the truth", first_test.name
     assert_equal TestedApp::TruthTest, first_test.klass
     assert_equal fixture("simple.rb"), first_test.source_file
     assert_equal 9, first_test.source_line
+
+    assert_equal 2, @registry.test_cases.size
   end
 end

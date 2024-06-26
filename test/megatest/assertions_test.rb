@@ -13,7 +13,7 @@ module Megatest
     end
 
     def setup
-      @state = TestState.new
+      @state = State::TestCase.new
       @case = DummyTester.new(@state)
     end
 

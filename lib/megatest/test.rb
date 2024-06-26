@@ -8,12 +8,12 @@ module Megatest
     class << self
       def inherited(subclass)
         super
-        ::Megatest.registry.add_test_case(subclass)
+        ::Megatest.registry.add_test_suite(subclass)
       end
 
       def test(name, &block)
         location = caller_locations(1, 1).first
-        @__mega.register_test(self, -name, block, location&.path, location&.lineno)
+        @__mega.register_test_case(self, -name, block, location&.path, location&.lineno)
       end
     end
 
