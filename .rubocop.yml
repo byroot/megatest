@@ -12,6 +12,15 @@ Style/StringLiterals:
 Style/StringLiteralsInInterpolation:
   EnforcedStyle: double_quotes
 
+Style/TrailingCommaInArrayLiteral:
+  EnforcedStyleForMultiline: consistent_comma
+
+Style/TrailingCommaInHashLiteral:
+  EnforcedStyleForMultiline: consistent_comma
+
+Style/TrailingCommaInArguments:
+  EnforcedStyleForMultiline: consistent_comma
+
 Style/Documentation:
   Enabled: false
 
@@ -19,6 +28,14 @@ Style/ExpandPathArguments:
   # This cop is wrong, `__FILE__` and `__dir__` can't always be substitued
   Enabled: false
 
+Style/CaseEquality:
+  Enabled: false # I know what I'm doing, thanks.
+
+Style/FormatStringToken:
+  Enabled: false # Pointless.
+
+Style/EmptyMethod:
+  Enabled: false # Disagree.
 
 Naming/RescuedExceptionsVariableName:
   # Enforcing `e` as an exception name? WTF!

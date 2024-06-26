@@ -13,5 +13,9 @@ module TestedApp
     test "the lie" do
       assert false
     end
+
+    test "the unexpected" do
+      raise "Oh no!"
+    end
   end
 end

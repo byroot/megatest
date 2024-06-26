@@ -35,5 +35,6 @@ module Megatest
 end
 
 require "megatest/state"
+require "megatest/reporters"
 require "megatest/executor"
 require "megatest/test"

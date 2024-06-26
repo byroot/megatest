@@ -12,7 +12,7 @@ class MegatestTest < MegaTestCase
     suite = @registry.test_suites.last
 
     assert_equal TestedApp::TruthTest, suite.klass
-    assert_equal 2, suite.test_cases.size
+    assert_equal 3, suite.test_cases.size
 
     first_test = suite.test_cases.first
     assert_equal "the truth", first_test.name
@@ -20,7 +20,7 @@ class MegatestTest < MegaTestCase
     assert_equal fixture("simple_test.rb"), first_test.source_file
     assert_equal 9, first_test.source_line
 
-    assert_equal 2, @registry.test_cases.size
+    assert_equal 3, @registry.test_cases.size
   end
 
   def test_successful_run

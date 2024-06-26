@@ -10,7 +10,7 @@ module Megatest
       end
     end
 
-    undef_method :puts # Should only use @out.puts or @err.puts
+    undef_method :puts, :print # Should only use @out.puts or @err.puts
 
     def initialize(program_name, out, err, argv)
       @program_name = program_name
@@ -27,18 +27,20 @@ module Megatest
 
     def run_tests
       Megatest.load_suites(@argv)
-      executor = executor_class.new(Megatest.registry)
-      @err.puts("Running #{executor.test_cases.size} test cases with --seed #{Megatest.seed.seed}")
-      results = executor.run
-
-      exitcode = 0
-      results.each do |result|
-        exitcode = 1 if result.failed?
-      end
-      exitcode
+      success = SuccessReporter.new
+      reporters = [success] + default_reporters
+      executor = executor_class.new(Megatest.registry, reporters)
+      executor.run
+      success.passed? ? 0 : 1
     end
 
     private
+
+    def default_reporters
+      [
+        SimpleReporter.new(@out),
+      ]
+    end
 
     def executor_class
       Executor

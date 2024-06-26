@@ -52,6 +52,10 @@ module Megatest
     def failed?
       !@failure.nil?
     end
+
+    def error?
+      UnexpectedError === @failure
+    end
   end
 
   class BlockTest
