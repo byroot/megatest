@@ -6,21 +6,24 @@ require "megatest"
 require "minitest/autorun"
 
 class MegaTestCase < Minitest::Test
+  FIXTURES_PATH = File.expand_path("../fixtures", __FILE__)
+
   def before_setup
     @registry = Megatest.registry = Megatest::Registry.new
   end
 
   def after_teardown
     Object.send(:remove_const, :TestedApp) if defined?(::TestedApp)
+    $LOADED_FEATURES.reject! { |f| f.start_with?(FIXTURES_PATH) }
   end
 
   private
 
   def load_fixture(path)
-    Kernel.load(fixture(path))
+    Kernel.require(fixture(path))
   end
 
   def fixture(path)
-    File.join(File.expand_path("../fixtures", __FILE__), path)
+    File.join(FIXTURES_PATH, path)
   end
 end
