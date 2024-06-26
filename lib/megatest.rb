@@ -3,8 +3,7 @@
 require_relative "megatest/version"
 
 module Megatest
-  class Error < StandardError; end
-  # Your code goes here...
 end
 
+require "megatest/assertions"
 require "megatest/test"

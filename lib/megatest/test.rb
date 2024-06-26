@@ -26,6 +26,14 @@ module Megatest
     end
   end
 
+  class TestState
+    attr_accessor :assertions
+
+    def initialize
+      @assertions = 0
+    end
+  end
+
   class Test
     class << self
       def __mega_state
@@ -36,6 +44,10 @@ module Megatest
         location = caller_locations(1, 1).first
         __mega_state.register_test(self, -name, block, location&.path, location&.lineno)
       end
+    end
+
+    def initialize(mega_state)
+      @__mega_state = mega_state
     end
   end
 end

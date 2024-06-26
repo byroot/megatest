@@ -2,7 +2,7 @@
 
 require "test_helper"
 
-class TestMegatest < Minitest::Test
+class MegatestTest < MegaTestCase
   def teardown
     Object.send(:remove_const, :TestedApp) if defined?(::TestedApp)
   end
@@ -12,7 +12,7 @@ class TestMegatest < Minitest::Test
   end
 
   def test_loading
-    Kernel.load(fixture("simple.rb"))
+    load_fixture("simple.rb")
     state = TestedApp::TruthTest.__mega_state
 
     assert_equal 2, state.tests.size

@@ -3,6 +3,9 @@ AllCops:
   NewCops: enable
   SuggestExtensions: false
 
+Metrics:
+  Enabled: false
+
 Style/StringLiterals:
   EnforcedStyle: double_quotes
 
@@ -17,5 +20,5 @@ Style/ExpandPathArguments:
   Enabled: false
 
 
-Metrics/AbcSize:
+Lint/InheritException:
   Enabled: false
