@@ -23,6 +23,18 @@ class MegatestTest < MegaTestCase
     assert_equal 3, @registry.test_cases.size
   end
 
+  def test_inheritance
+    load_fixture("inheritance/inheritance_test.rb")
+    assert_equal <<~CLASSES.strip, @registry.test_cases.map(&:id).sort.join("\n")
+      TestedApp::ConcreteATest#concrete A
+      TestedApp::ConcreteATest#predefined
+      TestedApp::ConcreteATest#reopened
+      TestedApp::ConcreteBTest#concrete B
+      TestedApp::ConcreteBTest#predefined
+      TestedApp::ConcreteBTest#reopened
+    CLASSES
+  end
+
   def test_successful_run
     load_fixture("simple/simple_test.rb")
 

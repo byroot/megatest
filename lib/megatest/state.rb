@@ -6,38 +6,69 @@ module Megatest
     # A test case is the smaller runable unit, it's a block defined with `test`
     # or a method with a name starting with `test_`.
     class TestSuite
-      attr_reader :klass, :test_cases
+      attr_reader :klass
 
-      def initialize(test_suite)
+      def initialize(registry, test_suite)
+        @registry = registry
         @klass = test_suite
-        @test_cases = []
+        @test_cases = {}
       end
 
-      def register_test_case(suite, name, block)
-        @test_cases << BlockTest.new(suite, name, block)
+      def abstract?
+        !@klass.name || !@klass.name.end_with?("Test")
+      end
+
+      def test_cases
+        @test_cases.keys
+      end
+
+      def register_test_case(name, block)
+        test = BlockTest.new(@klass, name, block)
+        raise "TODO: duplicate error" if @test_cases[test]
+
+        @test_cases[test] = true
+        @registry.clear_cache
       end
     end
   end
 
   class Registry
-    attr_reader :test_suites
-
     def initialize
-      @test_suites = []
+      @test_suites = {}
+      clear_cache
     end
 
     def [](test_id)
       test_cases.find { |t| t.id == test_id } or raise KeyError, test_id # TODO: need O(1) lookup
     end
 
-    def add_test_suite(test_suite)
-      state = State::TestSuite.new(test_suite)
-      test_suite.instance_variable_set(:@__mega, state)
-      @test_suites << state
+    def clear_cache
+      @test_cases = nil
+    end
+
+    def suite(test_suite)
+      @test_suites[test_suite] ||= begin
+        clear_cache
+        State::TestSuite.new(self, test_suite)
+      end
+    end
+
+    def test_suites
+      @test_suites.values
     end
 
     def test_cases
-      @test_suites.flat_map(&:test_cases)
+      @test_cases ||= @test_suites.flat_map do |klass, suite|
+        next [] if suite.abstract?
+
+        test_cases = suite.test_cases
+        parent_class = klass
+        while parent_class.superclass < ::Megatest::Test
+          parent_class = parent_class.superclass
+          test_cases += @test_suites[parent_class].test_cases.map { |t| t.inherited_by(klass) }
+        end
+        test_cases
+      end
     end
   end
 
@@ -99,15 +130,32 @@ module Megatest
     end
   end
 
-  class BlockTest
-    attr_reader :id, :klass, :name, :block, :source_file, :source_line
+  class AbstractTest
+    attr_reader :id, :klass, :name, :source_file, :source_line
 
-    def initialize(klass, name, block)
+    def initialize(klass, name, callable)
       @id = "#{klass.name}##{name}"
       @klass = klass
       @name = name
-      @block = block
-      @source_file, @source_line = block.source_location
+      @callable = callable
+      @source_file, @source_line = callable.source_location
+    end
+
+    def inherited_by(klass)
+      copy = dup
+      copy.klass = klass
+      copy
+    end
+
+    def ==(other)
+      other.is_a?(AbstractTest) &&
+        @klass == other.klass &&
+        @name == other.name
+    end
+    alias_method :eql?, :==
+
+    def hash
+      [AbstractTest, @klass, @name].hash
     end
 
     def <=>(other)
@@ -116,11 +164,20 @@ module Megatest
       cmp
     end
 
+    protected
+
+    def klass=(klass)
+      @klass = klass
+      @id = "#{klass.name}##{@name}"
+    end
+  end
+
+  class BlockTest < AbstractTest
     def run
       result = TestCaseResult.new(self)
       instance = klass.new(result)
       result.record do
-        instance.instance_exec(&@block)
+        instance.instance_exec(&@callable)
       end
     end
   end

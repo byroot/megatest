@@ -10,11 +10,11 @@ module Megatest
     class << self
       def inherited(subclass)
         super
-        ::Megatest.registry.add_test_suite(subclass)
+        ::Megatest.registry.suite(subclass)
       end
 
       def test(name, &block)
-        @__mega.register_test_case(self, -name, block)
+        ::Megatest.registry.suite(self).register_test_case(-name, block)
       end
     end
 

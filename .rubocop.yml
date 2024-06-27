@@ -40,6 +40,9 @@ Style/IfUnlessModifier:
 Style/FormatStringToken:
   Enabled: false # Pointless.
 
+Style/Alias:
+  Enabled: false # Are you out of your mind?
+
 Style/EmptyMethod:
   Enabled: false # Disagree.
 

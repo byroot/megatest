@@ -75,7 +75,7 @@ module Megatest
         end
       end
 
-      if wall_time = executor.wall_time
+      if (wall_time = executor.wall_time.to_f) > 0.0
         @out.puts format(
           "Finished in %.2fs, %d cases/s, %d assertions/s, %.2fs tests runtime.",
           wall_time,
