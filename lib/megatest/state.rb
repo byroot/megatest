@@ -46,18 +46,15 @@ module Megatest
 
   class TestCaseResult
     attr_accessor :assertions_count
-    attr_reader :failure, :duration, :test_id
+    attr_reader :failure, :duration, :test_id, :source_file, :source_line
 
     def initialize(test_case)
-      @test_id = test_case&.id
-      @test_case = test_case
+      @test_id = test_case.id
+      @source_file = test_case.source_file
+      @source_line = test_case.source_line
       @assertions_count = 0
       @failure = nil
       @duration = nil
-    end
-
-    def test_case
-      @test_case ||= Megatest.registry[test_id] # TODO: refactor this. Result should have the test case
     end
 
     def record
@@ -77,9 +74,9 @@ module Megatest
       self
     end
 
-    def test_source_location
-      if test_case.source_file
-        [test_case.source_file, test_case.source_line]
+    def source_location
+      if @source_file
+        [@source_file, @source_line]
       end
     end
 

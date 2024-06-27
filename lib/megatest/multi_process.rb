@@ -50,7 +50,6 @@ module Megatest
       end
 
       def record_result(result)
-        result.instance_variable_set(:@test_case, nil) # TODO: proper serialization
         @socket << [:record, result]
         @socket.read # TODO: really necessary?
       end
