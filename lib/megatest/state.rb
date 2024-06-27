@@ -67,6 +67,10 @@ module Megatest
           parent_class = parent_class.superclass
           test_cases += @test_suites[parent_class].test_cases.map { |t| t.inherited_by(klass) }
         end
+
+        test_methods = klass.public_instance_methods.select { |m| m.start_with?("test_") }
+        test_methods.map! { |m| MethodTest.new(klass, m.name, klass.instance_method(m)) }
+        test_cases += test_methods
         test_cases
       end
     end
@@ -178,6 +182,16 @@ module Megatest
       instance = klass.new(result)
       result.record do
         instance.instance_exec(&@callable)
+      end
+    end
+  end
+
+  class MethodTest < AbstractTest
+    def run
+      result = TestCaseResult.new(self)
+      instance = klass.new(result)
+      result.record do
+        @callable.bind_call(instance)
       end
     end
   end

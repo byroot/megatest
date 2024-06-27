@@ -35,6 +35,22 @@ class MegatestTest < MegaTestCase
     CLASSES
   end
 
+  def test_def_style_compatibility
+    load_fixture("compat/compat_test.rb")
+    assert_equal <<~CLASSES.strip, @registry.test_cases.map(&:id).sort.join("\n")
+      TestedApp::CompatTest#test_the_lie
+      TestedApp::CompatTest#test_the_truth
+      TestedApp::CompatTest#test_the_unexpected
+    CLASSES
+
+    first_test = @registry.test_cases.min
+    assert_equal "test_the_lie", first_test.name
+    result = first_test.run
+
+    assert_equal 1, result.assertions_count
+    assert_predicate result, :failed?
+  end
+
   def test_successful_run
     load_fixture("simple/simple_test.rb")
 
