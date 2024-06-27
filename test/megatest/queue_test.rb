@@ -5,7 +5,7 @@ require "test_helper"
 module Megatest
   class QueueTest < MegaTestCase
     def setup
-      load_fixture("simple_test.rb")
+      load_fixture("simple/simple_test.rb")
       @test_cases = @registry.test_cases
       @test_cases.sort!
       @queue = Queue.new(@test_cases)

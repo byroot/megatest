@@ -53,3 +53,9 @@ Lint/RescueException:
 
 Lint/InheritException:
   Enabled: false # I know what I'm doing, thanks.
+
+Lint/AssignmentInCondition:
+  Enabled: false # I know what I'm doing, thanks.
+
+Security/MarshalLoad:
+  Enabled: false # I know what I'm doing, thanks.

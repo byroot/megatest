@@ -8,7 +8,7 @@ class MegatestTest < MegaTestCase
   end
 
   def test_loading
-    load_fixture("simple_test.rb")
+    load_fixture("simple/simple_test.rb")
     suite = @registry.test_suites.last
 
     assert_equal TestedApp::TruthTest, suite.klass
@@ -17,14 +17,14 @@ class MegatestTest < MegaTestCase
     first_test = suite.test_cases.first
     assert_equal "the truth", first_test.name
     assert_equal TestedApp::TruthTest, first_test.klass
-    assert_equal fixture("simple_test.rb"), first_test.source_file
+    assert_equal fixture("simple/simple_test.rb"), first_test.source_file
     assert_equal 9, first_test.source_line
 
     assert_equal 3, @registry.test_cases.size
   end
 
   def test_successful_run
-    load_fixture("simple_test.rb")
+    load_fixture("simple/simple_test.rb")
 
     first_test = @registry.test_cases.first
     assert_equal "the truth", first_test.name
@@ -35,7 +35,7 @@ class MegatestTest < MegaTestCase
   end
 
   def test_failing_run
-    load_fixture("simple_test.rb")
+    load_fixture("simple/simple_test.rb")
 
     first_test = @registry.test_cases[1]
     assert_equal "the lie", first_test.name

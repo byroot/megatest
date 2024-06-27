@@ -2,21 +2,21 @@
 
 module Megatest
   class Executor
-    def initialize(queue, reporters)
-      @queue = queue
-      @reporters = reporters
-    end
+    attr_reader :wall_time
 
-    def run
-      @reporters.each { |r| r.start(@queue) }
+    def run(queue, reporters)
+      start_time = Megatest.now
 
-      while (test_case = @queue.pop_test)
-        @reporters.each { |r| r.before_test_case(@queue, test_case) }
-        result = @queue.record_result(test_case.run)
-        @reporters.each { |r| r.after_test_case(@queue, test_case, result) }
+      reporters.each { |r| r.start(self, queue) }
+
+      while (test_case = queue.pop_test)
+        reporters.each { |r| r.before_test_case(queue, test_case) }
+        result = queue.record_result(test_case.run)
+        reporters.each { |r| r.after_test_case(queue, test_case, result) }
       end
 
-      @reporters.each { |r| r.summary(@queue) }
+      @wall_time = Megatest.now - start_time
+      reporters.each { |r| r.summary(self, queue) }
     end
   end
 end

@@ -10,6 +10,10 @@ module Megatest
   class << self
     attr_accessor :seed
 
+    def now
+      Process.clock_gettime(Process::CLOCK_REALTIME)
+    end
+
     def relative_path(absolute_path)
       absolute_path.delete_prefix(PWD)
     end

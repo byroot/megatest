@@ -17,6 +17,7 @@ module Megatest
       @out = out
       @err = err
       @argv = argv.dup
+      @processes = nil
     end
 
     def run
@@ -33,7 +34,7 @@ module Megatest
       test_cases.shuffle!(random: Megatest.seed)
 
       queue = Queue.new(test_cases)
-      executor_class.new(queue, default_reporters).run
+      executor.run(queue, default_reporters)
       queue.success? ? 0 : 1
     end
 
@@ -45,8 +46,13 @@ module Megatest
       ]
     end
 
-    def executor_class
-      Executor
+    def executor
+      if @processes
+        require "megatest/multi_process"
+        MultiProcess::Executor.new(@processes)
+      else
+        Executor.new
+      end
     end
 
     def parser
@@ -63,6 +69,10 @@ module Megatest
 
         opts.on("--seed=SEED", Integer, "The seed used to define run order") do |seed|
           Megatest.seed = Random.new(seed)
+        end
+
+        opts.on("-j", "--jobs=JOBS", Integer, "Number of processes to use") do |jobs|
+          @processes = jobs
         end
       end
     end

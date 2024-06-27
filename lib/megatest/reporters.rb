@@ -4,7 +4,7 @@ module Megatest
   class AbstractReporter
     undef_method :puts, :print
 
-    def start(_queue)
+    def start(_executor, _queue)
     end
 
     def before_test_case(_queue, _test_case)
@@ -13,7 +13,7 @@ module Megatest
     def after_test_case(_queue, _test_case, _result)
     end
 
-    def summary(_queue)
+    def summary(_executor, _queue)
     end
   end
 
@@ -24,7 +24,7 @@ module Megatest
       @failures = []
     end
 
-    def start(queue)
+    def start(_executor, queue)
       @out.puts("Running #{queue.size} test cases with --seed #{Megatest.seed.seed}")
     end
 
@@ -47,7 +47,7 @@ module Megatest
 
     def render_failure(result)
       str = "#{LABELS.fetch(result.status)}: #{result.test_id}"
-      if (location = result.test_source_location)
+      if location = result.test_source_location
         str << " [#{Megatest.relative_path(location.join(":"))}]"
       end
       str << "\n"
@@ -63,7 +63,7 @@ module Megatest
       str
     end
 
-    def summary(queue)
+    def summary(executor, queue)
       @out.puts
       @out.puts
 
@@ -75,13 +75,13 @@ module Megatest
         end
       end
 
-      total_time = queue.total_time
-      if total_time > 0.0
+      if wall_time = executor.wall_time
         @out.puts format(
-          "Finished in %.2fs, %d cases/s, %d assertions/s.",
+          "Finished in %.2fs, %d cases/s, %d assertions/s, %.2fs tests runtime.",
+          wall_time,
+          (queue.runs_count / wall_time).to_i,
+          (queue.assertions_count / wall_time).to_i,
           queue.total_time,
-          (queue.runs_count / queue.total_time).to_i,
-          (queue.assertions_count / total_time).to_i,
         )
       end
 

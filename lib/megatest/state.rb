@@ -26,6 +26,10 @@ module Megatest
       @test_suites = []
     end
 
+    def [](test_id)
+      test_cases.find { |t| t.id == test_id } or raise KeyError, test_id # TODO: need O(1) lookup
+    end
+
     def add_test_suite(test_suite)
       state = State::TestSuite.new(test_suite)
       test_suite.instance_variable_set(:@__mega, state)
@@ -42,21 +46,22 @@ module Megatest
 
   class TestCaseResult
     attr_accessor :assertions_count
-    attr_reader :failure, :duration
+    attr_reader :failure, :duration, :test_id
 
     def initialize(test_case)
+      @test_id = test_case&.id
       @test_case = test_case
       @assertions_count = 0
       @failure = nil
       @duration = nil
     end
 
-    def test_id
-      @test_case.id
+    def test_case
+      @test_case ||= Megatest.registry[test_id] # TODO: refactor this. Result should have the test case
     end
 
     def record
-      start_time = now
+      start_time = Megatest.now
       begin
         begin
           yield
@@ -68,13 +73,13 @@ module Megatest
       rescue Assertion => assertion
         @failure = assertion
       end
-      @duration = now - start_time
+      @duration = Megatest.now - start_time
       self
     end
 
     def test_source_location
-      if @test_case.source_file
-        [@test_case.source_file, @test_case.source_line]
+      if test_case.source_file
+        [test_case.source_file, test_case.source_line]
       end
     end
 
@@ -94,12 +99,6 @@ module Megatest
 
     def error?
       UnexpectedError === @failure
-    end
-
-    private
-
-    def now
-      Process.clock_gettime(Process::CLOCK_REALTIME)
     end
   end
 

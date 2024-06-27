@@ -19,7 +19,7 @@ module Megatest
     end
 
     def test_execute_directory
-      cli = new_cli(fixture("/"))
+      cli = new_cli(fixture("simple/"))
       assert_equal 1, cli.run
     end
 
