@@ -27,11 +27,14 @@ module Megatest
 
     def run_tests
       Megatest.load_suites(@argv)
-      success = SuccessReporter.new
-      reporters = [success] + default_reporters
-      executor = executor_class.new(Megatest.registry, reporters)
-      executor.run
-      success.passed? ? 0 : 1
+
+      test_cases = Megatest.registry.test_cases
+      test_cases.sort!
+      test_cases.shuffle!(random: Megatest.seed)
+
+      queue = Queue.new(test_cases)
+      executor_class.new(queue, default_reporters).run
+      queue.success? ? 0 : 1
     end
 
     private

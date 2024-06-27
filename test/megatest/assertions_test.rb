@@ -36,36 +36,36 @@ module Megatest
     end
 
     def test_assert
-      assert_equal 0, @result.assertions
+      assert_equal 0, @result.assertions_count
 
       assertion = assert_raises(Assertion) do
         @case.assert false
       end
-      assert_equal 1, @result.assertions
+      assert_equal 1, @result.assertions_count
       assert_equal "Failed", assertion.message
 
       assertion = assert_raises(Assertion) do
         @case.assert false, message: "Keyword"
       end
-      assert_equal 2, @result.assertions
+      assert_equal 2, @result.assertions_count
       assert_equal "Keyword", assertion.message
 
       assertion = assert_raises(Assertion) do
         @case.assert false, message: -> { "Callable" }
       end
-      assert_equal 3, @result.assertions
+      assert_equal 3, @result.assertions_count
       assert_equal "Callable", assertion.message
 
       @case.assert true
-      assert_equal 4, @result.assertions
+      assert_equal 4, @result.assertions_count
 
       @case.assert "truthy"
-      assert_equal 5, @result.assertions
+      assert_equal 5, @result.assertions_count
 
       assert_raises(Assertion) do
         @case.assert nil
       end
-      assert_equal 6, @result.assertions
+      assert_equal 6, @result.assertions_count
     end
   end
 end

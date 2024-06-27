@@ -43,5 +43,6 @@ end
 require "megatest/state"
 require "megatest/reporters"
 require "megatest/backtrace"
+require "megatest/queue"
 require "megatest/executor"
 require "megatest/test"

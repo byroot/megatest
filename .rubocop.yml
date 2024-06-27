@@ -31,6 +31,9 @@ Style/ExpandPathArguments:
 Style/CaseEquality:
   Enabled: false # I know what I'm doing, thanks.
 
+Style/GuardClause:
+  Enabled: false # Isn't always better.
+
 Style/IfUnlessModifier:
   Enabled: false # Doesn't always make sense.
 

@@ -41,13 +41,41 @@ module Megatest
   self.registry = Registry.new
 
   class TestCaseResult
-    attr_reader :test_case
-    attr_accessor :assertions, :failure
+    attr_accessor :assertions_count
+    attr_reader :failure, :duration
 
     def initialize(test_case)
       @test_case = test_case
-      @assertions = 0
+      @assertions_count = 0
       @failure = nil
+      @duration = nil
+    end
+
+    def test_id
+      @test_case.id
+    end
+
+    def record
+      start_time = now
+      begin
+        begin
+          yield
+        rescue Assertion
+          raise
+        rescue Exception => original_error
+          raise UnexpectedError, original_error
+        end
+      rescue Assertion => assertion
+        @failure = assertion
+      end
+      @duration = now - start_time
+      self
+    end
+
+    def test_source_location
+      if @test_case.source_file
+        [@test_case.source_file, @test_case.source_line]
+      end
     end
 
     def status
@@ -67,12 +95,19 @@ module Megatest
     def error?
       UnexpectedError === @failure
     end
+
+    private
+
+    def now
+      Process.clock_gettime(Process::CLOCK_REALTIME)
+    end
   end
 
   class BlockTest
-    attr_reader :klass, :name, :block, :source_file, :source_line
+    attr_reader :id, :klass, :name, :block, :source_file, :source_line
 
     def initialize(klass, name, block)
+      @id = "#{klass.name}##{name}"
       @klass = klass
       @name = name
       @block = block
@@ -88,18 +123,9 @@ module Megatest
     def run
       result = TestCaseResult.new(self)
       instance = klass.new(result)
-      begin
-        begin
-          instance.instance_exec(&@block)
-        rescue Assertion
-          raise
-        rescue Exception => original_error
-          raise UnexpectedError, original_error
-        end
-      rescue Assertion => assertion
-        result.failure = assertion
+      result.record do
+        instance.instance_exec(&@block)
       end
-      result
     end
   end
 end

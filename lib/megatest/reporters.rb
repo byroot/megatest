@@ -4,37 +4,16 @@ module Megatest
   class AbstractReporter
     undef_method :puts, :print
 
-    def start(_executor)
+    def start(_queue)
     end
 
-    def before_test_case(_executor, _test_case)
+    def before_test_case(_queue, _test_case)
     end
 
-    def after_test_case(_executor, _test_case, _result)
+    def after_test_case(_queue, _test_case, _result)
     end
 
-    def summary(_executor)
-    end
-
-    private
-
-    def now
-      Process.clock_gettime(Process::CLOCK_REALTIME)
-    end
-  end
-
-  class SuccessReporter < AbstractReporter
-    def initialize
-      super
-      @passed = true
-    end
-
-    def passed?
-      @passed
-    end
-
-    def after_test_case(_executor, _test_case, result)
-      @passed = false if result.failed?
+    def summary(_queue)
     end
   end
 
@@ -42,32 +21,18 @@ module Megatest
     def initialize(out)
       super()
       @out = out
-      @start_time = now
-      @assertions_count = 0
-      @failures_count = 0
-      @errors_count = 0
-      @cases_count = 0
-      @skips_count = 0
       @failures = []
     end
 
-    def start(executor)
-      @out.puts("Running #{executor.test_cases.size} test cases with --seed #{Megatest.seed.seed}")
+    def start(queue)
+      @out.puts("Running #{queue.size} test cases with --seed #{Megatest.seed.seed}")
     end
 
-    def before_test_case(executor, test_case)
-    end
-
-    def after_test_case(_executor, _test_case, result)
-      @cases_count += 1
-      @assertions_count += result.assertions
-
+    def after_test_case(_queue, _test_case, result)
       if result.error?
-        @errors_count += 1
         @out.print("E")
         @failures << result
       elsif result.failed?
-        @failures_count += 1
         @out.print("F")
         @failures << result
       else
@@ -80,41 +45,53 @@ module Megatest
       failure: "Failure",
     }.freeze
 
-    def summary(_executor)
+    def render_failure(result)
+      str = "#{LABELS.fetch(result.status)}: #{result.test_id}"
+      if (location = result.test_source_location)
+        str << " [#{Megatest.relative_path(location.join(":"))}]"
+      end
+      str << "\n"
+
+      if result.error?
+        str << "#{result.failure.cause.class}: #{result.failure.cause.message}\n"
+      end
+
+      Backtrace.clean(result.failure.backtrace).each do |frame|
+        str << "  #{frame}\n"
+      end
+
+      str
+    end
+
+    def summary(queue)
       @out.puts
       @out.puts
 
       unless @failures.empty?
-        @failures.sort_by!(&:test_case)
+        @failures.sort_by!(&:test_id)
         @failures.each do |result|
-          test_case = result.test_case
-          @out.print("#{LABELS.fetch(result.status)}: #{test_case.klass} #{test_case.name} ")
-          @out.puts("[#{Megatest.relative_path(test_case.source_file)}:#{test_case.source_line}]")
-
-          if result.error?
-            @out.puts("#{result.failure.cause.class}: #{result.failure.cause.message}")
-          end
-
-          @out.puts(Backtrace.clean(result.failure.backtrace).map { |f| "  #{f}" })
-
+          @out.puts render_failure(result)
           @out.puts
         end
       end
-      total_time = now - @start_time
-      @out.puts format(
-        "Finished in %.2fs, %d cases/s, %d assertions/s.",
-        total_time,
-        (@cases_count / total_time).to_i,
-        (@assertions_count / total_time).to_i,
-      )
+
+      total_time = queue.total_time
+      if total_time > 0.0
+        @out.puts format(
+          "Finished in %.2fs, %d cases/s, %d assertions/s.",
+          queue.total_time,
+          (queue.runs_count / queue.total_time).to_i,
+          (queue.assertions_count / total_time).to_i,
+        )
+      end
 
       @out.puts format(
-        "%d cases, %d assertions, %d failures, %d errors, %d skips",
-        @cases_count,
-        @assertions_count,
-        @failures_count,
-        @errors_count,
-        @skips_count,
+        "Ran %d cases, %d assertions, %d failures, %d errors, %d skips",
+        queue.runs_count,
+        queue.assertions_count,
+        queue.failures_count,
+        queue.errors_count,
+        queue.skips_count,
       )
     end
   end

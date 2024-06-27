@@ -30,7 +30,7 @@ class MegatestTest < MegaTestCase
     assert_equal "the truth", first_test.name
     result = first_test.run
 
-    assert_equal 1, result.assertions
+    assert_equal 1, result.assertions_count
     refute_predicate result, :failed?
   end
 
@@ -41,7 +41,7 @@ class MegatestTest < MegaTestCase
     assert_equal "the lie", first_test.name
     result = first_test.run
 
-    assert_equal 1, result.assertions
+    assert_equal 1, result.assertions_count
     assert_predicate result, :failed?
   end
 end
