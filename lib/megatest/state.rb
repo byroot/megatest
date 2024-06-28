@@ -43,7 +43,7 @@ module Megatest
     end
 
     def clear_cache
-      @test_cases = nil
+      @test_cases = @test_cases_by_path = nil
     end
 
     def suite(test_suite)
@@ -72,6 +72,12 @@ module Megatest
         test_methods.map! { |m| MethodTest.new(klass, m.name, klass.instance_method(m)) }
         test_cases += test_methods
         test_cases
+      end
+    end
+
+    def test_cases_by_path
+      @test_cases_by_path ||= test_cases.each_with_object({}) do |test_case, hash|
+        (hash[test_case.source_file] ||= []) << test_case
       end
     end
   end

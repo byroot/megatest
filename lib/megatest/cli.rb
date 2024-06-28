@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "optparse"
+require "megatest/selector"
 
 module Megatest
   class CLI
@@ -27,9 +28,17 @@ module Megatest
     end
 
     def run_tests
-      Megatest.load_suites(@argv)
+      selectors = @argv.map { |arg| Selector.parse(arg) }
+      Megatest.load_suites(selectors.map(&:path))
 
-      test_cases = Megatest.registry.test_cases
+      test_cases = []
+      selectors.each do |selector|
+        test_cases.concat(selector.select(Megatest.registry))
+      end
+
+      # TODO: figure out when to shuffle. E.g. if passing file:line file:line we want to keep the order
+      # but file, file we want to shuffle. It also should just be a default we should be able to flip it
+      # with CLI arguments.
       test_cases.sort!
       test_cases.shuffle!(random: Megatest.seed)
 
