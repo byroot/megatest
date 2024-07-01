@@ -23,18 +23,14 @@ module Megatest
 
     def run
       parser.parse!(@argv)
-
       run_tests
     end
 
     def run_tests
       selectors = Selector.parse(@argv)
-      Megatest.load_suites(selectors.map(&:path))
+      Megatest.load_suites(selectors.paths)
 
-      test_cases = []
-      selectors.each do |selector|
-        test_cases.concat(selector.select(Megatest.registry))
-      end
+      test_cases = selectors.select(Megatest.registry)
 
       # TODO: figure out when to shuffle. E.g. if passing file:line file:line we want to keep the order
       # but file, file we want to shuffle. It also should just be a default we should be able to flip it

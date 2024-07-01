@@ -2,6 +2,20 @@
 
 module Megatest
   module Selector
+    class Set
+      def initialize(selectors)
+        @selectors = selectors
+      end
+
+      def paths
+        @selectors.map(&:path).uniq
+      end
+
+      def select(registry)
+        @selectors.sum([]) { |s| s.select(registry) }
+      end
+    end
+
     class PathSelector
       singleton_class.alias_method(:parse, :new)
 
@@ -163,7 +177,7 @@ module Megatest
           end
         end
 
-        selectors
+        Set.new(selectors)
       end
     end
   end
