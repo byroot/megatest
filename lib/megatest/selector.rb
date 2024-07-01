@@ -3,6 +3,8 @@
 module Megatest
   module Selector
     class PathSelector
+      singleton_class.alias_method(:parse, :new)
+
       attr_reader :path
 
       def initialize(path)
@@ -35,7 +37,7 @@ module Megatest
     class ExactLineSelector
       class << self
         def parse(arg)
-          if match = arg.match(/(.*):(\d+)\z/)
+          if match = arg.match(/\A([^:]*):(\d+)\z/)
             new(match[1], Integer(match[2]))
           end
         end
@@ -70,18 +72,98 @@ module Megatest
       end
     end
 
+    class NameMatchSelector
+      class << self
+        def parse(arg)
+          if match = arg.match(%r{\A([^:]*):/(.+)\z})
+            new(match[1], match[2])
+          end
+        end
+      end
+
+      attr_reader :path
+
+      def initialize(path, pattern)
+        @path = File.expand_path(path)
+        @pattern = Regexp.new(pattern)
+      end
+
+      def select(registry)
+        test_cases = registry.test_cases_by_path[@path]
+        return [] unless test_cases
+
+        test_cases.select do |t|
+          @pattern.match?(t.name) || @pattern.match?(t.id)
+        end
+      end
+
+      def match?(test_case)
+        @pattern.match?(test_case.name) || @pattern.match?(test_case.id)
+      end
+    end
+
+    class NameSelector
+      class << self
+        def parse(arg)
+          if match = arg.match(/\A([^:]*):(.+)\z/)
+            new(match[1], match[2])
+          end
+        end
+      end
+
+      attr_reader :path
+
+      def initialize(path, name)
+        @path = File.expand_path(path)
+        @name = name
+      end
+
+      def select(registry)
+        test_cases = registry.test_cases_by_path[@path]
+        return [] unless test_cases
+
+        test_cases.select do |t|
+          @name == t.name || @name == t.id
+        end
+      end
+
+      def match?(test_case)
+        @name == test_case.name || @name == test_case.id
+      end
+    end
+
     ALL = [
       ExactLineSelector,
+      NameMatchSelector,
+      NameSelector,
+      PathSelector,
     ].freeze
 
     class << self
-      def parse(arg)
-        ALL.each do |selector_type|
-          if selector = selector_type.parse(arg)
-            return selector
+      def parse(argv)
+        argv = argv.dup
+        selectors = []
+
+        until argv.empty?
+          argument = argv.shift
+          case argument
+          when "-n"
+            if name = argv.shift
+              selectors << NameSelector.new(name)
+            else
+              raise "Missing -n argument"
+            end
+          else
+            ALL.each do |selector_class|
+              if selector = selector_class.parse(argument)
+                selectors << selector
+                break
+              end
+            end
           end
         end
-        PathSelector.new(arg)
+
+        selectors
       end
     end
   end

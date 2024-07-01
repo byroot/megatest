@@ -28,7 +28,7 @@ module Megatest
     end
 
     def run_tests
-      selectors = @argv.map { |arg| Selector.parse(arg) }
+      selectors = Selector.parse(@argv)
       Megatest.load_suites(selectors.map(&:path))
 
       test_cases = []

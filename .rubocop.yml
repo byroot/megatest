@@ -46,6 +46,9 @@ Style/Alias:
 Style/EmptyMethod:
   Enabled: false # Disagree.
 
+Layout/EndAlignment:
+  EnforcedStyleAlignWith: start_of_line
+
 Naming/RescuedExceptionsVariableName:
   # Enforcing `e` as an exception name? WTF!
   Enabled: false
