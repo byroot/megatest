@@ -4,13 +4,18 @@ module Megatest
   class Queue
     attr_reader :size, :assertions_count, :runs_count, :failures_count, :errors_count, :skips_count, :total_time
 
-    def initialize(test_cases)
-      @size = test_cases.size
-      @test_cases = test_cases.reverse
+    def initialize
+      @size = 0
+      @test_cases = nil
       @success = true
       @failures = []
       @runs_count = @assertions_count = @failures_count = @errors_count = @skips_count = 0
       @total_time = 0.0
+    end
+
+    def populate(test_cases)
+      @size = test_cases.size
+      @test_cases = test_cases.reverse
     end
 
     def success?

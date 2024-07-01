@@ -29,7 +29,7 @@ module Megatest
       @out = StringIO.new
       @err = StringIO.new
       @progname = "megatest"
-      CLI.new(@progname, @out, @err, argv)
+      CLI.new(@progname, @out, @err, argv, ENV)
     end
   end
 end

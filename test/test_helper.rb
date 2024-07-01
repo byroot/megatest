@@ -3,6 +3,7 @@
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "megatest"
 require "megatest/cli"
+require "megatest/redis_queue"
 
 require "minitest/autorun"
 

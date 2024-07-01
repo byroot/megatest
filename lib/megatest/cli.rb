@@ -5,25 +5,35 @@ require "megatest/selector"
 
 module Megatest
   class CLI
+    InvalidArgument = Class.new(ArgumentError)
+
     class << self
       def run!
-        exit(new($PROGRAM_NAME, $stdout, $stderr, ARGV).run)
+        exit(new($PROGRAM_NAME, $stdout, $stderr, ARGV, ENV).run)
       end
     end
 
     undef_method :puts, :print # Should only use @out.puts or @err.puts
 
-    def initialize(program_name, out, err, argv)
+    def initialize(program_name, out, err, argv, env)
       @program_name = program_name
       @out = out
       @err = err
       @argv = argv.dup
       @processes = nil
+      @queue_url = env["MEGATEST_QUEUE_URL"]
+      @build_id = nil
+      @worker_id = nil
     end
 
     def run
       parser.parse!(@argv)
       run_tests
+    rescue InvalidArgument => error
+      @err.puts "Invalid arguments: #{error.message}"
+      @err.puts
+      @err.puts parser
+      1
     end
 
     def run_tests
@@ -38,12 +48,32 @@ module Megatest
       test_cases.sort!
       test_cases.shuffle!(random: Megatest.seed)
 
-      queue = Queue.new(test_cases)
+      queue.populate(test_cases)
       executor.run(queue, default_reporters)
       queue.success? ? 0 : 1
     end
 
     private
+
+    def queue
+      @queue ||= case @queue_url
+      when nil
+        Queue.new
+      when /\Arediss?:/
+        require "megatest/redis_queue"
+        RedisQueue.new(url: @queue_url, build: build_id, worker: worker_id)
+      else
+        raise ArgumentError, "Unsupported queue type: #{@queue_url.inspect}"
+      end
+    end
+
+    def build_id
+      @build_id or raise InvalidArgument, "Distributed queues require a build-id"
+    end
+
+    def worker_id
+      @worker_id or raise InvalidArgument, "Distributed queues require a worker-id"
+    end
 
     def default_reporters
       [
@@ -63,9 +93,7 @@ module Megatest
     def parser
       @parser ||= OptionParser.new do |opts|
         opts.banner = <<~HELP
-          Usage: #{@program_name} [SUBCOMMAND] [ARGS]"
-
-          SUBCOMMANDS
+          Usage: #{@program_name} [SUBCOMMAND] [ARGS...]"
 
           GLOBAL OPTIONS
         HELP
@@ -78,6 +106,18 @@ module Megatest
 
         opts.on("-j", "--jobs=JOBS", Integer, "Number of processes to use") do |jobs|
           @processes = jobs
+        end
+
+        opts.on("--queue=URL", String) do |queue_url|
+          @queue_url = queue_url
+        end
+
+        opts.on("--build-id=ID", String) do |build_id|
+          @build_id = build_id
+        end
+
+        opts.on("--worker-id=ID", String) do |worker_id|
+          @worker_id = worker_id
         end
       end
     end

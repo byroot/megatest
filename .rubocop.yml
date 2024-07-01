@@ -40,11 +40,17 @@ Style/IfUnlessModifier:
 Style/FormatStringToken:
   Enabled: false # Pointless.
 
+Style/RedundantHeredocDelimiterQuotes:
+  Enabled: false
+
 Style/Alias:
   Enabled: false # Are you out of your mind?
 
 Style/EmptyMethod:
   Enabled: false # Disagree.
+
+Layout/CaseIndentation:
+  EnforcedStyle: end
 
 Layout/EndAlignment:
   EnforcedStyleAlignWith: start_of_line
