@@ -30,13 +30,25 @@ class MegatestTest < MegaTestCase
     end
 
     assert_equal <<~CLASSES.strip, cases.join("\n")
-      TestedApp::ConcreteATest#concrete A      | fixtures/inheritance/inheritance_test.rb:19
-      TestedApp::ConcreteATest#predefined      | fixtures/inheritance/inheritance_test.rb:18
-      TestedApp::ConcreteATest#reopened        | fixtures/inheritance/inheritance_test.rb:18
-      TestedApp::ConcreteBTest#concrete B      | fixtures/inheritance/inheritance_test.rb:25
-      TestedApp::ConcreteBTest#predefined      | fixtures/inheritance/inheritance_test.rb:24
-      TestedApp::ConcreteBTest#reopened        | fixtures/inheritance/inheritance_test.rb:24
+      TestedApp::ConcreteATest#concrete A      | fixtures/inheritance/inheritance_test.rb:23
+      TestedApp::ConcreteATest#overridable     | fixtures/inheritance/inheritance_test.rb:22
+      TestedApp::ConcreteATest#predefined      | fixtures/inheritance/inheritance_test.rb:22
+      TestedApp::ConcreteATest#reopened        | fixtures/inheritance/inheritance_test.rb:22
+      TestedApp::ConcreteBTest#concrete B      | fixtures/inheritance/inheritance_test.rb:33
+      TestedApp::ConcreteBTest#overridable     | fixtures/inheritance/inheritance_test.rb:32
+      TestedApp::ConcreteBTest#predefined      | fixtures/inheritance/inheritance_test.rb:32
+      TestedApp::ConcreteBTest#reopened        | fixtures/inheritance/inheritance_test.rb:32
     CLASSES
+  end
+
+  def test_already_defined
+    load_fixture("simple/simple_test.rb")
+
+    assert_raises Megatest::AlreadyDefinedError do
+      TestedApp::TruthTest.test "the truth" do
+        # noop
+      end
+    end
   end
 
   def test_def_style_compatibility

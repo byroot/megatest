@@ -14,7 +14,10 @@ module Megatest
         @source_file, @source_line = location
 
         @test_cases = if test_suite.superclass < ::Megatest::Test
-          registry.suite(test_suite.superclass).test_cases.to_h { |t| [t.inherited_by(self), true] }
+          registry.suite(test_suite.superclass).test_cases.to_h do |t|
+            test = t.inherited_by(self)
+            [test, test]
+          end
         else
           {}
         end
@@ -42,20 +45,26 @@ module Megatest
         else
           BlockTest.new(@klass, name, callable)
         end
-
-        raise "TODO: duplicate error" if @test_cases[test]
-
-        @test_cases[test] = true
+        add_test(test)
         @registry.register_test_case(test)
+      end
+
+      def add_test(test)
+        if duplicate = @test_cases[test]
+          return test if test.inherited?
+
+          unless duplicate.inherited?
+            raise AlreadyDefinedError,
+                  "`#{test.id}` already defined at #{Megatest.relative_path(test.source_file)}:#{test.source_line}"
+          end
+        end
+
+        @test_cases[test] = test
       end
 
       def inherit_test_case(test_case)
         test = test_case.inherited_by(self)
-
-        raise "TODO: duplicate error" if @test_cases[test]
-
-        @test_cases[test] = true
-        test
+        add_test(test)
       end
     end
   end
@@ -210,6 +219,7 @@ module Megatest
       @callable = callable
       @source_file, @source_line = callable.source_location
       @id = nil
+      @inherited = false
     end
 
     def id
@@ -220,9 +230,14 @@ module Megatest
       end
     end
 
+    def inherited?
+      @inherited
+    end
+
     def inherited_by(test_suite)
       copy = dup
       copy.test_suite = test_suite
+      copy.inherited = true
       copy
     end
 
@@ -244,6 +259,8 @@ module Megatest
     end
 
     protected
+
+    attr_writer :inherited
 
     def test_suite=(test_suite)
       @id = nil

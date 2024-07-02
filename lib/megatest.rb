@@ -3,6 +3,9 @@
 require_relative "megatest/version"
 
 module Megatest
+  Error = Class.new(StandardError)
+  AlreadyDefinedError = Class.new(Error)
+
   ROOT = -File.expand_path("../", __FILE__)
   PWD = File.join(Dir.pwd, "/")
   @seed = Random.new(ENV.fetch("SEED", Random.rand(0xFFFF)).to_i)

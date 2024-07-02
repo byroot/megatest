@@ -10,6 +10,10 @@ module TestedApp
       test "predefined" do
         assert true
       end
+
+      test "overridable" do
+        raise NotImplementedError
+      end
     end
   RUBY
 
@@ -19,10 +23,18 @@ module TestedApp
     test "concrete A" do
       assert true
     end
+
+    test "overridable" do
+      assert true
+    end
   end
 
   ConcreteBTest = Class.new(AbstractCase) do
     test "concrete B" do
+      assert true
+    end
+
+    test "overridable" do
       assert true
     end
   end
