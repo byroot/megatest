@@ -24,7 +24,7 @@ module Megatest
         stat = File.stat(path)
 
         if stat.directory?
-          Dir.glob(File.join(path, "**/*_test.rb"))
+          Dir.glob(File.join(path, "**/*.rb"))
         else
           [path]
         end
