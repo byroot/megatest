@@ -90,7 +90,7 @@ module Megatest
 
     def initialize
       @test_suites = {}
-      @test_cases_by_path = {}
+      @test_cases_by_location = {}
     end
 
     def [](test_id)
@@ -124,7 +124,18 @@ module Megatest
     end
 
     def register_test_case(test_case)
-      (@test_cases_by_path[test_case.source_file] ||= []) << test_case
+      path_index = @test_cases_by_location[test_case.source_file] ||= {}
+      line_tests = path_index[test_case.source_line] ||= []
+
+      unless line_tests.empty?
+        test_case.index = line_tests.size
+        if line_tests.size == 1
+          line_tests.first.index = 0
+        end
+      end
+
+      line_tests << test_case
+
       each_subclass_of(test_case.klass) do |subclass|
         child_test_case = suite(subclass).inherit_test_case(test_case)
         register_test_case(child_test_case)
@@ -146,9 +157,7 @@ module Megatest
     end
 
     def test_cases_by_path
-      @test_cases_by_path ||= test_cases.each_with_object({}) do |test_case, hash|
-        (hash[test_case.source_file] ||= []) << test_case
-      end
+      @test_cases_by_location.transform_values { |line_index| line_index.values.flatten }
     end
   end
 
@@ -157,12 +166,11 @@ module Megatest
 
   class TestCaseResult
     attr_accessor :assertions_count
-    attr_reader :failure, :duration, :test_id, :source_file, :source_line
+    attr_reader :failure, :duration, :test_id, :test_location
 
     def initialize(test_case)
       @test_id = test_case.id
-      @source_file = test_case.source_file
-      @source_line = test_case.source_line
+      @test_location = test_case.location_id
       @assertions_count = 0
       @failure = nil
       @duration = nil
@@ -185,12 +193,6 @@ module Megatest
       self
     end
 
-    def source_location
-      if @source_file
-        [@source_file, @source_line]
-      end
-    end
-
     def status
       if error?
         :error
@@ -211,6 +213,7 @@ module Megatest
   end
 
   class AbstractTest
+    attr_accessor :index
     attr_reader :klass, :name, :source_file, :source_line
 
     def initialize(klass, name, callable)
@@ -219,6 +222,7 @@ module Megatest
       @callable = callable
       @source_file, @source_line = callable.source_location
       @id = nil
+      @index = nil
       @inherited = false
     end
 
@@ -227,6 +231,14 @@ module Megatest
         @id ||= "#{klass.name}##{name}"
       else
         "#{klass.inspect}##{name}"
+      end
+    end
+
+    def location_id
+      if @index
+        "#{@source_file}:#{@source_line}~#{@index}"
+      else
+        "#{@source_file}:#{@source_line}"
       end
     end
 

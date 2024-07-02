@@ -51,38 +51,43 @@ module Megatest
     class ExactLineSelector
       class << self
         def parse(arg)
-          if match = arg.match(/\A([^:]*):(\d+)\z/)
-            new(match[1], Integer(match[2]))
+          if match = arg.match(/\A([^:]*):(\d+)(?:~(\d+))?\z/)
+            new(match[1], Integer(match[2]), match[3]&.to_i)
           end
         end
       end
 
       attr_reader :path
 
-      def initialize(path, line)
+      def initialize(path, line, index)
         @path = File.expand_path(path)
         @line = line
+        @index = index
       end
 
       def select(registry)
         test_cases = registry.test_cases_by_path[@path]
         return [] unless test_cases
 
-        sorted_cases = test_cases.sort { |a, b| b.source_line <=> a.source_line }
-        start_index = test_cases.bsearch_index { |t| t.source_line > @line }
+        test_cases.sort! { |a, b| b.source_line <=> a.source_line }
+        test_cases = test_cases.drop_while { |t| t.source_line > @line }
 
         # Line not found, fallback to run the whole file?
-        return test_cases if start_index.nil? || start_index.zero?
+        return if test_cases.empty?
 
-        actual_line = test_cases[start_index - 1].source_line
+        real_line = test_cases.first&.source_line
+        test_cases = test_cases.take_while { |t| t.source_line == real_line }
 
-        # We might be able to be smarter and not scan the whole array here
-        sorted_cases.select { |t| t.source_line == actual_line }
+        if @index
+          test_cases.select! { |t| t.index == @index }
+        end
+        test_cases
       end
 
       def match?(test_case)
         path == test_case.source_file &&
-          @line == test_case.line
+          @line == test_case.line &&
+          (@index.nil? || @index == test_case.index)
       end
     end
 

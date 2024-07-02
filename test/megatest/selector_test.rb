@@ -47,6 +47,19 @@ module Megatest
       CLASSES
     end
 
+    def test_file_path_line_and_index
+      selector = Selector.parse(["fixtures/large/large_test.rb:12~777", "fixtures/large/large_test.rb:12~888"])
+      assert_equal [fixture("large/large_test.rb")], selector.paths
+
+      load_fixture("large/large_test.rb")
+
+      selected_test_cases = selector.select(@registry)
+      assert_equal <<~CLASSES.strip, selected_test_cases.map(&:id).sort.join("\n")
+        LargeTest#large 777
+        LargeTest#large 888
+      CLASSES
+    end
+
     def test_name
       selector = Selector.parse(["fixtures/simple/simple_test.rb:the truth"])
       assert_equal [fixture("simple/simple_test.rb")], selector.paths

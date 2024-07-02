@@ -46,11 +46,7 @@ module Megatest
     }.freeze
 
     def render_failure(result)
-      str = +"#{LABELS.fetch(result.status)}: #{result.test_id}"
-      if location = result.source_location
-        str << " [#{Megatest.relative_path(location.join(":"))}]"
-      end
-      str << "\n"
+      str = +"#{LABELS.fetch(result.status)}: #{result.test_id}\n"
 
       if result.error?
         str << "#{result.failure.cause.class}: #{result.failure.cause.message}\n"
@@ -59,6 +55,8 @@ module Megatest
       Backtrace.clean(result.failure.backtrace).each do |frame|
         str << "  #{frame}\n"
       end
+
+      str << "\nRerun: TODO-COMMAND: #{Megatest.relative_path(result.test_location)}"
 
       str
     end
