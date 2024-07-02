@@ -15,7 +15,7 @@ module Megatest
     end
 
     def relative_path(absolute_path)
-      absolute_path.delete_prefix(PWD)
+      absolute_path&.delete_prefix(PWD)
     end
 
     def load_suites(argv)

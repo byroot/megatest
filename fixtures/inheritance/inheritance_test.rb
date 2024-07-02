@@ -5,27 +5,33 @@ module TestedApp
     # base test class where to put helpers and such
   end
 
-  class AbstractCase < TestCase
-    test "predefined" do
-      assert true
+  class_eval <<~RUBY, "test_helper.rb"
+    class AbstractCase < TestCase
+      test "predefined" do
+        assert true
+      end
     end
-  end
+  RUBY
 
-  class ConcreteATest < AbstractCase
+  anonymous_class = Class.new(AbstractCase)
+
+  class ConcreteATest < anonymous_class
     test "concrete A" do
       assert true
     end
   end
 
-  class ConcreteBTest < AbstractCase
+  ConcreteBTest = Class.new(AbstractCase) do
     test "concrete B" do
       assert true
     end
   end
 
-  class AbstractCase < TestCase
-    test "reopened" do
-      assert true
+  class_eval <<~RUBY, "another_test_helper.rb"
+    class AbstractCase < TestCase
+      test "reopened" do
+        assert true
+      end
     end
-  end
+  RUBY
 end

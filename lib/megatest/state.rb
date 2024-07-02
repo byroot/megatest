@@ -6,12 +6,18 @@ module Megatest
     # A test case is the smaller runable unit, it's a block defined with `test`
     # or a method with a name starting with `test_`.
     class TestSuite
-      attr_reader :klass
+      attr_reader :klass, :source_file, :source_line
 
-      def initialize(registry, test_suite)
+      def initialize(registry, test_suite, location)
         @registry = registry
         @klass = test_suite
-        @test_cases = {}
+        @source_file, @source_line = location
+
+        @test_cases = if test_suite.superclass < ::Megatest::Test
+          registry.suite(test_suite.superclass).test_cases.to_h { |t| [t.inherited_by(self), true] }
+        else
+          {}
+        end
       end
 
       def abstract?
@@ -22,12 +28,34 @@ module Megatest
         @test_cases.keys
       end
 
-      def register_test_case(name, block)
-        test = BlockTest.new(@klass, name, block)
+      unless Symbol.method_defined?(:name)
+        using Module.new {
+          refine Symbol do
+            alias_method :name, :to_s
+          end
+        }
+      end
+
+      def register_test_case(name, callable)
+        test = if callable.is_a?(UnboundMethod)
+          MethodTest.new(@klass, name.name, callable)
+        else
+          BlockTest.new(@klass, name, callable)
+        end
+
         raise "TODO: duplicate error" if @test_cases[test]
 
         @test_cases[test] = true
-        @registry.clear_cache
+        @registry.register_test_case(test)
+      end
+
+      def inherit_test_case(test_case)
+        test = test_case.inherited_by(self)
+
+        raise "TODO: duplicate error" if @test_cases[test]
+
+        @test_cases[test] = true
+        test
       end
     end
   end
@@ -53,21 +81,44 @@ module Megatest
 
     def initialize
       @test_suites = {}
-      clear_cache
+      @test_cases_by_path = {}
     end
 
     def [](test_id)
       test_cases.find { |t| t.id == test_id } or raise KeyError, test_id # TODO: need O(1) lookup
     end
 
-    def clear_cache
-      @test_cases = @test_cases_by_path = nil
+    def suite(klass)
+      @test_suites.fetch(klass)
     end
 
-    def suite(test_suite)
-      @test_suites[test_suite] ||= begin
-        clear_cache
-        State::TestSuite.new(self, test_suite)
+    if Class.method_defined?(:subclasses)
+      def register_suite(test_suite, location)
+        @test_suites[test_suite] ||= State::TestSuite.new(self, test_suite, location)
+      end
+
+      def each_subclass_of(klass, &block)
+        klass.subclasses.each(&block)
+      end
+    else
+      def register_suite(test_suite, location)
+        @test_suites[test_suite] ||= begin
+          @subclasses ||= {}
+          (@subclasses[test_suite.superclass] ||= []) << test_suite
+          State::TestSuite.new(self, test_suite, location)
+        end
+      end
+
+      def each_subclass_of(klass, &block)
+        @subclasses[klass]&.each(&block)
+      end
+    end
+
+    def register_test_case(test_case)
+      (@test_cases_by_path[test_case.source_file] ||= []) << test_case
+      each_subclass_of(test_case.klass) do |subclass|
+        child_test_case = suite(subclass).inherit_test_case(test_case)
+        register_test_case(child_test_case)
       end
     end
 
@@ -76,20 +127,12 @@ module Megatest
     end
 
     def test_cases
-      @test_cases ||= @test_suites.flat_map do |klass, suite|
-        next [] if suite.abstract?
-
-        test_cases = suite.test_cases
-        parent_class = klass
-        while parent_class.superclass < ::Megatest::Test
-          parent_class = parent_class.superclass
-          test_cases += @test_suites[parent_class].test_cases.map { |t| t.inherited_by(klass) }
+      @test_suites.flat_map do |_klass, suite|
+        if suite.abstract?
+          []
+        else
+          suite.test_cases
         end
-
-        test_methods = klass.public_instance_methods.select { |m| m.start_with?("test_") }
-        test_methods.map! { |m| MethodTest.new(klass, m.name, klass.instance_method(m)) }
-        test_cases += test_methods
-        test_cases
       end
     end
 
@@ -159,19 +202,27 @@ module Megatest
   end
 
   class AbstractTest
-    attr_reader :id, :klass, :name, :source_file, :source_line
+    attr_reader :klass, :name, :source_file, :source_line
 
     def initialize(klass, name, callable)
-      @id = "#{klass.name}##{name}"
       @klass = klass
       @name = name
       @callable = callable
       @source_file, @source_line = callable.source_location
+      @id = nil
     end
 
-    def inherited_by(klass)
+    def id
+      if klass.name
+        @id ||= "#{klass.name}##{name}"
+      else
+        "#{klass.inspect}##{name}"
+      end
+    end
+
+    def inherited_by(test_suite)
       copy = dup
-      copy.klass = klass
+      copy.test_suite = test_suite
       copy
     end
 
@@ -194,9 +245,11 @@ module Megatest
 
     protected
 
-    def klass=(klass)
-      @klass = klass
-      @id = "#{klass.name}##{@name}"
+    def test_suite=(test_suite)
+      @id = nil
+      @klass = test_suite.klass
+      @source_file = test_suite.source_file
+      @source_line = test_suite.source_line
     end
   end
 

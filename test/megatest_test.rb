@@ -25,13 +25,17 @@ class MegatestTest < MegaTestCase
 
   def test_inheritance
     load_fixture("inheritance/inheritance_test.rb")
-    assert_equal <<~CLASSES.strip, @registry.test_cases.map(&:id).sort.join("\n")
-      TestedApp::ConcreteATest#concrete A
-      TestedApp::ConcreteATest#predefined
-      TestedApp::ConcreteATest#reopened
-      TestedApp::ConcreteBTest#concrete B
-      TestedApp::ConcreteBTest#predefined
-      TestedApp::ConcreteBTest#reopened
+    cases = @registry.test_cases.sort.map do |test_case|
+      "#{test_case.id.ljust(40)} | #{Megatest.relative_path(test_case.source_file)}:#{test_case.source_line}"
+    end
+
+    assert_equal <<~CLASSES.strip, cases.join("\n")
+      TestedApp::ConcreteATest#concrete A      | fixtures/inheritance/inheritance_test.rb:19
+      TestedApp::ConcreteATest#predefined      | fixtures/inheritance/inheritance_test.rb:18
+      TestedApp::ConcreteATest#reopened        | fixtures/inheritance/inheritance_test.rb:18
+      TestedApp::ConcreteBTest#concrete B      | fixtures/inheritance/inheritance_test.rb:25
+      TestedApp::ConcreteBTest#predefined      | fixtures/inheritance/inheritance_test.rb:24
+      TestedApp::ConcreteBTest#reopened        | fixtures/inheritance/inheritance_test.rb:24
     CLASSES
   end
 
