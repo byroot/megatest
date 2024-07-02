@@ -60,6 +60,9 @@ Naming/RescuedExceptionsVariableName:
   Enabled: false
 
 
+Lint/AmbiguousBlockAssociation:
+  Enabled: false # I know what I'm doing, thanks.
+
 Lint/RescueException:
   Enabled: false # I know what I'm doing, thanks.
 

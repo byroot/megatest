@@ -46,7 +46,7 @@ module Megatest
     }.freeze
 
     def render_failure(result)
-      str = "#{LABELS.fetch(result.status)}: #{result.test_id}"
+      str = +"#{LABELS.fetch(result.status)}: #{result.test_id}"
       if location = result.source_location
         str << " [#{Megatest.relative_path(location.join(":"))}]"
       end

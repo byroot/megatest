@@ -33,6 +33,24 @@ module Megatest
   end
 
   class Registry
+    unless Symbol.method_defined?(:name)
+      using Module.new {
+        refine Symbol do
+          alias_method :name, :to_s
+        end
+      }
+    end
+
+    unless Symbol.method_defined?(:start_with?)
+      using Module.new {
+        refine Symbol do
+          def start_with?(*args)
+            to_s.start_with?(*args)
+          end
+        end
+      }
+    end
+
     def initialize
       @test_suites = {}
       clear_cache
@@ -193,6 +211,16 @@ module Megatest
   end
 
   class MethodTest < AbstractTest
+    unless UnboundMethod.method_defined?(:bind_call)
+      using Module.new {
+        refine UnboundMethod do
+          def bind_call(receiver, *args, &block)
+            bind(receiver).call(*args, &block)
+          end
+        end
+      }
+    end
+
     def run
       result = TestCaseResult.new(self)
       instance = klass.new(result)
