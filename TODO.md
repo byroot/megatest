@@ -6,8 +6,6 @@
   - Right now global setup like fixtures insertion is done in the first test setup, rather than being its own step.
   - Maybe: a per suite global setup? Executed before running the first test of the suite?
 
-- Test sharing (include module)
-
 - Minitest compatibility layer:
   - `def setup`, etc
 

@@ -2,6 +2,9 @@
 
 module Megatest
   module State
+    using Compat::Name unless Symbol.method_defined?(:name)
+    using Compat::StartWith unless Symbol.method_defined?(:start_with?)
+
     # A test suite is a group of tests. It's a class that inherits Megatest::Test
     # A test case is the smaller runable unit, it's a block defined with `test`
     # or a method with a name starting with `test_`.
@@ -13,7 +16,7 @@ module Megatest
         @klass = test_suite
         @source_file, @source_line = location
 
-        @test_cases = if test_suite.superclass < ::Megatest::Test
+        @test_cases = if test_suite.is_a?(Class) && test_suite.superclass < ::Megatest::Test
           registry.suite(test_suite.superclass).test_cases.to_h do |t|
             test = t.inherited_by(self)
             [test, test]
@@ -31,14 +34,6 @@ module Megatest
         @test_cases.keys
       end
 
-      unless Symbol.method_defined?(:name)
-        using Module.new {
-          refine Symbol do
-            alias_method :name, :to_s
-          end
-        }
-      end
-
       def register_test_case(name, callable)
         test = if callable.is_a?(UnboundMethod)
           MethodTest.new(@klass, name.name, callable)
@@ -51,9 +46,14 @@ module Megatest
 
       def add_test(test)
         if duplicate = @test_cases[test]
+          # It was late defined in an parent class we can just ignore it.
           return test if test.inherited?
 
-          unless duplicate.inherited?
+          if duplicate.inherited?
+            @test_cases.delete(test)
+          else
+            # If the pre-existing test wasn't inherited, it means we're defining the
+            # same test twice, that's a mistake.
             raise AlreadyDefinedError,
                   "`#{test.id}` already defined at #{Megatest.relative_path(test.source_file)}:#{test.source_line}"
           end
@@ -63,33 +63,56 @@ module Megatest
       end
 
       def inherit_test_case(test_case)
-        test = test_case.inherited_by(self)
-        add_test(test)
+        add_test(test_case.inherited_by(self))
+      end
+
+      def include_test_case(test_case, include_location)
+        add_test(test_case.included_by(self, include_location))
+      end
+    end
+
+    class SharedSuite
+      def initialize(registry, test_suite)
+        @registry = registry
+        @mod = test_suite
+        @test_cases = {}
+        test_suite.instance_methods.each do |name|
+          if name.start_with?("test_")
+            register_test_case(name, test_suite.instance_method(name))
+          end
+        end
+      end
+
+      def included_by(klass_or_module, include_location)
+        if klass_or_module.is_a?(Class)
+          suite = @registry.suite(klass_or_module)
+          @test_cases.each_key do |test_case|
+            suite.include_test_case(test_case, include_location)
+          end
+        end
+      end
+
+      def register_test_case(name, callable)
+        test = if callable.is_a?(UnboundMethod)
+          MethodTest.new(@mod, name.name, callable)
+        else
+          BlockTest.new(@mod, name, callable)
+        end
+
+        if @test_cases[test]
+          raise AlreadyDefinedError,
+                "`#{test.id}` already defined at #{Megatest.relative_path(test.source_file)}:#{test.source_line}"
+        end
+
+        @test_cases[test] = test
       end
     end
   end
 
   class Registry
-    unless Symbol.method_defined?(:name)
-      using Module.new {
-        refine Symbol do
-          alias_method :name, :to_s
-        end
-      }
-    end
-
-    unless Symbol.method_defined?(:start_with?)
-      using Module.new {
-        refine Symbol do
-          def start_with?(*args)
-            to_s.start_with?(*args)
-          end
-        end
-      }
-    end
-
     def initialize
       @test_suites = {}
+      @shared_suites = {}
       @test_cases_by_location = {}
     end
 
@@ -97,8 +120,12 @@ module Megatest
       test_cases.find { |t| t.id == test_id } or raise KeyError, test_id # TODO: need O(1) lookup
     end
 
+    def shared_suite(test_suite)
+      @shared_suites[test_suite] ||= State::SharedSuite.new(self, test_suite)
+    end
+
     def suite(klass)
-      @test_suites.fetch(klass)
+      @shared_suites[klass] || @test_suites.fetch(klass)
     end
 
     if Class.method_defined?(:subclasses)
@@ -112,8 +139,10 @@ module Megatest
     else
       def register_suite(test_suite, location)
         @test_suites[test_suite] ||= begin
-          @subclasses ||= {}
-          (@subclasses[test_suite.superclass] ||= []) << test_suite
+          if test_suite.is_a?(Class)
+            @subclasses ||= {}
+            (@subclasses[test_suite.superclass] ||= []) << test_suite
+          end
           State::TestSuite.new(self, test_suite, location)
         end
       end
@@ -157,7 +186,11 @@ module Megatest
     end
 
     def test_cases_by_path
-      @test_cases_by_location.transform_values { |line_index| line_index.values.flatten }
+      @test_cases_by_location.transform_values do |line_index|
+        line_index.flat_map do |_line, test_cases|
+          test_cases
+        end
+      end
     end
   end
 
@@ -249,6 +282,16 @@ module Megatest
     def inherited_by(test_suite)
       copy = dup
       copy.test_suite = test_suite
+      copy.source_file = test_suite.source_file
+      copy.source_line = test_suite.source_line
+      copy.inherited = true
+      copy
+    end
+
+    def included_by(test_suite, include_location)
+      copy = dup
+      copy.test_suite = test_suite
+      copy.source_file, copy.source_line = include_location
       copy.inherited = true
       copy
     end
@@ -266,19 +309,17 @@ module Megatest
 
     def <=>(other)
       cmp = @klass.name <=> other.klass.name
-      cmp = @name <=> other.name if cmp.zero?
-      cmp
+      cmp = @name <=> other.name if cmp&.zero?
+      cmp || 0
     end
 
     protected
 
-    attr_writer :inherited
+    attr_writer :inherited, :source_file, :source_line
 
     def test_suite=(test_suite)
       @id = nil
       @klass = test_suite.klass
-      @source_file = test_suite.source_file
-      @source_line = test_suite.source_line
     end
   end
 
@@ -293,15 +334,7 @@ module Megatest
   end
 
   class MethodTest < AbstractTest
-    unless UnboundMethod.method_defined?(:bind_call)
-      using Module.new {
-        refine UnboundMethod do
-          def bind_call(receiver, *args, &block)
-            bind(receiver).call(*args, &block)
-          end
-        end
-      }
-    end
+    using Compat::BindCall unless UnboundMethod.method_defined?(:bind_call)
 
     def run
       result = TestCaseResult.new(self)

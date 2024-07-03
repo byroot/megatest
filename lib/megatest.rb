@@ -47,9 +47,11 @@ module Megatest
   end
 end
 
+require "megatest/compat"
 require "megatest/state"
 require "megatest/reporters"
 require "megatest/backtrace"
 require "megatest/queue"
 require "megatest/executor"
+require "megatest/dsl"
 require "megatest/test"

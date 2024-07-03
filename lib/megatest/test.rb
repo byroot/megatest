@@ -8,16 +8,6 @@ require "megatest/assertions"
 module Megatest
   class Test
     class << self
-      unless Symbol.method_defined?(:start_with?)
-        using Module.new {
-          refine Symbol do
-            def start_with?(*args)
-              to_s.start_with?(*args)
-            end
-          end
-        }
-      end
-
       if respond_to?(:const_source_location)
         def inherited(subclass)
           super
@@ -38,18 +28,42 @@ module Megatest
         end
       end
 
-      def test(name, &block)
-        ::Megatest.registry.suite(self).register_test_case(-name, block)
-      end
+      if Thread.respond_to?(:each_caller_location)
+        def include(*modules)
+          super
 
-      def method_added(name)
-        super
-        if name.start_with?("test_")
-          ::Megatest.registry.suite(self).register_test_case(name, instance_method(name))
+          location = Thread.each_caller_location do |l|
+            break l if l.base_label != "include"
+          end
+          include_location = [location.path, location.lineno]
+
+          modules.each do |mod|
+            if mod.is_a?(::Megatest::DSL) || mod.instance_methods.any? { |m| m.start_with?("test_") }
+              ::Megatest.registry.shared_suite(mod).included_by(self, include_location)
+            end
+          end
+        end
+      else
+        using Compat::StartWith unless Symbol.method_defined?(:start_with?)
+
+        def include(*modules)
+          super
+
+          location = caller_locations.find do |l|
+            l if l.base_label != "include"
+          end
+          include_location = [location.path, location.lineno]
+
+          modules.each do |mod|
+            if mod.is_a?(::Megatest::DSL) || mod.instance_methods.any? { |m| m.start_with?("test_") }
+              ::Megatest.registry.shared_suite(mod).included_by(self, include_location)
+            end
+          end
         end
       end
     end
 
+    extend DSL
     include Assertions
 
     def initialize(mega_state)
