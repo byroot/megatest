@@ -9,7 +9,7 @@ class LargeTest < Megatest::Test
   ENV.fetch("TEST_COUNT", 1_000).to_i.times do |i|
     test "large #{i}" do
       sleep 0.01
-      assert false
+      assert i.odd?
     end
   end
 

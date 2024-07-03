@@ -77,7 +77,7 @@ module Megatest
 
     def default_reporters
       [
-        SimpleReporter.new(@out),
+        Reporters::SimpleReporter.new(@out, program_name: @program_name),
       ]
     end
 
