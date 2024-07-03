@@ -34,3 +34,4 @@
 
 - Add multi-threading?
   - Not convinced of the usefulness, except maybe for alternative rubies.
+  - Also breaks most mocking libaries
