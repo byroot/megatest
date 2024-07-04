@@ -5,17 +5,43 @@ module Megatest
     using Compat::Name unless Symbol.method_defined?(:name)
     using Compat::StartWith unless Symbol.method_defined?(:start_with?)
 
+    class Suite
+      attr_reader :setup_callbacks, :teardown_callbacks
+
+      def initialize(registry)
+        @registry = registry
+        @setup_callbacks = nil
+        @teardown_callbacks = nil
+      end
+
+      def each_setup_callback(&block)
+        @setup_callbacks&.each(&block)
+      end
+
+      def on_setup(block)
+        (@setup_callbacks ||= []) << block
+      end
+
+      def each_teardown_callback(&block)
+        @teardown_callbacks&.each(&block)
+      end
+
+      def on_teardown(block)
+        (@teardown_teardown ||= []) << block
+      end
+    end
+
     # A test suite is a group of tests. It's a class that inherits Megatest::Test
     # A test case is the smaller runable unit, it's a block defined with `test`
     # or a method with a name starting with `test_`.
-    class TestSuite
+    class TestSuite < Suite
       attr_reader :klass, :source_file, :source_line
 
       def initialize(registry, test_suite, location)
-        @registry = registry
+        super(registry)
         @klass = test_suite
         @source_file, @source_line = location
-
+        @ancestors = nil
         @test_cases = if test_suite.is_a?(Class) && test_suite.superclass < ::Megatest::Test
           registry.suite(test_suite.superclass).test_cases.to_h do |t|
             test = t.inherited_by(self)
@@ -24,6 +50,10 @@ module Megatest
         else
           {}
         end
+      end
+
+      def ancestors
+        @ancestors ||= @registry.ancestors(@klass)
       end
 
       def abstract?
@@ -36,9 +66,9 @@ module Megatest
 
       def register_test_case(name, callable)
         test = if callable.is_a?(UnboundMethod)
-          MethodTest.new(@klass, name.name, callable)
+          MethodTest.new(self, @klass, name.name, callable)
         else
-          BlockTest.new(@klass, name, callable)
+          BlockTest.new(self, @klass, name, callable)
         end
         add_test(test)
         @registry.register_test_case(test)
@@ -71,9 +101,9 @@ module Megatest
       end
     end
 
-    class SharedSuite
+    class SharedSuite < Suite
       def initialize(registry, test_suite)
-        @registry = registry
+        super(registry)
         @mod = test_suite
         @test_cases = {}
         test_suite.instance_methods.each do |name|
@@ -94,9 +124,9 @@ module Megatest
 
       def register_test_case(name, callable)
         test = if callable.is_a?(UnboundMethod)
-          MethodTest.new(@mod, name.name, callable)
+          MethodTest.new(self, @mod, name.name, callable)
         else
-          BlockTest.new(@mod, name, callable)
+          BlockTest.new(self, @mod, name, callable)
         end
 
         if @test_cases[test]
@@ -137,6 +167,17 @@ module Megatest
 
     def suite(klass)
       @shared_suites[klass] || @test_suites.fetch(klass)
+    end
+
+    def ancestors(klass)
+      suites = []
+      klass.ancestors.each do |mod|
+        suite = @shared_suites[mod] || @test_suites[mod]
+        suites << suite if suite
+
+        break if mod == ::Megatest::Test
+      end
+      suites
     end
 
     if Class.method_defined?(:subclasses)
@@ -216,32 +257,38 @@ module Megatest
 
   class TestCaseResult
     attr_accessor :assertions_count
-    attr_reader :failure, :duration, :test_id, :test_location
+    attr_reader :failures, :duration, :test_id, :test_location
 
     def initialize(test_case)
       @test_id = test_case.id
       @test_location = test_case.location_id
       @assertions_count = 0
       @retried = false
-      @failure = nil
+      @failures = []
       @duration = nil
     end
 
-    def record
+    def record(&block)
       start_time = Megatest.now
-      begin
-        begin
-          yield
-        rescue Assertion
-          raise
-        rescue Exception => original_error
-          raise UnexpectedError, original_error
-        end
-      rescue Assertion => assertion
-        @failure = assertion
-      end
       @duration = Megatest.now - start_time
+      record_failures(&block)
       self
+    end
+
+    def failure
+      @failures.first
+    end
+
+    def record_failures
+      begin
+        yield
+      rescue Assertion
+        raise
+      rescue Exception => original_error
+        raise UnexpectedError, original_error
+      end
+    rescue Assertion => assertion
+      @failures << assertion
     end
 
     def status
@@ -256,16 +303,20 @@ module Megatest
       end
     end
 
+    def success?
+      @failures.empty?
+    end
+
     def retried?
       @retried
     end
 
     def failed?
-      !@failure.nil?
+      !@failures.empty?
     end
 
     def error?
-      UnexpectedError === @failure
+      UnexpectedError === @failures.first
     end
 
     def retry
@@ -283,7 +334,8 @@ module Megatest
     attr_accessor :index
     attr_reader :klass, :name, :source_file, :source_line
 
-    def initialize(klass, name, callable)
+    def initialize(test_suite, klass, name, callable)
+      @test_suite = test_suite
       @klass = klass
       @name = name
       @callable = callable
@@ -347,35 +399,70 @@ module Megatest
       cmp || 0
     end
 
+    def each_setup_callback(&block)
+      @test_suite.ancestors.reverse_each do |test_suite|
+        test_suite.each_setup_callback(&block)
+      end
+    end
+
+    def each_teardown_callback(&block)
+      @test_suite.ancestors.each do |test_suite|
+        test_suite.each_setup_callback(&block)
+      end
+    end
+
+    def run
+      result = TestCaseResult.new(self)
+      instance = klass.new(result)
+      result.record do
+        instance.before_setup
+        each_setup_callback do |callback|
+          instance.instance_exec(&callback)
+        end
+        instance.setup
+        instance.after_setup
+
+        execute(instance)
+
+        result.record_failures do
+          instance.before_teardown
+        end
+        each_teardown_callback do |callback|
+          result.record_failures do
+            instance.instance_exec(&callback)
+          end
+        end
+        result.record_failures do
+          instance.teardown
+        end
+        result.record_failures do
+          instance.after_teardown
+        end
+      end
+    end
+
     protected
 
     attr_writer :inherited, :source_file, :source_line
 
     def test_suite=(test_suite)
       @id = nil
+      @test_suite = test_suite
       @klass = test_suite.klass
     end
   end
 
   class BlockTest < AbstractTest
-    def run
-      result = TestCaseResult.new(self)
-      instance = klass.new(result)
-      result.record do
-        instance.instance_exec(&@callable)
-      end
+    def execute(instance)
+      instance.instance_exec(&@callable)
     end
   end
 
   class MethodTest < AbstractTest
     using Compat::BindCall unless UnboundMethod.method_defined?(:bind_call)
 
-    def run
-      result = TestCaseResult.new(self)
-      instance = klass.new(result)
-      result.record do
-        @callable.bind_call(instance)
-      end
+    def execute(instance)
+      @callable.bind_call(instance)
     end
   end
 end

@@ -52,15 +52,20 @@ Style/Alias:
 Style/EmptyMethod:
   Enabled: false # Disagree.
 
+
 Layout/CaseIndentation:
   EnforcedStyle: end
 
 Layout/EndAlignment:
   EnforcedStyleAlignWith: start_of_line
 
+
 Naming/RescuedExceptionsVariableName:
   # Enforcing `e` as an exception name? WTF!
   Enabled: false
+
+Naming/VariableNumber:
+  Enabled: false # WTF? Mind your own business.
 
 
 Lint/AmbiguousBlockAssociation:

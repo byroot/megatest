@@ -69,5 +69,23 @@ module Megatest
     def initialize(mega_state)
       @__mega = mega_state
     end
+
+    def before_setup
+    end
+
+    def setup
+    end
+
+    def after_setup
+    end
+
+    def before_teardown
+    end
+
+    def teardown
+    end
+
+    def after_teardown
+    end
   end
 end

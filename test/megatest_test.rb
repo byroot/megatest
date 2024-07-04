@@ -92,4 +92,36 @@ class MegatestTest < MegaTestCase
     assert_equal 1, result.assertions_count
     assert_predicate result, :failed?
   end
+
+  def test_callbacks
+    load_fixture("callbacks/callbacks_test.rb")
+
+    first_test = @registry.test_cases.first
+    assert_equal "callbacks", first_test.name
+    result = first_test.run
+    assert_predicate result, :success?
+
+    assert_equal <<~ORDER.strip, TestedApp.order.join("\n")
+      test_case_before_setup
+      callbacks_test_before_setup
+      test_case_setup_block_1
+      test_case_setup_block_2
+      callbacks_test_setup_block_1
+      callbacks_test_setup_block_2
+      test_case_setup_method
+      callbacks_test_setup_method
+      test_case_after_setup
+      callbacks_test_after_setup
+      test_case_before_teardown
+      callbacks_test_before_teardown
+      callbacks_test_setup_block_1
+      callbacks_test_setup_block_2
+      test_case_setup_block_1
+      test_case_setup_block_2
+      test_case_teardown_method
+      callbacks_test_teardown_method
+      test_case_after_teardown
+      callbacks_test_after_teardown
+    ORDER
+  end
 end

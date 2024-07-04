@@ -13,7 +13,7 @@ module Megatest
     end
 
     def setup
-      fake_test_case = BlockTest.new(DummyTester, "fake test case", -> {})
+      fake_test_case = BlockTest.new(:__suite__, DummyTester, "fake test case", -> {})
       @result = TestCaseResult.new(fake_test_case)
       @case = DummyTester.new(@result)
     end

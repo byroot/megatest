@@ -27,5 +27,13 @@ module Megatest
         ::Megatest.registry.suite(self).register_test_case(name, instance_method(name))
       end
     end
+
+    def setup(&block)
+      ::Megatest.registry.suite(self).on_setup(block)
+    end
+
+    def teardown(&block)
+      ::Megatest.registry.suite(self).on_teardown(block)
+    end
   end
 end
