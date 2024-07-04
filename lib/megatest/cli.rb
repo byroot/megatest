@@ -21,9 +21,7 @@ module Megatest
       @err = err
       @argv = argv.dup
       @processes = nil
-      @queue_url = env["MEGATEST_QUEUE_URL"]
-      @build_id = nil
-      @worker_id = nil
+      queue_config.url = env["MEGATEST_QUEUE_URL"]
     end
 
     def run
@@ -56,12 +54,12 @@ module Megatest
     private
 
     def queue
-      @queue ||= case @queue_url
+      @queue ||= case queue_config.url
       when nil
         Queue.new(queue_config)
       when /\Arediss?:/
         require "megatest/redis_queue"
-        RedisQueue.new(queue_config, url: @queue_url, build: build_id, worker: worker_id)
+        RedisQueue.new(queue_config)
       else
         raise ArgumentError, "Unsupported queue type: #{@queue_url.inspect}"
       end
@@ -69,14 +67,6 @@ module Megatest
 
     def queue_config
       @queue_config ||= QueueConfig.new
-    end
-
-    def build_id
-      @build_id or raise InvalidArgument, "Distributed queues require a build-id"
-    end
-
-    def worker_id
-      @worker_id or raise InvalidArgument, "Distributed queues require a worker-id"
     end
 
     def default_reporters
@@ -113,15 +103,15 @@ module Megatest
         end
 
         opts.on("--queue=URL", String) do |queue_url|
-          @queue_url = queue_url
+          queue_config.url = queue_url
         end
 
         opts.on("--build-id=ID", String) do |build_id|
-          @build_id = build_id
+          queue_config.build_id = build_id
         end
 
         opts.on("--worker-id=ID", String) do |worker_id|
-          @worker_id = worker_id
+          queue_config.worker_id = worker_id
         end
 
         opts.on("--max-retries=COUNT", Integer) do |max_retries|

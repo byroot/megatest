@@ -7,14 +7,14 @@ module Megatest
   class RedisQueue < Queue
     attr_reader :size, :assertions_count, :runs_count, :failures_count, :errors_count, :skips_count, :total_time
 
-    def initialize(queue_config, build:, worker:, url:, ttl: 24 * 60 * 60)
+    def initialize(queue_config, ttl: 24 * 60 * 60)
       super(queue_config)
 
-      @redis = RedisClient.new(url: url)
+      @redis = RedisClient.new(url: queue_config.url)
       @ttl = ttl
       @load_timeout = 30 # TODO: configurable
-      @worker_id = worker
-      @build_id = build
+      @worker_id = queue_config.worker_id
+      @build_id = queue_config.build_id
       @success = true
       @failures = []
       @runs_count = @assertions_count = @failures_count = @errors_count = @skips_count = 0
