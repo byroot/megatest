@@ -81,7 +81,10 @@ module Megatest
       end
 
       def after_test_case(_queue, _test_case, result)
-        if result.error?
+        if result.retried?
+          @out.print(@out.yellow("R"))
+          @failures << result
+        elsif result.error?
           @out.print(@out.red("E"))
           @failures << result
         elsif result.failed?
@@ -93,12 +96,19 @@ module Megatest
       end
 
       LABELS = {
+        retried: "Retried",
         error: "Error",
         failure: "Failure",
       }.freeze
 
       def render_failure(result)
-        str = +"#{@out.red(LABELS.fetch(result.status))}: #{result.test_id}\n"
+        str = "#{LABELS.fetch(result.status)}: #{result.test_id}\n"
+        str = if result.retried?
+          @out.yellow(str)
+        else
+          @out.red(str)
+        end
+        str = +str
 
         if result.error?
           str << "#{result.failure.cause.class}: #{result.failure.cause.message}\n"
@@ -137,11 +147,12 @@ module Megatest
         end
 
         @out.puts format(
-          "Ran %d cases, %d assertions, %d failures, %d errors, %d skips",
+          "Ran %d cases, %d assertions, %d failures, %d errors, %d retries, %d skips",
           queue.runs_count,
           queue.assertions_count,
           queue.failures_count,
           queue.errors_count,
+          queue.retries_count,
           queue.skips_count,
         )
       end

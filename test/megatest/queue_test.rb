@@ -4,10 +4,6 @@ require "test_helper"
 
 module Megatest
   class QueueTest < MegaTestCase
-    def build_queue
-      Queue.new
-    end
-
     def setup
       load_fixture("simple/simple_test.rb")
       @test_cases = @registry.test_cases
@@ -37,6 +33,28 @@ module Megatest
       assert_equal 1, @queue.runs_count
       assert_equal 0, @queue.failures_count
       assert_equal 1, @queue.errors_count
+    end
+
+    def test_retry_test
+      queue_config.max_retries = 2
+      queue_config.retry_tolerance = 1.0
+
+      result = TestCaseResult.new(@test_cases.first)
+      result.record do
+        raise "oops"
+      end
+      recorded_result = @queue.record_result(result)
+      assert_predicate recorded_result, :retried?
+    end
+
+    private
+
+    def build_queue
+      Queue.new(queue_config)
+    end
+
+    def queue_config
+      @queue_config ||= QueueConfig.new
     end
   end
 end

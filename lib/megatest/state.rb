@@ -205,6 +205,7 @@ module Megatest
       @test_id = test_case.id
       @test_location = test_case.location_id
       @assertions_count = 0
+      @retried = false
       @failure = nil
       @duration = nil
     end
@@ -227,13 +228,19 @@ module Megatest
     end
 
     def status
-      if error?
+      if retried?
+        :retried
+      elsif error?
         :error
       elsif failed?
         :failure
       else
         :success
       end
+    end
+
+    def retried?
+      @retried
     end
 
     def failed?
@@ -243,6 +250,16 @@ module Megatest
     def error?
       UnexpectedError === @failure
     end
+
+    def retry
+      copy = dup
+      copy.retried = true
+      copy
+    end
+
+    protected
+
+    attr_writer :retried
   end
 
   class AbstractTest

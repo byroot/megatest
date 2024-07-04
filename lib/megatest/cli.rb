@@ -58,13 +58,17 @@ module Megatest
     def queue
       @queue ||= case @queue_url
       when nil
-        Queue.new
+        Queue.new(queue_config)
       when /\Arediss?:/
         require "megatest/redis_queue"
-        RedisQueue.new(url: @queue_url, build: build_id, worker: worker_id)
+        RedisQueue.new(queue_config, url: @queue_url, build: build_id, worker: worker_id)
       else
         raise ArgumentError, "Unsupported queue type: #{@queue_url.inspect}"
       end
+    end
+
+    def queue_config
+      @queue_config ||= QueueConfig.new
     end
 
     def build_id
@@ -118,6 +122,14 @@ module Megatest
 
         opts.on("--worker-id=ID", String) do |worker_id|
           @worker_id = worker_id
+        end
+
+        opts.on("--max-retries=COUNT", Integer) do |max_retries|
+          queue_config.max_retries = max_retries
+        end
+
+        opts.on("--retry-tolerance=RATE", Float) do |retry_tolerance|
+          queue_config.retry_tolerance = retry_tolerance
         end
       end
     end

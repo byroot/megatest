@@ -7,8 +7,8 @@ module Megatest
   class RedisQueue < Queue
     attr_reader :size, :assertions_count, :runs_count, :failures_count, :errors_count, :skips_count, :total_time
 
-    def initialize(build:, worker:, url:, ttl: 24 * 60 * 60)
-      super()
+    def initialize(queue_config, build:, worker:, url:, ttl: 24 * 60 * 60)
+      super(queue_config)
 
       @redis = RedisClient.new(url: url)
       @ttl = ttl
@@ -63,6 +63,7 @@ module Megatest
     end
 
     def populate(test_cases)
+      @size = test_cases.size
       @test_cases = test_cases.to_h { |t| [t.id, t] }
 
       leader_key_set, = @redis.pipelined do |pipeline|
@@ -102,31 +103,41 @@ module Megatest
     end
 
     ACKNOWLEDGE = <<~'LUA'
-      local queue_key = KEYS[1]
+      local running_key = KEYS[1]
       local processed_key = KEYS[2]
       local owners_key = KEYS[3]
 
       local test = ARGV[1]
 
-      redis.call('zrem', queue_key, test)
+      redis.call('zrem', running_key, test)
       redis.call('hdel', owners_key, test) -- # Doesn't matter if it was reclaimed by another workers
       return redis.call('sadd', processed_key, test)
     LUA
 
-    def record_result(result)
-      super
+    def record_result(original_result)
+      result = super
 
-      load_script(ACKNOWLEDGE)
-      _ack, = @redis.pipelined do |_pipeline|
-        eval_script(
-          ACKNOWLEDGE,
-          keys: [key("running"), key("processed"), key("owners")],
-          argv: [result.test_id],
-        )
-        @redis.call("hincrby", key("stats"), "assertions-count", result.assertions_count)
-        @redis.call("hincrby", key("stats"), "runs-count", 1)
-        @redis.call("hincrby", key("stats"), "total-time-us", (result.duration * 1_000_000).to_i)
-        @redis.call("expire", key("stats"), @ttl)
+      stats = {
+        "assertions-count" => result.assertions_count,
+        "runs-count" => 1,
+        "total-time-us" => (result.duration * 1_000_000).to_i,
+      }
+
+      if result.retried?
+        @redis.pipelined do |pipeline|
+          increment_stats(pipeline, stats)
+        end
+      else
+        load_script(ACKNOWLEDGE)
+        _ack, = @redis.pipelined do |pipeline|
+          eval_script(
+            ACKNOWLEDGE,
+            keys: [key("running"), key("processed"), key("owners")],
+            argv: [result.test_id],
+            redis: pipeline,
+          )
+          increment_stats(pipeline, stats)
+        end
       end
 
       result
@@ -134,8 +145,86 @@ module Megatest
 
     private
 
-    def eval_script(script, keys: [], argv: [])
-      @redis.call("evalsha", load_script(script), keys.size, keys, argv)
+    REQUEUE = <<~'LUA'
+      local processed_key = KEYS[1]
+      local requeues_count_key = KEYS[2]
+      local queue_key = KEYS[3]
+      local running_key = KEYS[4]
+      local worker_queue_key = KEYS[5]
+      local owners_key = KEYS[6]
+
+      local max_requeues = tonumber(ARGV[1])
+      local global_max_requeues = tonumber(ARGV[2])
+      local test = ARGV[3]
+      local index = ARGV[4]
+
+      if redis.call('hget', owners_key, test) == worker_queue_key then
+         redis.call('hdel', owners_key, test)
+      end
+
+      if redis.call('sismember', processed_key, test) == 1 then
+        return false
+      end
+
+      local global_requeues = tonumber(redis.call('hget', requeues_count_key, '___total___'))
+      if global_requeues and global_requeues >= tonumber(global_max_requeues) then
+        return false
+      end
+
+      local requeues = tonumber(redis.call('hget', requeues_count_key, test))
+      if requeues and requeues >= max_requeues then
+        return false
+      end
+
+      redis.call('hincrby', requeues_count_key, '___total___', 1)
+      redis.call('hincrby', requeues_count_key, test, 1)
+
+      local pivot = redis.call('lrange', queue_key, -1 - index, 0 - index)[1]
+      if pivot then
+        redis.call('linsert', queue_key, 'BEFORE', pivot, test)
+      else
+        redis.call('lpush', queue_key, test)
+      end
+
+      redis.call('zrem', running_key, test)
+
+      return true
+    LUA
+
+    def attempt_to_retry(result)
+      return false unless @config.retries?
+
+      index = Megatest.seed.rand(0..@redis.call("llen", key("queue")))
+      eval_script(
+        REQUEUE,
+        keys: [
+          key("processed"),
+          key("requeues-count"),
+          key("queue"),
+          key("running"),
+          key("worker", @worker_id, "queue"),
+          key("owners"),
+        ],
+        argv: [
+          @config.max_retries,
+          @config.total_max_retries(@size),
+          result.test_id,
+          index,
+        ],
+      ) == 1
+    end
+
+    def increment_stats(redis, stats)
+      return if stats.empty?
+
+      stats.each do |key, value|
+        redis.call("hincrby", key("stats"), key, value)
+      end
+      redis.call("expire", key("stats"), @ttl)
+    end
+
+    def eval_script(script, keys: [], argv: [], redis: @redis)
+      redis.call("evalsha", load_script(script), keys.size, keys, argv)
     end
 
     def load_script(script)

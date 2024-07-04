@@ -12,7 +12,10 @@
 - Polish multi-processing.
 
 - Distributed queue (ci-queue style).
-  - Requeues & Retries
+  - Central Reporter
+  - Lost tests
+  - Circuit breakers
+  - Other?
 
 - Test leak bisect
   - `test_order.log` first?
