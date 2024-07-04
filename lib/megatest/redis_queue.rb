@@ -49,7 +49,8 @@ module Megatest
     LUA
 
     def reserve
-      eval_script(
+      load_script(RESERVE)
+      test_id, = eval_script(
         RESERVE,
         keys: [
           key("queue"),
@@ -60,6 +61,7 @@ module Megatest
         ],
         argv: [Megatest.now],
       )
+      test_id
     end
 
     def populate(test_cases)
@@ -195,6 +197,7 @@ module Megatest
       return false unless @config.retries?
 
       index = Megatest.seed.rand(0..@redis.call("llen", key("queue")))
+      load_script(REQUEUE)
       eval_script(
         REQUEUE,
         keys: [
@@ -224,7 +227,22 @@ module Megatest
     end
 
     def eval_script(script, keys: [], argv: [], redis: @redis)
-      redis.call("evalsha", load_script(script), keys.size, keys, argv)
+      script_id = load_script(script)
+      result, = pipelined(redis) do |pipeline|
+        pipeline.call("evalsha", script_id, keys.size, keys, argv)
+        keys.each do |key|
+          pipeline.call("expire", key, @ttl)
+        end
+      end
+      result
+    end
+
+    def pipelined(redis, &block)
+      if redis.respond_to?(:pipelined)
+        redis.pipelined(&block)
+      else
+        yield redis
+      end
     end
 
     def load_script(script)
