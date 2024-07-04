@@ -114,10 +114,21 @@ module Megatest
       @test_suites = {}
       @shared_suites = {}
       @test_cases_by_location = {}
+      @test_cases_by_id = {}
+      @pending_test_cases = []
     end
 
     def [](test_id)
-      test_cases.find { |t| t.id == test_id } or raise KeyError, test_id # TODO: need O(1) lookup
+      unless test_case = @test_cases_by_id[test_id]
+        @pending_test_cases.reject! do |t|
+          if t.klass.name
+            @test_cases_by_id[t.id] = t
+          end
+        end
+        @test_cases_by_id[test_id]
+      end
+
+      test_case or raise KeyError, test_id
     end
 
     def shared_suite(test_suite)
@@ -153,6 +164,12 @@ module Megatest
     end
 
     def register_test_case(test_case)
+      if test_case.klass.name
+        @test_cases_by_id[test_case.id] = test_case
+      else
+        @pending_test_cases << test_case
+      end
+
       path_index = @test_cases_by_location[test_case.source_file] ||= {}
       line_tests = path_index[test_case.source_line] ||= []
 
@@ -280,7 +297,7 @@ module Megatest
       if klass.name
         @id ||= "#{klass.name}##{name}"
       else
-        "#{klass.inspect}##{name}"
+        raise Error, "Can't access the id of an anonymous test"
       end
     end
 
