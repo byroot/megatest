@@ -11,17 +11,30 @@ module Megatest
   # need to be refactored to make multi-processing and test
   # distribution work well (See the TODOs).
   module MultiProcess
+    class << self
+      def socketpair
+        UNIXSocket.socketpair(:SOCK_STREAM).map { |s| MessageSocket.new(s) }
+      end
+    end
+
     class MessageSocket
       def initialize(socket)
         @socket = socket
       end
 
       def <<(message)
-        @socket.write(Marshal.dump(message))
+        begin
+          @socket.write(Marshal.dump(message))
+        rescue Errno::EPIPE
+          return nil # Other side was closed
+        end
+        self
       end
 
       def read
         Marshal.load(@socket)
+      rescue EOFError
+        nil # Other side was closed
       end
 
       def closed?
@@ -69,21 +82,27 @@ module Megatest
         @config = config
         @index = index
         @pid = nil
-        @child_socket, @parent_socket = UNIXSocket.socketpair(:SOCK_STREAM).map { |s| MessageSocket.new(s) }
+        @child_socket, @parent_socket = MultiProcess.socketpair
+        @assigned_test = nil
+        @idle = false
       end
 
-      def run(parent_queue)
+      def run(executor, parent_queue)
         @pid = Process.fork do
+          @config.job_index = @index
           @parent_socket.close
+          executor.after_fork_in_child(self)
+
           queue = ClientQueue.new(@child_socket, parent_queue)
           @config.run_job_setup_callbacks(@index)
 
-          while (test_case = queue.pop_test)
-            result = test_case.run
-            queue.record_result(result)
+          begin
+            while (test_case = queue.pop_test)
+              result = test_case.run
+              queue.record_result(result)
+            end
+          rescue Interrupt
           end
-
-          Megatest::Executor.new.run(queue, [])
           queue.close
         end
         @child_socket.close
@@ -91,6 +110,12 @@ module Megatest
 
       def to_io
         @parent_socket.to_io
+      end
+
+      def term
+        Process.kill(:TERM, @pid)
+      rescue Errno::ESRCH
+        # Already dead
       end
 
       def close
@@ -102,20 +127,46 @@ module Megatest
         @parent_socket.closed?
       end
 
+      def idle?
+        @idle
+      end
+
       def process(queue, reporters)
+        if @idle
+          if @assigned_test = queue.pop_test
+            @idle = false
+            @parent_socket << @assigned_test&.id
+          end
+          return
+        end
+
         message, *args = @parent_socket.read
         case message
+        when nil
+          # Socket closed, child probably died
+          @parent_socket.close
         when :pop
-          @parent_socket << queue.pop_test&.id
+          if @assigned_test = queue.pop_test
+            @parent_socket << @assigned_test&.id
+          else
+            @idle = true
+          end
         when :record
           result = queue.record_result(*args)
+          @assigned_test = nil
           @parent_socket << result
           reporters.each { |r| r.after_test_case(queue, nil, result) }
         else
           raise "Unexpected message: #{message.inspect}"
         end
-      rescue EOFError
-        @parent_socket.close
+      end
+
+      def on_exit(queue, reporters)
+        if @assigned_test
+          result = queue.record_lost_test(@assigned_test)
+          @assigned_test = nil
+          reporters.each { |r| r.after_test_case(queue, nil, result) }
+        end
       end
 
       def reap
@@ -130,19 +181,39 @@ module Megatest
         @config = config
       end
 
+      def after_fork_in_child(active_job)
+        @jobs.each do |job|
+          job.close unless job == active_job
+        end
+      end
+
       def run(queue, reporters)
         start_time = Megatest.now
         @config.run_global_setup_callbacks
         @jobs = @config.jobs_count.times.map { |index| Job.new(@config, index) }
 
         @config.before_fork_callbacks.each(&:call)
-        @jobs.each { |j| j.run(queue.test_cases_index) }
+        @jobs.each { |j| j.run(self, queue.test_cases_index) }
 
-        until @jobs.all?(&:closed?)
-          reads, = IO.select(@jobs.reject(&:closed?))
-          reads.each do |job|
-            job.process(queue, reporters)
+        begin
+          while true
+            dead_jobs = @jobs.select(&:closed?).each { |j| j.on_exit(queue, reporters) }
+            @jobs -= dead_jobs
+            break if @jobs.empty?
+
+            @jobs.select(&:idle?).each do |job|
+              job.process(queue, reporters)
+            end
+
+            break if @jobs.all?(&:idle?)
+
+            reads, = IO.select(@jobs, nil, nil, 1)
+            reads&.each do |job|
+              job.process(queue, reporters)
+            end
           end
+        rescue Interrupt
+          @jobs.each(&:term) # Early exit
         end
 
         @jobs.each(&:close)

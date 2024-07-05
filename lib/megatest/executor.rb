@@ -16,10 +16,14 @@ module Megatest
 
       reporters.each { |r| r.start(self, queue) }
 
-      while (test_case = queue.pop_test)
-        reporters.each { |r| r.before_test_case(queue, test_case) }
-        result = queue.record_result(test_case.run)
-        reporters.each { |r| r.after_test_case(queue, test_case, result) }
+      begin
+        while (test_case = queue.pop_test)
+          reporters.each { |r| r.before_test_case(queue, test_case) }
+          result = queue.record_result(test_case.run)
+          reporters.each { |r| r.after_test_case(queue, test_case, result) }
+        end
+      rescue Interrupt
+        # Early exit
       end
 
       @wall_time = Megatest.now - start_time

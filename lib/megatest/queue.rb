@@ -14,6 +14,15 @@ module Megatest
       @runs_count = @assertions_count = @failures_count = @errors_count = @retries_count = @skips_count = 0
       @total_time = 0.0
       @retries = Hash.new(0)
+      @lost_tests = Hash.new(0)
+    end
+
+    def empty?
+      @test_cases.empty?
+    end
+
+    def remaining_size
+      @test_cases.size
     end
 
     def populate(test_cases)
@@ -27,7 +36,11 @@ module Megatest
     end
 
     def success?
-      @success
+      @success && @test_cases.empty?
+    end
+
+    def record_lost_test(test)
+      record_result(TestCaseResult.new(test).lost)
     end
 
     def pop_test
@@ -39,6 +52,7 @@ module Megatest
       if result.failed?
         if attempt_to_retry(result)
           result = result.retry
+          @runs_count -= 1
           @failures << result
           @retries_count += 1
         else

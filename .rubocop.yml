@@ -52,6 +52,9 @@ Style/Alias:
 Style/EmptyMethod:
   Enabled: false # Disagree.
 
+Style/InfiniteLoop:
+  Enabled: false
+
 
 Layout/CaseIndentation:
   EnforcedStyle: end
@@ -82,6 +85,10 @@ Lint/InheritException:
 
 Lint/AssignmentInCondition:
   Enabled: false # I know what I'm doing, thanks.
+
+Lint/SuppressedException:
+  Enabled: false # I know what I'm doing, thanks.
+
 
 Security/MarshalLoad:
   Enabled: false # I know what I'm doing, thanks.

@@ -261,8 +261,8 @@ module Megatest
     def record_failures
       begin
         yield
-      rescue Assertion
-        raise
+      rescue Assertion, NoMemoryError, SignalException, SystemExit
+        raise # Exceptions we shouldn't rescue
       rescue Exception => original_error
         raise UnexpectedError, original_error
       end
@@ -284,8 +284,15 @@ module Megatest
 
     def complete
       if @assertions_count.zero? && success?
-        @failures << NoAssertion.new("No assertions performed")
+        @failures << NoAssertion.new
       end
+      self
+    end
+
+    def lost
+      @failures << LostTest.new(@test_id)
+      @duration = 0.0
+      self
     end
 
     def success?

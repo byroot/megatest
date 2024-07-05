@@ -6,9 +6,7 @@ module Megatest
   class RedisQueueTest < MegaTestCase
     def setup
       super
-      @redis_url = ENV.fetch("REDIS_URL", "redis://127.0.0.1/7")
-      @redis = RedisClient.new(url: @redis_url)
-      @redis.call("flushdb")
+      setup_redis
 
       load_fixture("simple/simple_test.rb")
       @test_cases = @registry.test_cases

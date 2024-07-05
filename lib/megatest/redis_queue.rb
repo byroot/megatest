@@ -66,7 +66,7 @@ module Megatest
 
     def populate(test_cases)
       @size = test_cases.size
-      @test_cases = test_cases.to_h { |t| [t.id, t] }
+      @test_cases = test_cases
 
       leader_key_set, = @redis.pipelined do |pipeline|
         pipeline.call("setnx", key("leader-status"), "setup")
@@ -100,7 +100,7 @@ module Megatest
 
     def pop_test
       if test_id = reserve
-        @test_cases.fetch(test_id)
+        test_cases_index.fetch(test_id)
       end
     end
 
@@ -121,7 +121,7 @@ module Megatest
 
       stats = {
         "assertions-count" => result.assertions_count,
-        "runs-count" => 1,
+        "runs-count" => result.retried? ? 0 : 1,
         "total-time-us" => (result.duration * 1_000_000).to_i,
       }
 

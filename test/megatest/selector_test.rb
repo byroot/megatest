@@ -57,8 +57,8 @@ module Megatest
 
       selected_test_cases = selector.select(@registry)
       assert_equal <<~CLASSES.strip, selected_test_cases.map(&:id).sort.join("\n")
-        LargeTest#large 777
-        LargeTest#large 888
+        TestedApp::LargeTest#large 777
+        TestedApp::LargeTest#large 888
       CLASSES
     end
 

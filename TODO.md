@@ -2,8 +2,6 @@
 
 - around callbacks?
 
-- Polish multi-processing.
-
 - context blocks
   - As a simple prefix for test name
   - No scoped setup/teardown, need to explicitly reject that.

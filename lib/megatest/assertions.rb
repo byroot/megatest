@@ -5,6 +5,15 @@ module Megatest
   end
 
   class NoAssertion < Assertion
+    def initialize(message = "No assertions performed")
+      super
+    end
+  end
+
+  class LostTest < Assertion
+    def initialize(test_id)
+      super("#{test_id} never completed. Might be causing a crash or early exit?")
+    end
   end
 
   class UnexpectedError < Assertion

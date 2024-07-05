@@ -4,6 +4,7 @@ $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "megatest"
 require "megatest/cli"
 require "megatest/redis_queue"
+require "megatest/multi_process"
 
 require "minitest/autorun"
 
@@ -20,6 +21,12 @@ class MegaTestCase < Minitest::Test
   end
 
   private
+
+  def setup_redis
+    @redis_url = ENV.fetch("REDIS_URL", "redis://127.0.0.1/7")
+    @redis = RedisClient.new(url: @redis_url)
+    @redis.call("flushdb")
+  end
 
   def load_fixture(path)
     Kernel.require(fixture(path))
