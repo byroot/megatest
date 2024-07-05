@@ -282,6 +282,12 @@ module Megatest
       end
     end
 
+    def complete
+      if @assertions_count.zero? && success?
+        @failures << NoAssertion.new("No assertions performed")
+      end
+    end
+
     def success?
       @failures.empty?
     end
@@ -402,6 +408,7 @@ module Megatest
         instance.after_setup
 
         execute(instance)
+        result.complete
 
         result.record_failures do
           instance.before_teardown
@@ -417,6 +424,14 @@ module Megatest
         result.record_failures do
           instance.after_teardown
         end
+      end
+    end
+
+    def inspect
+      if klass.name
+        "#<#{id}>"
+      else
+        "#<#{klass.inspect}##{name}>"
       end
     end
 

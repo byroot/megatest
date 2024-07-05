@@ -16,6 +16,7 @@ module Megatest
       assert_equal "TestedApp::TruthTest#the lie", @queue.pop_test&.id
       assert_equal "TestedApp::TruthTest#the truth", @queue.pop_test&.id
       assert_equal "TestedApp::TruthTest#the unexpected", @queue.pop_test&.id
+      assert_equal "TestedApp::TruthTest#the void", @queue.pop_test&.id
       assert_nil @queue.pop_test
     end
 

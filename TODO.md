@@ -20,8 +20,6 @@
 - Automatically add `-Itest` for compat with Minitest.
   - Automatically require `test/test_helper.rb` ?
 
-- Fail tests if nothing was asserted.
-
 - Fail or warn if some tests are purely abstract?
   - e.g. defined in a class that doesn't end with `Test`, and isn't inherited.
 

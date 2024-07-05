@@ -10,10 +10,14 @@ module Megatest
       end
 
       def filter(backtrace)
-        filters.each do |filter|
-          backtrace = filter.call(backtrace)
+        if backtrace
+          filters.each do |filter|
+            backtrace = filter.call(backtrace)
+          end
+          backtrace
+        else
+          []
         end
-        backtrace
       end
 
       def format(backtrace)

@@ -21,6 +21,7 @@ module Megatest
       assert_equal "TestedApp::TruthTest#the lie", @queue.pop_test&.id
       assert_equal "TestedApp::TruthTest#the truth", @queue.pop_test&.id
       assert_equal "TestedApp::TruthTest#the unexpected", @queue.pop_test&.id
+      assert_equal "TestedApp::TruthTest#the void", @queue.pop_test&.id
       assert_nil @queue.pop_test
     end
 
@@ -34,6 +35,8 @@ module Megatest
       assert_equal "TestedApp::TruthTest#the lie", @queue.pop_test&.id
       assert_equal "TestedApp::TruthTest#the truth", other_worker.pop_test&.id
       assert_equal "TestedApp::TruthTest#the unexpected", @queue.pop_test&.id
+      assert_equal "TestedApp::TruthTest#the void", @queue.pop_test&.id
+      assert_nil @queue.pop_test
     end
 
     def test_record_result

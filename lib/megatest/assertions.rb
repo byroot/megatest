@@ -4,6 +4,9 @@ module Megatest
   class Assertion < Exception
   end
 
+  class NoAssertion < Assertion
+  end
+
   class UnexpectedError < Assertion
     attr_reader :cause
 

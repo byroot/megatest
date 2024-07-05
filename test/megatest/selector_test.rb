@@ -16,6 +16,7 @@ module Megatest
         TestedApp::TruthTest#the lie
         TestedApp::TruthTest#the truth
         TestedApp::TruthTest#the unexpected
+        TestedApp::TruthTest#the void
       CLASSES
     end
 
@@ -31,6 +32,7 @@ module Megatest
         TestedApp::TruthTest#the lie
         TestedApp::TruthTest#the truth
         TestedApp::TruthTest#the unexpected
+        TestedApp::TruthTest#the void
       CLASSES
     end
 
