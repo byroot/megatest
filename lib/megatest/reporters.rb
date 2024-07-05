@@ -112,6 +112,8 @@ module Megatest
 
         if result.error?
           str << "#{result.failure.cause.class}: #{result.failure.cause.message}\n"
+        elsif result.failed?
+          str << result.failure.message.to_s
         end
 
         Backtrace.clean(result.failure.backtrace).each do |frame|
@@ -130,7 +132,8 @@ module Megatest
 
         unless @failures.empty?
           @failures.sort_by!(&:test_id)
-          @failures.each do |result|
+          @failures.each_with_index do |result, index|
+            @out.print "  #{index + 1}) "
             @out.puts render_failure(result)
             @out.puts
           end

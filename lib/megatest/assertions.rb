@@ -26,6 +26,7 @@ module Megatest
       @__mega.assertions_count += 1
       return if result
 
+      message ||= "Expected #{result.inspect} to be truthy"
       flunk(message)
     end
 

@@ -39,10 +39,10 @@ module Megatest
       assert_equal 0, @result.assertions_count
 
       assertion = assert_raises(Assertion) do
-        @case.assert false
+        @case.assert nil
       end
       assert_equal 1, @result.assertions_count
-      assert_equal "Failed", assertion.message
+      assert_equal "Expected nil to be truthy", assertion.message
 
       assertion = assert_raises(Assertion) do
         @case.assert false, message: "Keyword"
