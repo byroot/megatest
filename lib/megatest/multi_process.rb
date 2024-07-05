@@ -64,8 +64,9 @@ module Megatest
       end
     end
 
-    class Worker
-      def initialize(index)
+    class Job
+      def initialize(config, index)
+        @config = config
         @index = index
         @pid = nil
         @child_socket, @parent_socket = UNIXSocket.socketpair(:SOCK_STREAM).map { |s| MessageSocket.new(s) }
@@ -75,6 +76,7 @@ module Megatest
         @pid = Process.fork do
           @parent_socket.close
           queue = ClientQueue.new(@child_socket, parent_queue)
+          @config.run_job_setup_callbacks(@index)
 
           while (test_case = queue.pop_test)
             result = test_case.run
@@ -124,24 +126,27 @@ module Megatest
     class Executor
       attr_reader :wall_time
 
-      def initialize(workers_count)
-        @workers_count = workers_count
+      def initialize(config)
+        @config = config
       end
 
       def run(queue, reporters)
         start_time = Megatest.now
-        @workers = @workers_count.times.map { |index| Worker.new(index) }
-        @workers.each { |w| w.run(queue.test_cases_index) }
+        @config.run_global_setup_callbacks
+        @jobs = @config.jobs_count.times.map { |index| Job.new(@config, index) }
 
-        until @workers.all?(&:closed?)
-          reads, = IO.select(@workers.reject(&:closed?))
-          reads.each do |worker|
-            worker.process(queue, reporters)
+        @config.before_fork_callbacks.each(&:call)
+        @jobs.each { |j| j.run(queue.test_cases_index) }
+
+        until @jobs.all?(&:closed?)
+          reads, = IO.select(@jobs.reject(&:closed?))
+          reads.each do |job|
+            job.process(queue, reporters)
           end
         end
 
-        @workers.each(&:close)
-        @workers.each(&:reap)
+        @jobs.each(&:close)
+        @jobs.each(&:reap)
         @wall_time = Megatest.now - start_time
         reporters.each { |r| r.summary(self, queue) }
       end

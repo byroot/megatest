@@ -4,8 +4,15 @@ module Megatest
   class Executor
     attr_reader :wall_time
 
+    def initialize(config)
+      @config = config
+    end
+
     def run(queue, reporters)
       start_time = Megatest.now
+
+      @config.run_global_setup_callbacks
+      @config.run_job_setup_callbacks(nil)
 
       reporters.each { |r| r.start(self, queue) }
 

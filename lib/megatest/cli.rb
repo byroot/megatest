@@ -21,10 +21,11 @@ module Megatest
       @err = err
       @argv = argv.dup
       @processes = nil
-      queue_config.url = env["MEGATEST_QUEUE_URL"]
+      @config = Config.new(env)
     end
 
     def run
+      Megatest.config = @config
       parser.parse!(@argv)
       run_tests
     rescue InvalidArgument => error
@@ -36,6 +37,7 @@ module Megatest
 
     def run_tests
       selectors = Selector.parse(@argv)
+      Megatest.load_config(selectors.paths)
       Megatest.load_suites(selectors.paths)
 
       test_cases = selectors.select(Megatest.registry)
@@ -54,19 +56,15 @@ module Megatest
     private
 
     def queue
-      @queue ||= case queue_config.url
+      @queue ||= case @config.queue_url
       when nil
-        Queue.new(queue_config)
+        Queue.new(@config)
       when /\Arediss?:/
         require "megatest/redis_queue"
-        RedisQueue.new(queue_config)
+        RedisQueue.new(@config)
       else
-        raise ArgumentError, "Unsupported queue type: #{@queue_url.inspect}"
+        raise ArgumentError, "Unsupported queue type: #{@condig.queue_url.inspect}"
       end
-    end
-
-    def queue_config
-      @queue_config ||= QueueConfig.new
     end
 
     def default_reporters
@@ -76,11 +74,11 @@ module Megatest
     end
 
     def executor
-      if @processes
+      if @config.jobs_count > 1
         require "megatest/multi_process"
-        MultiProcess::Executor.new(@processes)
+        MultiProcess::Executor.new(@config)
       else
-        Executor.new
+        Executor.new(@config)
       end
     end
 
@@ -99,27 +97,27 @@ module Megatest
         end
 
         opts.on("-j", "--jobs=JOBS", Integer, "Number of processes to use") do |jobs|
-          @processes = jobs
+          @config.jobs_count = jobs
         end
 
         opts.on("--queue=URL", String) do |queue_url|
-          queue_config.url = queue_url
+          @config.queue_url = queue_url
         end
 
         opts.on("--build-id=ID", String) do |build_id|
-          queue_config.build_id = build_id
+          @config.build_id = build_id
         end
 
         opts.on("--worker-id=ID", String) do |worker_id|
-          queue_config.worker_id = worker_id
+          @config.worker_id = worker_id
         end
 
         opts.on("--max-retries=COUNT", Integer) do |max_retries|
-          queue_config.max_retries = max_retries
+          @config.max_retries = max_retries
         end
 
         opts.on("--retry-tolerance=RATE", Float) do |retry_tolerance|
-          queue_config.retry_tolerance = retry_tolerance
+          @config.retry_tolerance = retry_tolerance
         end
       end
     end

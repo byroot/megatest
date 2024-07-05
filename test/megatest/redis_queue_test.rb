@@ -53,8 +53,8 @@ module Megatest
     end
 
     def test_retry_test
-      queue_config.max_retries = 2
-      queue_config.retry_tolerance = 1.0
+      config.max_retries = 2
+      config.retry_tolerance = 1.0
       @queue = build_queue
       @queue.populate(@test_cases)
 
@@ -69,16 +69,16 @@ module Megatest
     private
 
     def build_queue(worker: nil, build: nil)
-      config = queue_config.dup
-      config.worker_id = worker if worker
-      config.build_id = build if build
-      RedisQueue.new(config)
+      queue_config = config.dup
+      queue_config.worker_id = worker if worker
+      queue_config.build_id = build if build
+      RedisQueue.new(queue_config)
     end
 
-    def queue_config
-      @queue_config ||= begin
-        config = QueueConfig.new
-        config.url = @redis_url
+    def config
+      @config ||= begin
+        config = Config.new({})
+        config.queue_url = @redis_url
         config.worker_id = 1
         config.build_id = 1
         config

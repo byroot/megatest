@@ -21,6 +21,28 @@ module Megatest
       absolute_path&.delete_prefix(PWD)
     end
 
+    def load_config(paths)
+      scaned = {}
+      paths.each do |path|
+        path = File.dirname(path) unless File.directory?(path)
+
+        while path.start_with?(PWD)
+          break if scaned[path]
+
+          scaned[path] = true
+
+          config_path = File.join(path, "test_config.rb")
+          if File.exist?(config_path)
+            require(config_path)
+            break
+          end
+
+          path = File.dirname(path)
+        end
+      end
+      nil
+    end
+
     def load_suites(argv)
       test_suites = argv.flat_map do |path|
         path = File.expand_path(path)
@@ -48,6 +70,7 @@ module Megatest
 end
 
 require "megatest/compat"
+require "megatest/config"
 require "megatest/state"
 require "megatest/reporters"
 require "megatest/backtrace"

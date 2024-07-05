@@ -1,39 +1,6 @@
 # frozen_string_literal: true
 
 module Megatest
-  class QueueConfig
-    attr_accessor :url, :retry_tolerance, :max_retries
-    attr_writer :build_id, :worker_id
-
-    def initialize
-      @retry_tolerance = 0.0
-      @max_retries = 0
-      @url = nil
-      @build_id = nil
-      @worker_id = nil
-    end
-
-    def retries?
-      @max_retries.positive?
-    end
-
-    def total_max_retries(size)
-      if @retry_tolerance.positive?
-        (size * @retry_tolerance).ceil
-      else
-        @max_retries * size
-      end
-    end
-
-    def build_id
-      @build_id or raise InvalidArgument, "Distributed queues require a build-id"
-    end
-
-    def worker_id
-      @worker_id or raise InvalidArgument, "Distributed queues require a worker-id"
-    end
-  end
-
   class Queue
     attr_reader :size, :assertions_count, :runs_count, :failures_count, :errors_count, :retries_count, :skips_count,
                 :total_time

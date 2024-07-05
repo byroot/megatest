@@ -2,10 +2,6 @@
 
 - around callbacks?
 
-- A proper "setup worker" hook.
-  - Right now global setup like fixtures insertion is done in the first test setup, rather than being its own step.
-  - Maybe: a per suite global setup? Executed before running the first test of the suite?
-
 - Polish multi-processing.
 
 - context blocks

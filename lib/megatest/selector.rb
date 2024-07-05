@@ -160,6 +160,10 @@ module Megatest
 
     class << self
       def parse(argv)
+        if argv.empty?
+          return Set.new([PathSelector.parse("test")])
+        end
+
         argv = argv.dup
         selectors = []
 

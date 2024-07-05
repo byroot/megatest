@@ -36,8 +36,8 @@ module Megatest
     end
 
     def test_retry_test
-      queue_config.max_retries = 2
-      queue_config.retry_tolerance = 1.0
+      config.max_retries = 2
+      config.retry_tolerance = 1.0
 
       result = TestCaseResult.new(@test_cases.first)
       result.record do
@@ -50,11 +50,11 @@ module Megatest
     private
 
     def build_queue
-      Queue.new(queue_config)
+      Queue.new(config)
     end
 
-    def queue_config
-      @queue_config ||= QueueConfig.new
+    def config
+      @config ||= Config.new({})
     end
   end
 end
