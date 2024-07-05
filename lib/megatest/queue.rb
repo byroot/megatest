@@ -52,6 +52,11 @@ module Megatest
     def populate(test_cases)
       @size = test_cases.size
       @test_cases = test_cases.reverse
+      @test_cases_index = nil
+    end
+
+    def test_cases_index
+      @test_cases_index ||= @test_cases.to_h { |t| [t.id, t] }
     end
 
     def success?
@@ -94,7 +99,7 @@ module Megatest
       @retries[result.test_id] += 1
 
       index = Megatest.seed.rand(0..@test_cases.size)
-      @test_cases.insert(index, Megatest.registry[result.test_id])
+      @test_cases.insert(index, test_cases_index.fetch(result.test_id))
       true
     end
   end

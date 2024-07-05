@@ -38,20 +38,21 @@ module Megatest
     end
 
     class ClientQueue
-      def initialize(socket)
+      def initialize(socket, test_cases_index)
         @socket = socket
+        @test_cases_index = test_cases_index
       end
 
       def pop_test
         @socket << [:pop]
         if test_id = @socket.read
-          Megatest.registry[test_id] # TODO: refactor this
+          @test_cases_index.fetch(test_id)
         end
       end
 
       def record_result(result)
         @socket << [:record, result]
-        @socket.read # TODO: really necessary?
+        @socket.read
       end
 
       def close
@@ -70,10 +71,10 @@ module Megatest
         @child_socket, @parent_socket = UNIXSocket.socketpair(:SOCK_STREAM).map { |s| MessageSocket.new(s) }
       end
 
-      def run
+      def run(parent_queue)
         @pid = Process.fork do
           @parent_socket.close
-          queue = ClientQueue.new(@child_socket)
+          queue = ClientQueue.new(@child_socket, parent_queue)
 
           while (test_case = queue.pop_test)
             result = test_case.run
@@ -130,7 +131,7 @@ module Megatest
       def run(queue, reporters)
         start_time = Megatest.now
         @workers = @workers_count.times.map { |index| Worker.new(index) }
-        @workers.each(&:run)
+        @workers.each { |w| w.run(queue.test_cases_index) }
 
         until @workers.all?(&:closed?)
           reads, = IO.select(@workers.reject(&:closed?))
