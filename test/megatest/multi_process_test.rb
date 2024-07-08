@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "test_helper"
-
 module Megatest
   class MultiProcessTest < MegaTestCase
     def test_client_queue

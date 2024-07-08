@@ -15,8 +15,9 @@
 - Test leak bisect
   - `test_order.log` first?
 
-- Automatically add `-Itest` for compat with Minitest.
-  - Automatically require `test/test_helper.rb` ?
+- Implement missing assertions
+
+- `megatest/test_task`
 
 - Fail or warn if some tests are purely abstract?
   - e.g. defined in a class that doesn't end with `Test`, and isn't inherited.

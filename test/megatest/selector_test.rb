@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "test_helper"
-
 module Megatest
   class SelectorTest < MegaTestCase
     def test_directory_path

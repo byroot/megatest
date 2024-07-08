@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "test_helper"
-
 module Megatest
   class MultiProcessIntegrationTest < MegaTestCase
     class RecordReporter < Reporters::AbstractReporter

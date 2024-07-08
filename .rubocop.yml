@@ -55,6 +55,9 @@ Style/EmptyMethod:
 Style/InfiniteLoop:
   Enabled: false
 
+Style/YodaCondition:
+  # Yoda style is a good idea for a test framework that need to do defensive programing
+  Enabled: false
 
 Layout/CaseIndentation:
   EnforcedStyle: end

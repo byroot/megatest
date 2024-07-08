@@ -258,14 +258,16 @@ module Megatest
       @failures.first
     end
 
-    def record_failures
-      begin
-        yield
-      rescue Assertion, NoMemoryError, SignalException, SystemExit
-        raise # Exceptions we shouldn't rescue
-      rescue Exception => original_error
-        raise UnexpectedError, original_error
-      end
+    def expect_no_failures
+      yield
+    rescue Assertion, *Megatest::IGNORED_ERRORS
+      raise # Exceptions we shouldn't rescue
+    rescue Exception => original_error
+      raise UnexpectedError, original_error
+    end
+
+    def record_failures(&block)
+      expect_no_failures(&block)
     rescue Assertion => assertion
       @failures << assertion
     end

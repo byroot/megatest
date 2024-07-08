@@ -11,11 +11,12 @@ module Megatest
   end
 
   class Config
-    attr_accessor :queue_url, :retry_tolerance, :max_retries, :jobs_count, :job_index
+    attr_accessor :queue_url, :retry_tolerance, :max_retries, :jobs_count, :job_index, :load_paths
     attr_writer :build_id, :worker_id
     attr_reader :before_fork_callbacks, :global_setup_callbacks, :worker_setup_callbacks
 
     def initialize(env)
+      @load_paths = ["test"] # For easier transition from other frameworks
       @retry_tolerance = 0.0
       @max_retries = 0
       @queue_url = env["MEGATEST_QUEUE_URL"]

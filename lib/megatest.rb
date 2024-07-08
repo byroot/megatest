@@ -10,6 +10,8 @@ module Megatest
   PWD = File.join(Dir.pwd, "/")
   @seed = Random.new(ENV.fetch("SEED", Random.rand(0xFFFF)).to_i)
 
+  IGNORED_ERRORS = [NoMemoryError, SignalException, SystemExit].freeze
+
   class << self
     attr_accessor :seed
 
@@ -19,6 +21,13 @@ module Megatest
 
     def relative_path(absolute_path)
       absolute_path&.delete_prefix(PWD)
+    end
+
+    def append_load_path(config)
+      config.load_paths.each do |path|
+        abs_path = File.absolute_path(path)
+        $LOAD_PATH.unshift(abs_path) unless $LOAD_PATH.include?(abs_path)
+      end
     end
 
     def load_config(paths)

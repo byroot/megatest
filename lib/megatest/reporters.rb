@@ -115,6 +115,7 @@ module Megatest
         elsif result.failed?
           str << result.failure.message.to_s
         end
+        str << "\n" unless str.end_with?("\n")
 
         Backtrace.clean(result.failure.backtrace).each do |frame|
           str << "  #{@out.cyan(frame)}\n"

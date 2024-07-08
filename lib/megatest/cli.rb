@@ -37,7 +37,9 @@ module Megatest
 
     def run_tests
       selectors = Selector.parse(@argv)
+
       Megatest.load_config(selectors.paths)
+      Megatest.append_load_path(@config)
       Megatest.load_suites(selectors.paths)
 
       test_cases = selectors.select(Megatest.registry)

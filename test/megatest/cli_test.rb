@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require "megatest/cli"
+require "stringio"
 
 module Megatest
   class CLITest < MegaTestCase

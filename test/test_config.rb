@@ -6,9 +6,7 @@ require "megatest/cli"
 require "megatest/redis_queue"
 require "megatest/multi_process"
 
-require "minitest/autorun"
-
-class MegaTestCase < Minitest::Test
+class MegaTestCase < Megatest::Test
   FIXTURES_PATH = File.expand_path("../../fixtures", __FILE__)
 
   def before_setup
