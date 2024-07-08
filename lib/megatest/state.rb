@@ -1,6 +1,26 @@
 # frozen_string_literal: true
 
 module Megatest
+  @registry = nil
+
+  class << self
+    def registry
+      raise Error, "Can't define tests without a registry set" unless @registry
+
+      @registry
+    end
+
+    def with_registry(registry = Registry.new)
+      @registry = registry
+      begin
+        yield
+      ensure
+        @registry = nil
+      end
+      registry
+    end
+  end
+
   module State
     using Compat::Name unless Symbol.method_defined?(:name)
     using Compat::StartWith unless Symbol.method_defined?(:start_with?)
@@ -230,9 +250,6 @@ module Megatest
       end
     end
   end
-
-  singleton_class.attr_accessor :registry
-  self.registry = Registry.new
 
   class TestCaseResult
     attr_accessor :assertions_count

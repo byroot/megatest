@@ -38,11 +38,12 @@ module Megatest
     def run_tests
       selectors = Selector.parse(@argv)
 
-      Megatest.load_config(selectors.paths)
-      Megatest.append_load_path(@config)
-      Megatest.load_suites(selectors.paths)
-
-      test_cases = selectors.select(Megatest.registry)
+      registry = Megatest.with_registry do
+        Megatest.load_config(selectors.paths)
+        Megatest.append_load_path(@config)
+        Megatest.load_suites(selectors.paths)
+      end
+      test_cases = selectors.select(registry)
 
       # TODO: figure out when to shuffle. E.g. if passing file:line file:line we want to keep the order
       # but file, file we want to shuffle. It also should just be a default we should be able to flip it

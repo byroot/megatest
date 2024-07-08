@@ -10,7 +10,7 @@ class MegaTestCase < Megatest::Test
   FIXTURES_PATH = File.expand_path("../../fixtures", __FILE__)
 
   def before_setup
-    @registry = Megatest.registry = Megatest::Registry.new
+    @registry = Megatest::Registry.new
   end
 
   def after_teardown
@@ -27,7 +27,9 @@ class MegaTestCase < Megatest::Test
   end
 
   def load_fixture(path)
-    Kernel.require(fixture(path))
+    Megatest.with_registry(@registry) do
+      Kernel.require(fixture(path))
+    end
   end
 
   def fixture(path)

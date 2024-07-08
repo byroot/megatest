@@ -47,8 +47,10 @@ class MegatestTest < MegaTestCase
     load_fixture("simple/simple_test.rb")
 
     assert_raises Megatest::AlreadyDefinedError do
-      TestedApp::TruthTest.test "the truth" do
-        # noop
+      Megatest.with_registry(@registry) do
+        TestedApp::TruthTest.test "the truth" do
+          # noop
+        end
       end
     end
   end
