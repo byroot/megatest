@@ -17,6 +17,11 @@
 
 - Implement missing assertions
 
+- Improve assertion failure message
+  - Better inspect
+  - Diffs
+  - Etc
+
 - `megatest/test_task`
 
 - Fail or warn if some tests are purely abstract?
