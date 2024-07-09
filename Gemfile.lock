@@ -8,17 +8,30 @@ GEM
   specs:
     ast (2.4.2)
     connection_pool (2.4.1)
+    debug (1.9.2)
+      irb (~> 1.10)
+      reline (>= 0.3.8)
+    io-console (0.7.2)
+    irb (1.14.0)
+      rdoc (>= 4.0.0)
+      reline (>= 0.4.2)
     json (2.7.2)
     parallel (1.24.0)
     parser (3.3.3.0)
       ast (~> 2.4.1)
       racc
+    psych (5.1.2)
+      stringio
     racc (1.8.0)
     rainbow (3.1.1)
     rake (13.2.1)
+    rdoc (6.7.0)
+      psych (>= 4.0.0)
     redis-client (0.22.2)
       connection_pool
     regexp_parser (2.9.2)
+    reline (0.5.9)
+      io-console (~> 0.5)
     rexml (3.3.1)
       strscan
     rubocop (1.50.2)
@@ -34,6 +47,7 @@ GEM
     rubocop-ast (1.30.0)
       parser (>= 3.2.1.0)
     ruby-progressbar (1.13.0)
+    stringio (3.1.1)
     strscan (3.1.0)
     unicode-display_width (2.5.0)
 
@@ -44,6 +58,7 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
+  debug
   megatest!
   rake (~> 13.0)
   redis-client (>= 0.22)
