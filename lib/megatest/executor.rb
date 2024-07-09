@@ -27,7 +27,7 @@ module Megatest
       end
 
       @wall_time = Megatest.now - start_time
-      reporters.each { |r| r.summary(self, queue) }
+      reporters.each { |r| r.summary(self, queue, queue.summary) }
     end
   end
 end

@@ -1,13 +1,17 @@
 ### Wants
 
+- Split `test_config.rb` and `test_helper.rb`
+
 - around callbacks?
+
+- Skips
+  - Also RSpec style pending?
 
 - context blocks
   - As a simple prefix for test name
   - No scoped setup/teardown, need to explicitly reject that.
 
 - Distributed queue (ci-queue style).
-  - Central Reporter
   - Lost tests
   - Circuit breakers
   - Other?

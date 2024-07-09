@@ -36,21 +36,62 @@ module Megatest
     end
 
     def test_record_result
-      assert_equal 0, @queue.runs_count
-      assert_equal 0, @queue.failures_count
-      assert_equal 0, @queue.errors_count
+      assert_equal 0, @queue.summary.runs_count
+      assert_equal 0, @queue.summary.failures_count
+      assert_equal 0, @queue.summary.errors_count
 
-      result = TestCaseResult.new(@test_cases.first)
-      result.record_time do
-        result.record_failures do
-          raise "oops"
-        end
-      end
-      @queue.record_result(result)
+      @queue.record_result(build_error(@test_cases.first))
 
-      assert_equal 1, @queue.runs_count
-      assert_equal 0, @queue.failures_count
-      assert_equal 1, @queue.errors_count
+      assert_equal 1, @queue.summary.runs_count
+      assert_equal 0, @queue.summary.failures_count
+      assert_equal 1, @queue.summary.errors_count
+    end
+
+    def test_global_summary
+      assert_equal 0, @queue.global_summary.runs_count
+      assert_equal 0, @queue.global_summary.failures_count
+      assert_equal 0, @queue.global_summary.errors_count
+
+      @queue.record_result(build_error(@test_cases[0]))
+      summary = @queue.global_summary
+      assert_equal 1, summary.runs_count
+      assert_equal 0, summary.failures_count
+      assert_equal 1, summary.errors_count
+
+      other_worker = build_queue(worker: 1)
+      other_worker.populate(@test_cases)
+
+      @queue.record_result(build_failure(@test_cases[1]))
+      summary = @queue.global_summary
+      assert_equal 2, summary.runs_count
+      assert_equal 1, summary.failures_count
+      assert_equal 1, summary.errors_count
+
+      @queue.record_result(build_success(@test_cases[2]))
+      summary = @queue.global_summary
+      assert_equal 3, summary.runs_count
+      assert_equal 1, summary.failures_count
+      assert_equal 1, summary.errors_count
+      assert_equal 4, summary.assertions_count
+
+      assert_equal 3, summary.results.size
+      assert_equal 2, summary.failures.size
+
+      # Append a success report for a test that already failed
+      @queue.record_result(build_success(@test_cases[1]))
+      summary = @queue.global_summary
+      summary.deduplicate!
+      assert_equal 4, summary.runs_count
+      assert_equal 0, summary.failures_count
+      assert_equal 1, summary.errors_count
+
+      # Append a failure report for a test that already succeeded
+      @queue.record_result(build_failure(@test_cases[2]))
+      summary = @queue.global_summary
+      summary.deduplicate!
+      assert_equal 5, summary.runs_count
+      assert_equal 0, summary.failures_count
+      assert_equal 1, summary.errors_count
     end
 
     def test_retry_test
@@ -59,13 +100,7 @@ module Megatest
       @queue = build_queue
       @queue.populate(@test_cases)
 
-      result = TestCaseResult.new(@test_cases.first)
-      result.record_time do
-        result.record_failures do
-          raise "oops"
-        end
-      end
-      recorded_result = @queue.record_result(result)
+      recorded_result = @queue.record_result(build_error(@test_cases.first))
       assert_predicate recorded_result, :retried?
     end
 

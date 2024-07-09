@@ -6,6 +6,8 @@ require "megatest/cli"
 require "megatest/redis_queue"
 require "megatest/multi_process"
 
+require "stringio"
+
 class MegaTestCase < Megatest::Test
   FIXTURES_PATH = File.expand_path("../../fixtures", __FILE__)
 
@@ -19,6 +21,34 @@ class MegaTestCase < Megatest::Test
   end
 
   private
+
+  def build_success(test_case)
+    result = Megatest::TestCaseResult.new(test_case)
+    result.record_time do
+      result.assertions_count = 4
+    end
+    result
+  end
+
+  def build_error(test_case)
+    result = Megatest::TestCaseResult.new(test_case)
+    result.record_time do
+      result.record_failures do
+        raise "oops"
+      end
+    end
+    result
+  end
+
+  def build_failure(test_case)
+    result = Megatest::TestCaseResult.new(test_case)
+    result.record_time do
+      result.record_failures do
+        raise Megatest::Assertion, "2 + 2 != 5"
+      end
+    end
+    result
+  end
 
   def setup_redis
     @redis_url = ENV.fetch("REDIS_URL", "redis://127.0.0.1/7")

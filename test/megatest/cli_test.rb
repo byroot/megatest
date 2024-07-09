@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "stringio"
-
 module Megatest
   class CLITest < MegaTestCase
     def test_seed_argument

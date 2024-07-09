@@ -5,6 +5,7 @@ module Megatest
     def setup
       load_fixture("simple/simple_test.rb")
       @test_cases = @registry.test_cases
+      assert_equal 4, @test_cases.size
       @test_cases.sort!
       @queue = build_queue
       @queue.populate(@test_cases)
@@ -19,34 +20,22 @@ module Megatest
     end
 
     def test_record_result
-      assert_equal 0, @queue.runs_count
-      assert_equal 0, @queue.failures_count
-      assert_equal 0, @queue.errors_count
+      assert_equal 0, @queue.summary.runs_count
+      assert_equal 0, @queue.summary.failures_count
+      assert_equal 0, @queue.summary.errors_count
 
-      result = TestCaseResult.new(@test_cases.first)
-      result.record_time do
-        result.record_failures do
-          raise "oops"
-        end
-      end
-      @queue.record_result(result)
+      @queue.record_result(build_error(@test_cases.first))
 
-      assert_equal 1, @queue.runs_count
-      assert_equal 0, @queue.failures_count
-      assert_equal 1, @queue.errors_count
+      assert_equal 1, @queue.summary.runs_count
+      assert_equal 0, @queue.summary.failures_count
+      assert_equal 1, @queue.summary.errors_count
     end
 
     def test_retry_test
       config.max_retries = 2
       config.retry_tolerance = 1.0
 
-      result = TestCaseResult.new(@test_cases.first)
-      result.record_time do
-        result.record_failures do
-          raise "oops"
-        end
-      end
-      recorded_result = @queue.record_result(result)
+      recorded_result = @queue.record_result(build_error(@test_cases.first))
       assert_predicate recorded_result, :retried?
     end
 

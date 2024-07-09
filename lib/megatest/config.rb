@@ -11,8 +11,8 @@ module Megatest
   end
 
   class Config
-    attr_accessor :queue_url, :retry_tolerance, :max_retries, :jobs_count, :job_index, :load_paths
-    attr_writer :build_id, :worker_id
+    attr_accessor :queue_url, :retry_tolerance, :max_retries, :jobs_count, :job_index, :load_paths,
+                  :build_id, :worker_id
     attr_reader :before_fork_callbacks, :global_setup_callbacks, :worker_setup_callbacks
 
     def initialize(env)
@@ -62,14 +62,6 @@ module Megatest
       else
         @max_retries * size
       end
-    end
-
-    def build_id
-      @build_id or raise InvalidArgument, "Distributed queues require a build-id"
-    end
-
-    def worker_id
-      @worker_id or raise InvalidArgument, "Distributed queues require a worker-id"
     end
   end
 

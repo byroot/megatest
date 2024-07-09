@@ -1,42 +1,38 @@
 # frozen_string_literal: true
 
 module Megatest
-  class Queue
-    attr_reader :size, :assertions_count, :runs_count, :failures_count, :errors_count, :retries_count, :skips_count,
-                :total_time
+  class AbstractQueue
+    attr_reader :test_cases_index, :size
 
     def initialize(config)
       @config = config
-      @size = 0
-      @test_cases = nil
-      @success = true
-      @failures = []
-      @runs_count = @assertions_count = @failures_count = @errors_count = @retries_count = @skips_count = 0
-      @total_time = 0.0
-      @retries = Hash.new(0)
-      @lost_tests = Hash.new(0)
+      @size = nil
+      @test_cases_index = nil
+      @populated = false
+    end
+
+    def summary
+      raise NotImplementedError
+    end
+
+    def distributed?
+      raise NotImplementedError
     end
 
     def empty?
-      @test_cases.empty?
+      raise NotImplementedError
     end
 
     def remaining_size
-      @test_cases.size
-    end
-
-    def populate(test_cases)
-      @size = test_cases.size
-      @test_cases = test_cases.reverse
-      @test_cases_index = nil
-    end
-
-    def test_cases_index
-      @test_cases_index ||= @test_cases.to_h { |t| [t.id, t] }
+      raise NotImplementedError
     end
 
     def success?
-      @success && @test_cases.empty?
+      raise NotImplementedError
+    end
+
+    def populated?
+      @populated
     end
 
     def record_lost_test(test)
@@ -44,29 +40,137 @@ module Megatest
     end
 
     def pop_test
-      @test_cases.pop
+      raise NotImplementedError
     end
 
     def record_result(result)
-      @runs_count += 1
-      if result.failed?
-        if attempt_to_retry(result)
-          result = result.retry
-          @runs_count -= 1
-          @failures << result
-          @retries_count += 1
-        else
-          @success = false
-          @failures << result
-          if result.error?
-            @errors_count += 1
+      raise NotImplementedError
+    end
+
+    def populate(test_cases)
+      @test_cases_index = test_cases.to_h { |t| [t.id, t] }
+      @size = test_cases.size
+      @populated = true
+    end
+  end
+
+  class Queue < AbstractQueue
+    class Summary
+      attr_reader :results
+
+      def initialize(results = [])
+        @results = results
+      end
+
+      # When running distributed queues, it's possible
+      # that a test is considered lost and end up with both
+      # a successful and a failed result.
+      # In such case we turn the failed result into a retry
+      # after the fact.
+      def deduplicate!
+        success = {}
+        @results.each do |result|
+          if result.success?
+            success[result.test_id] = true
+          end
+        end
+
+        @results.map! do |result|
+          if result.bad? && success[result.test_id]
+            result.retry
           else
-            @failures_count += 1
+            result
           end
         end
       end
-      @assertions_count += result.assertions_count
-      @total_time += result.duration
+
+      def assertions_count
+        results.sum(0, &:assertions_count)
+      end
+
+      def runs_count
+        results.size
+      end
+
+      def total_time
+        results.sum(0.0, &:duration)
+      end
+
+      def retries_count
+        results.count(&:retried?)
+      end
+
+      def failures_count
+        results.count(&:failure?)
+      end
+
+      def errors_count
+        results.count(&:error?)
+      end
+
+      def skips_count
+        0 # TODO: implement skips
+      end
+
+      def failures
+        results.reject(&:success?)
+      end
+
+      def success?
+        !results.empty? && @results.all?(&:ok?)
+      end
+
+      def record_result(result)
+        @results << result
+      end
+    end
+
+    attr_reader :summary
+    alias_method :global_summary, :summary
+
+    def initialize(config)
+      super(config)
+
+      @queue = nil
+      @summary = Summary.new
+      @success = true
+      @retries = Hash.new(0)
+    end
+
+    def distributed?
+      false
+    end
+
+    def empty?
+      @queue.empty?
+    end
+
+    def populate(test_cases)
+      super
+      @queue = test_cases.reverse
+    end
+
+    def remaining_size
+      @queue.size
+    end
+
+    def success?
+      @success && @queue.empty?
+    end
+
+    def pop_test
+      @queue.pop
+    end
+
+    def record_result(result)
+      if result.failed?
+        if attempt_to_retry(result)
+          result = result.retry
+        else
+          @success = false
+        end
+      end
+      @summary.record_result(result)
       result
     end
 
@@ -74,13 +178,13 @@ module Megatest
 
     def attempt_to_retry(result)
       return false unless @config.retries?
-      return false unless @retries_count < @config.total_max_retries(@size)
+      return false unless @summary.retries_count < @config.total_max_retries(@size)
       return false unless @retries[result.test_id] < @config.max_retries
 
       @retries[result.test_id] += 1
 
-      index = Megatest.seed.rand(0..@test_cases.size)
-      @test_cases.insert(index, test_cases_index.fetch(result.test_id))
+      index = Megatest.seed.rand(0..@queue.size)
+      @queue.insert(index, test_cases_index.fetch(result.test_id))
       true
     end
   end

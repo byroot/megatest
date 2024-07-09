@@ -252,6 +252,23 @@ module Megatest
   end
 
   class TestCaseResult
+    class Failure
+      attr_reader :name, :message, :backtrace, :cause
+
+      def initialize(exception)
+        @name = exception.class.name
+        @message = exception.message
+        @backtrace = exception.backtrace
+        @cause = exception.cause ? Failure.new(exception.cause) : nil
+      end
+    end
+
+    class << self
+      def load(payload)
+        Marshal.load(payload)
+      end
+    end
+
     attr_accessor :assertions_count
     attr_reader :failures, :duration, :test_id, :test_location
 
@@ -262,6 +279,10 @@ module Megatest
       @retried = false
       @failures = []
       @duration = nil
+    end
+
+    def dump
+      Marshal.dump(self)
     end
 
     def record_time
@@ -286,7 +307,15 @@ module Megatest
     def record_failures(&block)
       expect_no_failures(&block)
     rescue Assertion => assertion
-      @failures << assertion
+      @failures << Failure.new(assertion)
+    end
+
+    def ok?
+      success? || retried?
+    end
+
+    def bad?
+      !@retried && !@failures.empty?
     end
 
     def status
@@ -303,13 +332,13 @@ module Megatest
 
     def complete
       if @assertions_count.zero? && success?
-        @failures << NoAssertion.new
+        @failures << Failure.new(NoAssertion.new)
       end
       self
     end
 
     def lost
-      @failures << LostTest.new(@test_id)
+      @failures << Failure.new(LostTest.new(@test_id))
       @duration = 0.0
       self
     end
@@ -326,8 +355,12 @@ module Megatest
       !@failures.empty?
     end
 
+    def failure?
+      !@retried && !@failures.empty? && @failures.first&.name != UnexpectedError.name
+    end
+
     def error?
-      UnexpectedError === @failures.first
+      !@retried && @failures.first&.name == UnexpectedError.name
     end
 
     def retry

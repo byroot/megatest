@@ -59,6 +59,10 @@ Style/YodaCondition:
   # Yoda style is a good idea for a test framework that need to do defensive programing
   Enabled: false
 
+Style/ConditionalAssignment:
+  Enabled: false # Yes but not always
+
+
 Layout/CaseIndentation:
   EnforcedStyle: end
 

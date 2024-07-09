@@ -4,12 +4,13 @@ gem "redis-client", ">= 0.22"
 require "redis-client"
 
 module Megatest
-  class RedisQueue < Queue
-    attr_reader :size, :assertions_count, :runs_count, :failures_count, :errors_count, :skips_count, :total_time
+  class RedisQueue < AbstractQueue
+    attr_reader :summary
 
     def initialize(config, ttl: 24 * 60 * 60)
       super(config)
 
+      @summary = Queue::Summary.new
       @redis = RedisClient.new(url: config.queue_url)
       @ttl = ttl
       @load_timeout = 30 # TODO: configurable
@@ -24,8 +25,27 @@ module Megatest
       @leader = nil
     end
 
+    def distributed?
+      true
+    end
+
+    def populated?
+      @redis.call("get", key("leader-status")) == "ready"
+    end
+
     def leader?
       @leader
+    end
+
+    def remaining_size
+      @redis.multi do |transaction|
+        transaction.call("llen", key("queue"))
+        transaction.call("zcard", key("running"))
+      end.inject(:+)
+    end
+
+    def empty?
+      remaining_size.zero?
     end
 
     RESERVE = <<~'LUA'
@@ -65,8 +85,7 @@ module Megatest
     end
 
     def populate(test_cases)
-      @size = test_cases.size
-      @test_cases = test_cases
+      super
 
       leader_key_set, = @redis.pipelined do |pipeline|
         pipeline.call("setnx", key("leader-status"), "setup")
@@ -85,7 +104,7 @@ module Megatest
         end
       else
         (@load_timeout * 10).times do
-          if @redis.call("get", key("leader-status")) == "ready"
+          if populated?
             break
           else
             sleep 0.1
@@ -117,17 +136,20 @@ module Megatest
     LUA
 
     def record_result(original_result)
-      result = super
-
-      stats = {
-        "assertions-count" => result.assertions_count,
-        "runs-count" => result.retried? ? 0 : 1,
-        "total-time-us" => (result.duration * 1_000_000).to_i,
-      }
+      result = original_result
+      if result.failed?
+        if attempt_to_retry(result)
+          result = result.retry
+        else
+          @success = false
+        end
+      end
+      @summary.record_result(result)
 
       if result.retried?
         @redis.pipelined do |pipeline|
-          increment_stats(pipeline, stats)
+          pipeline.call("lpush", key("results"), result.dump)
+          pipeline.call("expire", key("results"), @ttl)
         end
       else
         load_script(ACKNOWLEDGE)
@@ -138,11 +160,20 @@ module Megatest
             argv: [result.test_id],
             redis: pipeline,
           )
-          increment_stats(pipeline, stats)
+          pipeline.call("lpush", key("results"), result.dump)
+          pipeline.call("expire", key("results"), @ttl)
         end
       end
 
       result
+    end
+
+    def global_summary
+      if payloads = @redis.call("lrange", key("results"), 0, -1)
+        Queue::Summary.new(payloads.map { |p| TestCaseResult.load(p) })
+      else
+        Queue::Summary.new
+      end
     end
 
     private
@@ -215,15 +246,6 @@ module Megatest
           index,
         ],
       ) == 1
-    end
-
-    def increment_stats(redis, stats)
-      return if stats.empty?
-
-      stats.each do |key, value|
-        redis.call("hincrby", key("stats"), key, value)
-      end
-      redis.call("expire", key("stats"), @ttl)
     end
 
     def eval_script(script, keys: [], argv: [], redis: @redis)

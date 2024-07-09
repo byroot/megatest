@@ -44,7 +44,12 @@ module Megatest
 
     RelativePathCleaner = Megatest.method(:relative_path)
 
-    self.filters = [MegatestFilter]
+    if "#{File.dirname(Megatest::ROOT)}/" == Megatest::PWD
+      # We're testing ourselves, so let's not filter backtraces
+      self.filters = []
+    else
+      self.filters = [MegatestFilter]
+    end
     self.formatters = [RelativePathCleaner]
   end
 end

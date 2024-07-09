@@ -63,7 +63,7 @@ module Megatest
       def after_test_case(_queue, _test_case, _result)
       end
 
-      def summary(_executor, _queue)
+      def summary(_executor, _queue, _summary)
       end
     end
 
@@ -71,7 +71,6 @@ module Megatest
       def initialize(out, config = {})
         super()
         @out = Output.new(out)
-        @failures = []
         @program_name = config[:program_name] || "megatest"
       end
 
@@ -83,13 +82,10 @@ module Megatest
       def after_test_case(_queue, _test_case, result)
         if result.retried?
           @out.print(@out.yellow("R"))
-          @failures << result
         elsif result.error?
           @out.print(@out.red("E"))
-          @failures << result
         elsif result.failed?
           @out.print(@out.red("F"))
-          @failures << result
         else
           @out.print(@out.green("."))
         end
@@ -111,13 +107,13 @@ module Megatest
         str = +str
 
         if result.error?
-          str << "#{result.failure.cause.class}: #{result.failure.cause.message}\n"
+          str << "#{result.failure.cause.name}: #{result.failure.cause.message}\n"
         elsif result.failed?
           str << result.failure.message.to_s
         end
         str << "\n" unless str.end_with?("\n")
 
-        Backtrace.clean(result.failure.backtrace).each do |frame|
+        Backtrace.clean(result.failure.backtrace)&.each do |frame|
           str << "  #{@out.cyan(frame)}\n"
         end
         str << "\n"
@@ -127,13 +123,13 @@ module Megatest
         str
       end
 
-      def summary(executor, queue)
+      def summary(executor, _queue, summary)
         @out.puts
         @out.puts
 
-        unless @failures.empty?
-          @failures.sort_by!(&:test_id)
-          @failures.each_with_index do |result, index|
+        unless summary.failures.empty?
+          failures = summary.failures.sort_by(&:test_id)
+          failures.each_with_index do |result, index|
             @out.print "  #{index + 1}) "
             @out.puts render_failure(result)
             @out.puts
@@ -144,20 +140,20 @@ module Megatest
           @out.puts format(
             "Finished in %.2fs, %d cases/s, %d assertions/s, %.2fs tests runtime.",
             wall_time,
-            (queue.runs_count / wall_time).to_i,
-            (queue.assertions_count / wall_time).to_i,
-            queue.total_time,
+            (summary.runs_count / wall_time).to_i,
+            (summary.assertions_count / wall_time).to_i,
+            summary.total_time,
           )
         end
 
         @out.puts format(
           "Ran %d cases, %d assertions, %d failures, %d errors, %d retries, %d skips",
-          queue.runs_count,
-          queue.assertions_count,
-          queue.failures_count,
-          queue.errors_count,
-          queue.retries_count,
-          queue.skips_count,
+          summary.runs_count,
+          summary.assertions_count,
+          summary.failures_count,
+          summary.errors_count,
+          summary.retries_count,
+          summary.skips_count,
         )
       end
     end

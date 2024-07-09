@@ -27,7 +27,16 @@ module Megatest
     def run
       Megatest.config = @config
       parser.parse!(@argv)
-      run_tests
+
+      # TODO: need to move queue argument validation here
+      # e.g. distributed queues need a `--worker-id` for running tests
+      # but not for the summary.
+      case @argv.first
+      when "report"
+        report
+      else
+        run_tests
+      end
     rescue InvalidArgument => error
       @err.puts "Invalid arguments: #{error.message}"
       @err.puts
@@ -36,6 +45,11 @@ module Megatest
     end
 
     def run_tests
+      if queue.distributed?
+        raise ArgumentError, "Distributed queues require a build-id" unless @config.build_id
+        raise ArgumentError, "Distributed queues require a worker-id" unless @config.worker_id
+      end
+
       selectors = Selector.parse(@argv)
 
       registry = Megatest.with_registry do
@@ -54,6 +68,13 @@ module Megatest
       queue.populate(test_cases)
       executor.run(queue, default_reporters)
       queue.success? ? 0 : 1
+    end
+
+    def report
+      raise ArgumentError, "Only distributed queues can be summarized" unless queue.distributed?
+      raise ArgumentError, "Distributed queues require a build-id" unless @config.build_id
+
+      QueueReporter.new(@config, queue, @out).run(default_reporters) ? 0 : 1
     end
 
     private
