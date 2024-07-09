@@ -47,7 +47,7 @@ module Megatest
       end
 
       def on_teardown(block)
-        (@teardown_teardown ||= []) << block
+        (@teardown_callbacks ||= []) << block
       end
     end
 
@@ -264,10 +264,10 @@ module Megatest
       @duration = nil
     end
 
-    def record(&block)
+    def record_time
       start_time = Megatest.now
+      yield
       @duration = Megatest.now - start_time
-      record_failures(&block)
       self
     end
 
@@ -418,23 +418,25 @@ module Megatest
 
     def each_teardown_callback(&block)
       @test_suite.ancestors.each do |test_suite|
-        test_suite.each_setup_callback(&block)
+        test_suite.each_teardown_callback(&block)
       end
     end
 
     def run
       result = TestCaseResult.new(self)
       instance = klass.new(result)
-      result.record do
-        instance.before_setup
-        each_setup_callback do |callback|
-          instance.instance_exec(&callback)
-        end
-        instance.setup
-        instance.after_setup
+      result.record_time do
+        result.record_failures do
+          instance.before_setup
+          each_setup_callback do |callback|
+            instance.instance_exec(&callback)
+          end
+          instance.setup
+          instance.after_setup
 
-        execute(instance)
-        result.complete
+          execute(instance)
+          result.complete
+        end
 
         result.record_failures do
           instance.before_teardown

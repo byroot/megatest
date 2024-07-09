@@ -9,11 +9,11 @@ require "megatest/multi_process"
 class MegaTestCase < Megatest::Test
   FIXTURES_PATH = File.expand_path("../../fixtures", __FILE__)
 
-  def before_setup
+  setup do
     @registry = Megatest::Registry.new
   end
 
-  def after_teardown
+  teardown do
     Object.send(:remove_const, :TestedApp) if defined?(::TestedApp)
     $LOADED_FEATURES.reject! { |f| f.start_with?(FIXTURES_PATH) }
   end

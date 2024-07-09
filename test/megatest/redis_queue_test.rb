@@ -41,8 +41,10 @@ module Megatest
       assert_equal 0, @queue.errors_count
 
       result = TestCaseResult.new(@test_cases.first)
-      result.record do
-        raise "oops"
+      result.record_time do
+        result.record_failures do
+          raise "oops"
+        end
       end
       @queue.record_result(result)
 
@@ -58,8 +60,10 @@ module Megatest
       @queue.populate(@test_cases)
 
       result = TestCaseResult.new(@test_cases.first)
-      result.record do
-        raise "oops"
+      result.record_time do
+        result.record_failures do
+          raise "oops"
+        end
       end
       recorded_result = @queue.record_result(result)
       assert_predicate recorded_result, :retried?
