@@ -1,7 +1,5 @@
 ### Wants
 
-- Split `test_config.rb` and `test_helper.rb`
-
 - around callbacks?
 
 - RSpec style pending?

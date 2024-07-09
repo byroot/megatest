@@ -52,9 +52,11 @@ module Megatest
 
       selectors = Selector.parse(@argv)
 
+      Megatest.load_config(selectors.paths)
+
       registry = Megatest.with_registry do
-        Megatest.load_config(selectors.paths)
         Megatest.append_load_path(@config)
+        Megatest.load_test_helper(selectors.paths)
         Megatest.load_suites(selectors.paths)
       end
       test_cases = selectors.select(registry)
@@ -73,6 +75,8 @@ module Megatest
     def report
       raise ArgumentError, "Only distributed queues can be summarized" unless queue.distributed?
       raise ArgumentError, "Distributed queues require a build-id" unless @config.build_id
+
+      Megatest.load_config(@argv)
 
       QueueReporter.new(@config, queue, @out).run(default_reporters) ? 0 : 1
     end

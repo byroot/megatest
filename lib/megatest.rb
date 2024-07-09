@@ -31,6 +31,14 @@ module Megatest
     end
 
     def load_config(paths)
+      load_files(paths, "test_config.rb")
+    end
+
+    def load_test_helper(paths)
+      load_files(paths, "test_helper.rb")
+    end
+
+    def load_files(paths, name)
       scaned = {}
       paths.each do |path|
         path = File.dirname(path) unless File.directory?(path)
@@ -40,7 +48,7 @@ module Megatest
 
           scaned[path] = true
 
-          config_path = File.join(path, "test_config.rb")
+          config_path = File.join(path, name)
           if File.exist?(config_path)
             require(config_path)
             break
