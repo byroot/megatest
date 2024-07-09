@@ -78,6 +78,21 @@ module Megatest
       assert_equal 1, summary.errors_count
     end
 
+    def test_heartbeat
+      poped_tests = 2.times.map { @queue.pop_test }
+
+      running_key = @queue.send(:key, "running")
+      first_deadline, second_deadline = @redis.call("zmscore", running_key, poped_tests.map(&:id))
+      assert_instance_of Float, first_deadline
+      assert_instance_of Float, second_deadline
+
+      sleep 0.01 # Just in case
+      @queue.heartbeat
+      first, second = @redis.call("zmscore", running_key, poped_tests.map(&:id))
+      assert first > first_deadline
+      assert second > second_deadline
+    end
+
     private
 
     def build_queue(worker: nil, build: nil)

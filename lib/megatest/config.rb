@@ -12,7 +12,7 @@ module Megatest
 
   class Config
     attr_accessor :queue_url, :retry_tolerance, :max_retries, :jobs_count, :job_index, :load_paths,
-                  :build_id, :worker_id
+                  :build_id, :worker_id, :heartbeat_frequency
     attr_reader :before_fork_callbacks, :global_setup_callbacks, :worker_setup_callbacks
 
     def initialize(env)
@@ -26,6 +26,19 @@ module Megatest
       @before_fork_callbacks = []
       @global_setup_callbacks = []
       @job_setup_callbacks = []
+      @heartbeat_frequency = 5
+    end
+
+    def build_queue
+      case @queue_url
+      when nil
+        Queue.new(self)
+      when /\Arediss?:/
+        require "megatest/redis_queue"
+        RedisQueue.new(self)
+      else
+        raise ArgumentError, "Unsupported queue type: #{@queue_url.inspect}"
+      end
     end
 
     def run_before_fork_callback

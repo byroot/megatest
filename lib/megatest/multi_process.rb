@@ -174,6 +174,21 @@ module Megatest
       end
     end
 
+    class InlineMonitor
+      def initialize(config, queue)
+        @config = config
+        @queue = queue
+        @last_heartbeat = 0
+      end
+
+      def tick
+        now = Megatest.now
+        if now - @last_heartbeat > @config.heartbeat_frequency && @queue.heartbeat
+          @last_heartbeat = now
+        end
+      end
+    end
+
     class Executor
       attr_reader :wall_time
 
@@ -195,8 +210,11 @@ module Megatest
         @config.before_fork_callbacks.each(&:call)
         @jobs.each { |j| j.run(self, queue.test_cases_index) }
 
+        monitor = InlineMonitor.new(@config, queue) if queue.respond_to?(:heartbeat)
+
         begin
           while true
+            monitor&.tick
             dead_jobs = @jobs.select(&:closed?).each { |j| j.on_exit(queue, reporters) }
             @jobs -= dead_jobs
             break if @jobs.empty?
@@ -211,6 +229,7 @@ module Megatest
             reads&.each do |job|
               job.process(queue, reporters)
             end
+
           end
         rescue Interrupt
           @jobs.each(&:term) # Early exit

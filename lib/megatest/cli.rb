@@ -80,15 +80,7 @@ module Megatest
     private
 
     def queue
-      @queue ||= case @config.queue_url
-      when nil
-        Queue.new(@config)
-      when /\Arediss?:/
-        require "megatest/redis_queue"
-        RedisQueue.new(@config)
-      else
-        raise ArgumentError, "Unsupported queue type: #{@condig.queue_url.inspect}"
-      end
+      @queue ||= @config.build_queue
     end
 
     def default_reporters

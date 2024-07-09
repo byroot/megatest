@@ -142,6 +142,10 @@ module Megatest
       false
     end
 
+    def monitor
+      nil
+    end
+
     def empty?
       @queue.empty?
     end

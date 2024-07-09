@@ -2,6 +2,7 @@
 
 gem "redis-client", ">= 0.22"
 require "redis-client"
+require "rbconfig"
 
 module Megatest
   # Data structures
@@ -21,14 +22,22 @@ module Megatest
   # - "owners": Hash, contains a mapping of currently being processed tests and the worker they are assigned to.
   #    Keys are test ids, values are "worker:<@worker_id>:queue".
   #
-  # - "worker:<@worker_id>:queue": List, config all the tests ids of tests poped by a worker.
-  #     Tests are immediately inserted on pop.
+  # - "worker:<@worker_id>:running": Set, tests ids currently held by a worker.
+  #
+  # - "worker:<@worker_id>:queue": List, all the tests poped by a worker.
+  #     Tests are immediately inserted on pop, and never removed. Used to retry a job.
   #
   # - "results": List, inside are serialized TestCaseResult instances. Append only.
   #
   # - "requeues-count": Hash, keys are test ids, values are the number of time that particular test
   #    was retried. There is also the special "___total___" key.
   class RedisQueue < AbstractQueue
+    class ExternalHeartbeatMonitor
+      def initialize(queue)
+        @queue = queue
+      end
+    end
+
     attr_reader :summary
 
     def initialize(config, ttl: 24 * 60 * 60)
@@ -41,12 +50,55 @@ module Megatest
       @worker_id = config.worker_id
       @build_id = config.build_id
       @success = true
-      @failures = []
-      @runs_count = @assertions_count = @failures_count = @errors_count = @skips_count = 0
-      @total_time = 0.0
       @leader = nil
       @script_cache = {}
+      @leases = {}
       @leader = nil
+    end
+
+    HEARTBEAT = <<~'LUA'
+      local running_key = KEYS[1]
+      local processed_key = KEYS[2]
+      local owners_key = KEYS[3]
+      local worker_queue_key = KEYS[4]
+      local worker_running_key = KEYS[5]
+
+      local current_time = ARGV[1]
+
+      local count = 0
+
+      local tests = redis.call('smembers', worker_running_key)
+      for index = 1, #tests do
+        local test = tests[index]
+
+        -- # already processed, we do not need to bump the timestamp
+        if redis.call('sismember', processed_key, test) == 0 then
+          -- # we're still the owner of the test, we can bump the timestamp
+          if redis.call('hget', owners_key, test) == worker_queue_key then
+            redis.call('zadd', running_key, current_time, test)
+            count = count + 1
+          end
+        end
+      end
+
+      return count
+    LUA
+
+    def heartbeat
+      eval_script(
+        HEARTBEAT,
+        keys: [
+          key("running"),
+          key("processed"),
+          key("owners"),
+          key("worker", @worker_id, "queue"),
+          key("worker", @worker_id, "running"),
+        ],
+        argv: [
+          Megatest.now,
+        ],
+      )
+      true
     end
 
     def distributed?
@@ -78,12 +130,14 @@ module Megatest
       local processed_key = KEYS[3]
       local worker_queue_key = KEYS[4]
       local owners_key = KEYS[5]
+      local worker_running_key = KEYS[6]
 
       local current_time = ARGV[1]
 
       local test = redis.call('rpop', queue_key)
       if test then
         redis.call('zadd', running_key, current_time, test)
+        redis.call('sadd', worker_running_key, test)
         redis.call('lpush', worker_queue_key, test)
         redis.call('hset', owners_key, test, worker_queue_key)
         return test
@@ -102,6 +156,7 @@ module Megatest
           key("processed"),
           key("worker", @worker_id, "queue"),
           key("owners"),
+          key("worker", @worker_id, "running"),
         ],
         argv: [Megatest.now],
       )
@@ -148,10 +203,12 @@ module Megatest
       local running_key = KEYS[1]
       local processed_key = KEYS[2]
       local owners_key = KEYS[3]
+      local worker_running_key = KEYS[4]
 
       local test = ARGV[1]
 
       redis.call('zrem', running_key, test)
+      redis.call('srem', worker_running_key, test)
       redis.call('hdel', owners_key, test) -- # Doesn't matter if it was reclaimed by another workers
       return redis.call('sadd', processed_key, test)
     LUA
@@ -177,7 +234,12 @@ module Megatest
         _ack, = @redis.pipelined do |pipeline|
           eval_script(
             ACKNOWLEDGE,
-            keys: [key("running"), key("processed"), key("owners")],
+            keys: [
+              key("running"),
+              key("processed"),
+              key("owners"),
+              key("worker", @worker_id, "running"),
+            ],
             argv: [result.test_id],
             redis: pipeline,
           )
