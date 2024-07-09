@@ -140,6 +140,15 @@ module Megatest
       local worker_running_key = KEYS[6]
 
       local current_time = ARGV[1]
+      local timeout = ARGV[2]
+
+      -- # First we requeue all timed out tests
+      local lost_tests = redis.call('zrangebyscore', running_key, 0, current_time - timeout)
+      for _, test in ipairs(lost_tests) do
+        if redis.call('sismember', processed_key, test) == 0 then
+          local test = redis.call('rpush', queue_key, test)
+        end
+      end
 
       local test = redis.call('rpop', queue_key)
       if test then
@@ -148,9 +157,9 @@ module Megatest
         redis.call('lpush', worker_queue_key, test)
         redis.call('hset', owners_key, test, worker_queue_key)
         return test
-      else
-        return nil
       end
+
+      return nil
     LUA
 
     def reserve
@@ -165,7 +174,10 @@ module Megatest
           key("owners"),
           key("worker", @worker_id, "running"),
         ],
-        argv: [Megatest.now],
+        argv: [
+          Megatest.now,
+          @config.heartbeat_frequency * 2,
+        ],
       )
       test_id
     end

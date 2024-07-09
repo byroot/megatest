@@ -65,4 +65,16 @@ class MegaTestCase < Megatest::Test
   def fixture(path)
     File.join(FIXTURES_PATH, path)
   end
+
+  def stub_time(diff)
+    original_method = Megatest.singleton_class.instance_method(:now)
+    begin
+      Megatest.define_singleton_method(:now) do
+        original_method.bind(Megatest).call + diff
+      end
+      yield
+    ensure
+      Megatest.define_singleton_method(:now, original_method)
+    end
+  end
 end

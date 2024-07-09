@@ -11,7 +11,6 @@
   - No scoped setup/teardown, need to explicitly reject that.
 
 - Distributed queue (ci-queue style).
-  - Lost tests
   - Circuit breakers
   - Other?
 

@@ -93,6 +93,19 @@ module Megatest
       assert second > second_deadline
     end
 
+    def test_reserve_lost_test
+      assert_predicate @queue, :leader?
+
+      other_worker = build_queue(worker: 1)
+      other_worker.populate(@test_cases)
+      refute_predicate other_worker, :leader?
+
+      refute_nil test = @queue.pop_test
+      stub_time(@config.heartbeat_frequency * 3) do
+        assert_equal test, other_worker.pop_test
+      end
+    end
+
     private
 
     def build_queue(worker: nil, build: nil)
