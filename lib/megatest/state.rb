@@ -319,7 +319,9 @@ module Megatest
     end
 
     def status
-      if retried?
+      if skipped?
+        :skipped
+      elsif retried?
         :retried
       elsif error?
         :error
@@ -361,6 +363,10 @@ module Megatest
 
     def error?
       !@retried && @failures.first&.name == UnexpectedError.name
+    end
+
+    def skipped?
+      @failures.first&.name == Skip.name
     end
 
     def retry

@@ -4,8 +4,7 @@
 
 - around callbacks?
 
-- Skips
-  - Also RSpec style pending?
+- RSpec style pending?
 
 - context blocks
   - As a simple prefix for test name

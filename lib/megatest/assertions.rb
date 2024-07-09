@@ -16,6 +16,8 @@ module Megatest
     end
   end
 
+  Skip = Class.new(Assertion)
+
   class UnexpectedError < Assertion
     attr_reader :cause
 
@@ -110,6 +112,11 @@ module Megatest
       end
 
       flunk message || "#{expected_exceptions.inspect} expected but nothing was raised."
+    end
+
+    def skip(message)
+      message ||= "Skipped, no message given"
+      ::Kernel.raise(::Megatest::Skip, message, nil)
     end
 
     def flunk(postional_message = nil, message: postional_message)

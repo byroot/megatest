@@ -109,7 +109,7 @@ module Megatest
       end
 
       def skips_count
-        0 # TODO: implement skips
+        results.count(&:skipped?)
       end
 
       def failures

@@ -95,11 +95,12 @@ module Megatest
         retried: "Retried",
         error: "Error",
         failure: "Failure",
+        skipped: "Skipped",
       }.freeze
 
       def render_failure(result)
         str = "#{LABELS.fetch(result.status)}: #{result.test_id}\n"
-        str = if result.retried?
+        str = if result.retried? || result.skipped?
           @out.yellow(str)
         else
           @out.red(str)

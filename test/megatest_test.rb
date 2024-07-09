@@ -93,6 +93,17 @@ class MegatestTest < MegaTestCase
     assert_predicate result, :failed?
   end
 
+  def test_skipped_run
+    load_fixture("simple/skip_test.rb")
+
+    first_test = @registry.test_cases[0]
+    assert_equal "the skip", first_test.name
+    result = first_test.run
+
+    assert_equal 0, result.assertions_count
+    assert_predicate result, :skipped?
+  end
+
   def test_callbacks
     load_fixture("callbacks/callbacks_test.rb")
 
