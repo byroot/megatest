@@ -44,7 +44,13 @@ module Megatest
       super(config)
 
       @summary = Queue::Summary.new
-      @redis = RedisClient.new(url: config.queue_url)
+      @redis = RedisClient.new(
+        url: config.queue_url,
+        # We retry quite aggressively in case the network
+        # is spotty, we'd rather wait a bit than to crash
+        # a worker.
+        reconnect_attempts: [0, 0, 0.1, 0.5, 1, 3, 5],
+      )
       @ttl = ttl
       @load_timeout = 30 # TODO: configurable
       @worker_id = config.worker_id
@@ -52,7 +58,6 @@ module Megatest
       @success = true
       @leader = nil
       @script_cache = {}
-      @leases = {}
       @leader = nil
     end
 
@@ -99,6 +104,8 @@ module Megatest
         ],
       )
       true
+    rescue RedisClient::ConnectionError
+      false # Heartbeat is best effort
     end
 
     def distributed?
