@@ -135,6 +135,7 @@ module Megatest
       @summary = Summary.new
       @success = true
       @retries = Hash.new(0)
+      @leases = {}
     end
 
     def distributed?
@@ -151,7 +152,7 @@ module Megatest
     end
 
     def remaining_size
-      @queue.size
+      @queue.size + @leases.size
     end
 
     def success?
@@ -159,10 +160,14 @@ module Megatest
     end
 
     def pop_test
-      @queue.pop
+      if test = @queue.pop
+        @leases[test.id] = true
+      end
+      test
     end
 
     def record_result(result)
+      @leases.delete(result.test_id)
       if result.failed?
         if attempt_to_retry(result)
           result = result.retry

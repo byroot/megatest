@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "megatest/queue_shared_tests"
+
 module Megatest
   class RedisQueueTest < MegaTestCase
     def setup
@@ -13,13 +15,7 @@ module Megatest
       @queue.populate(@test_cases)
     end
 
-    def test_pop_test
-      assert_equal "TestedApp::TruthTest#the lie", @queue.pop_test&.id
-      assert_equal "TestedApp::TruthTest#the truth", @queue.pop_test&.id
-      assert_equal "TestedApp::TruthTest#the unexpected", @queue.pop_test&.id
-      assert_equal "TestedApp::TruthTest#the void", @queue.pop_test&.id
-      assert_nil @queue.pop_test
-    end
+    include QueueSharedTests
 
     def test_concurrent_pop_test
       assert_predicate @queue, :leader?
@@ -33,18 +29,6 @@ module Megatest
       assert_equal "TestedApp::TruthTest#the unexpected", @queue.pop_test&.id
       assert_equal "TestedApp::TruthTest#the void", @queue.pop_test&.id
       assert_nil @queue.pop_test
-    end
-
-    def test_record_result
-      assert_equal 0, @queue.summary.runs_count
-      assert_equal 0, @queue.summary.failures_count
-      assert_equal 0, @queue.summary.errors_count
-
-      @queue.record_result(build_error(@test_cases.first))
-
-      assert_equal 1, @queue.summary.runs_count
-      assert_equal 0, @queue.summary.failures_count
-      assert_equal 1, @queue.summary.errors_count
     end
 
     def test_global_summary
@@ -92,16 +76,6 @@ module Megatest
       assert_equal 5, summary.runs_count
       assert_equal 0, summary.failures_count
       assert_equal 1, summary.errors_count
-    end
-
-    def test_retry_test
-      config.max_retries = 2
-      config.retry_tolerance = 1.0
-      @queue = build_queue
-      @queue.populate(@test_cases)
-
-      recorded_result = @queue.record_result(build_error(@test_cases.first))
-      assert_predicate recorded_result, :retried?
     end
 
     private
