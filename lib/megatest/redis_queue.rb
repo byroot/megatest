@@ -4,6 +4,30 @@ gem "redis-client", ">= 0.22"
 require "redis-client"
 
 module Megatest
+  # Data structures
+  #
+  # Note: All keys are prefixed by `build:<@build_id>:`
+  #
+  # - "leader-status": String, either `setup` or `ready`
+  #
+  # - "queue": List, contains the test ids that haven't yet been poped.
+  #
+  # - "running": SortedSet, members are the test ids currently being processed.
+  #    Scores are the lease expiration timestamp. If the score is lower than
+  #    current time, the test was lost and should be re-assigned.
+  #
+  # - "processed": Set, members are the ids of test that were fully processed.
+  #
+  # - "owners": Hash, contains a mapping of currently being processed tests and the worker they are assigned to.
+  #    Keys are test ids, values are "worker:<@worker_id>:queue".
+  #
+  # - "worker:<@worker_id>:queue": List, config all the tests ids of tests poped by a worker.
+  #     Tests are immediately inserted on pop.
+  #
+  # - "results": List, inside are serialized TestCaseResult instances. Append only.
+  #
+  # - "requeues-count": Hash, keys are test ids, values are the number of time that particular test
+  #    was retried. There is also the special "___total___" key.
   class RedisQueue < AbstractQueue
     attr_reader :summary
 
@@ -90,8 +114,6 @@ module Megatest
       leader_key_set, = @redis.pipelined do |pipeline|
         pipeline.call("setnx", key("leader-status"), "setup")
         pipeline.call("expire", key("leader-status"), @ttl)
-        pipeline.call("sadd", key("workers"), @worker_id)
-        pipeline.call("expire", key("workers"), @ttl)
       end
       @leader = leader_key_set == 1
 
@@ -99,7 +121,6 @@ module Megatest
         @redis.multi do |transaction|
           transaction.call("lpush", key("queue"), test_cases.map(&:id)) unless test_cases.empty?
           transaction.call("expire", key("queue"), @ttl)
-          transaction.call("set", key("size"), test_cases.size, ex: @ttl)
           transaction.call("set", key("leader-status"), "ready")
         end
       else
