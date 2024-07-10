@@ -86,11 +86,11 @@ module Megatest
   end
 end
 
+require "megatest/backtrace"
 require "megatest/compat"
 require "megatest/config"
 require "megatest/state"
 require "megatest/reporters"
-require "megatest/backtrace"
 require "megatest/queue"
 require "megatest/queue_reporter"
 require "megatest/executor"

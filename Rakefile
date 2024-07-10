@@ -3,7 +3,7 @@
 require "bundler/gem_tasks"
 
 task :test do
-  sh "exe/megatest", "test"
+  sh "exe/megatest", "--backtrace", "test"
 end
 
 require "rubocop/rake_task"

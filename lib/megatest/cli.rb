@@ -89,7 +89,7 @@ module Megatest
 
     def default_reporters
       [
-        Reporters::SimpleReporter.new(@out, program_name: @program_name),
+        Reporters::SimpleReporter.new(@config, @out),
       ]
     end
 
@@ -118,6 +118,10 @@ module Megatest
 
         opts.on("-j", "--jobs=JOBS", Integer, "Number of processes to use") do |jobs|
           @config.jobs_count = jobs
+        end
+
+        opts.on("-b", "--backtrace", "Print full backtraces") do
+          @config.backtrace.full!
         end
 
         opts.on("--queue=URL", String) do |queue_url|

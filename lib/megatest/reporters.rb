@@ -54,6 +54,11 @@ module Megatest
     class AbstractReporter
       undef_method :puts, :print
 
+      def initialize(config, out)
+        @config = config
+        @out = Output.new(out)
+      end
+
       def start(_executor, _queue)
       end
 
@@ -68,12 +73,6 @@ module Megatest
     end
 
     class SimpleReporter < AbstractReporter
-      def initialize(out, config = {})
-        super()
-        @out = Output.new(out)
-        @program_name = config[:program_name] || "megatest"
-      end
-
       def start(_executor, queue)
         @out.puts("Running #{queue.size} test cases with --seed #{Megatest.seed.seed}")
         @out.puts
@@ -114,12 +113,12 @@ module Megatest
         end
         str << "\n" unless str.end_with?("\n")
 
-        Backtrace.clean(result.failure.backtrace)&.each do |frame|
+        @config.backtrace.clean(result.failure.backtrace)&.each do |frame|
           str << "  #{@out.cyan(frame)}\n"
         end
         str << "\n"
 
-        str << @out.yellow("#{@program_name} #{Megatest.relative_path(result.test_location)}")
+        str << @out.yellow("#{@config.program_name} #{Megatest.relative_path(result.test_location)}")
 
         str
       end

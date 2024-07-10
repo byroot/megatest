@@ -6,7 +6,7 @@ module Megatest
       attr_reader :results
 
       def initialize
-        super
+        super(:__config__, StringIO.new)
         @results = []
       end
 
