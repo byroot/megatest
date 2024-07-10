@@ -100,6 +100,9 @@ module Megatest
             while (test_case = queue.pop_test)
               result = test_case.run
               queue.record_result(result)
+
+              @config.circuit_breaker.record_result(result)
+              break if @config.circuit_breaker.break?
             end
           rescue Interrupt
           end
@@ -156,6 +159,7 @@ module Megatest
           @assigned_test = nil
           @parent_socket << result
           reporters.each { |r| r.after_test_case(queue, nil, result) }
+          @config.circuit_breaker.record_result(result)
         else
           raise "Unexpected message: #{message.inspect}"
         end
@@ -192,8 +196,9 @@ module Megatest
     class Executor
       attr_reader :wall_time
 
-      def initialize(config)
+      def initialize(config, out)
         @config = config
+        @out = Output.new(out)
       end
 
       def after_fork_in_child(active_job)
@@ -228,6 +233,8 @@ module Megatest
             reads&.each do |job|
               job.process(queue, reporters)
             end
+
+            break if @config.circuit_breaker.break?
           end
         rescue Interrupt
           @jobs.each(&:term) # Early exit
@@ -237,6 +244,11 @@ module Megatest
         @jobs.each(&:reap)
         @wall_time = Megatest.now - start_time
         reporters.each { |r| r.summary(self, queue, queue.summary) }
+
+        if @config.circuit_breaker.break?
+          @out.error("Exited early because too many failures were encountered")
+        end
+
         queue.cleanup
       end
     end

@@ -9,7 +9,6 @@
   - No scoped setup/teardown, need to explicitly reject that.
 
 - Distributed queue (ci-queue style).
-  - Circuit breakers
   - Other?
 
 - Test leak bisect

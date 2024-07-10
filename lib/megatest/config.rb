@@ -10,10 +10,29 @@ module Megatest
     end
   end
 
+  class CircuitBreaker
+    def initialize(max)
+      @max = max
+      @consecutive_failures = 0
+    end
+
+    def record_result(result)
+      if result.bad?
+        @consecutive_failures += 1
+      elsif result.success?
+        @consecutive_failures = 0
+      end
+    end
+
+    def break?
+      @consecutive_failures >= @max
+    end
+  end
+
   class Config
     attr_accessor :queue_url, :retry_tolerance, :max_retries, :jobs_count, :job_index, :load_paths,
                   :build_id, :worker_id, :heartbeat_frequency, :program_name
-    attr_reader :before_fork_callbacks, :global_setup_callbacks, :worker_setup_callbacks, :backtrace
+    attr_reader :before_fork_callbacks, :global_setup_callbacks, :worker_setup_callbacks, :backtrace, :circuit_breaker
 
     def initialize(env)
       @load_paths = ["test"] # For easier transition from other frameworks
@@ -30,6 +49,11 @@ module Megatest
       @heartbeat_frequency = 5
       @backtrace = Backtrace.new
       @program_name = "megatest"
+      @circuit_breaker = CircuitBreaker.new(Float::INFINITY)
+    end
+
+    def max_consecutive_failures=(max)
+      @circuit_breaker = CircuitBreaker.new(max)
     end
 
     def build_queue

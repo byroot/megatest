@@ -46,8 +46,9 @@ module Megatest
 
     attr_reader :wall_time
 
-    def initialize(config)
+    def initialize(config, out)
       @config = config
+      @out = Output.new(out)
     end
 
     def run(queue, reporters)
@@ -66,6 +67,9 @@ module Megatest
             reporters.each { |r| r.before_test_case(queue, test_case) }
             result = queue.record_result(test_case.run)
             reporters.each { |r| r.after_test_case(queue, test_case, result) }
+
+            @config.circuit_breaker.record_result(result)
+            break if @config.circuit_breaker.break?
           elsif queue.empty?
             break
           else
@@ -82,6 +86,11 @@ module Megatest
 
       @wall_time = Megatest.now - start_time
       reporters.each { |r| r.summary(self, queue, queue.summary) }
+
+      if @config.circuit_breaker.break?
+        @out.error("Exited early because too many failures were encountered")
+      end
+
       queue.cleanup
     end
   end

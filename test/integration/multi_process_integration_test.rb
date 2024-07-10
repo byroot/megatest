@@ -24,7 +24,7 @@ module Megatest
 
       reporter = RecordReporter.new
 
-      executor = MultiProcess::Executor.new(config)
+      executor = MultiProcess::Executor.new(config, StringIO.new)
       executor.run(queue, [reporter])
 
       refute_predicate queue, :success?
@@ -48,7 +48,7 @@ module Megatest
 
       reporter = RecordReporter.new
 
-      executor = MultiProcess::Executor.new(config)
+      executor = MultiProcess::Executor.new(config, StringIO.new)
       executor.run(queue, [reporter])
 
       refute_predicate queue, :success?
@@ -77,7 +77,7 @@ module Megatest
 
       reporter = RecordReporter.new
 
-      executor = MultiProcess::Executor.new(config)
+      executor = MultiProcess::Executor.new(config, StringIO.new)
       executor.run(queue, [reporter])
 
       assert_equal 1, queue.summary.retries_count
@@ -102,7 +102,7 @@ module Megatest
 
       reporter = RecordReporter.new
 
-      executor = MultiProcess::Executor.new(config)
+      executor = MultiProcess::Executor.new(config, StringIO.new)
       executor.run(queue, [reporter])
 
       refute_predicate queue, :success?

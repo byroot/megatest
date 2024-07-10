@@ -37,8 +37,12 @@ module Megatest
       else
         run_tests
       end
-    rescue InvalidArgument => error
-      @err.puts "Invalid arguments: #{error.message}"
+    rescue InvalidArgument, OptionParser::InvalidArgument => error
+      if error.is_a?(InvalidArgument)
+        @err.puts "invalid arguments: #{error.message}"
+      else
+        @err.puts error.message
+      end
       @err.puts
       @err.puts parser
       1
@@ -96,9 +100,9 @@ module Megatest
     def executor
       if @config.jobs_count > 1
         require "megatest/multi_process"
-        MultiProcess::Executor.new(@config)
+        MultiProcess::Executor.new(@config, @out)
       else
-        Executor.new(@config)
+        Executor.new(@config, @out)
       end
     end
 
@@ -112,11 +116,11 @@ module Megatest
 
         opts.separator ""
 
-        opts.on("--seed=SEED", Integer, "The seed used to define run order") do |seed|
+        opts.on("--seed SEED", Integer, "The seed used to define run order") do |seed|
           Megatest.seed = Random.new(seed)
         end
 
-        opts.on("-j", "--jobs=JOBS", Integer, "Number of processes to use") do |jobs|
+        opts.on("-j", "--jobs JOBS", Integer, "Number of processes to use") do |jobs|
           @config.jobs_count = jobs
         end
 
@@ -124,15 +128,20 @@ module Megatest
           @config.backtrace.full!
         end
 
+        help = "Number of consecutive failures before exiting. Default to 1"
+        opts.on("-f", "--fail-fast [COUNT]", Integer, help) do |max|
+          @config.max_consecutive_failures = (max || 1)
+        end
+
         opts.on("--queue=URL", String) do |queue_url|
           @config.queue_url = queue_url
         end
 
-        opts.on("--build-id=ID", String) do |build_id|
+        opts.on("--build-id ID", String) do |build_id|
           @config.build_id = build_id
         end
 
-        opts.on("--worker-id=ID", String) do |worker_id|
+        opts.on("--worker-id ID", String) do |worker_id|
           @config.worker_id = worker_id
         end
 

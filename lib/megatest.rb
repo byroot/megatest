@@ -86,6 +86,7 @@ module Megatest
   end
 end
 
+require "megatest/output"
 require "megatest/backtrace"
 require "megatest/compat"
 require "megatest/config"
