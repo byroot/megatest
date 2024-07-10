@@ -204,7 +204,7 @@ module Megatest
 
       @retries[result.test_id] += 1
 
-      index = Megatest.seed.rand(0..@queue.size)
+      index = @config.random.rand(0..@queue.size)
       @queue.insert(index, test_cases_index.fetch(result.test_id))
       true
     end

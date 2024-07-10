@@ -3,16 +3,17 @@
 module Megatest
   class CLITest < MegaTestCase
     def test_seed_argument
-      original_seed = Megatest.seed
-      cli = new_cli("--seed", "42")
-      cli.run
-      assert_equal 42, Megatest.seed.seed
+      config = new_cli("--seed", "42").configure
+      assert_equal 42, config.seed
 
-      cli = new_cli("--seed=44")
-      cli.run
-      assert_equal 44, Megatest.seed.seed
-    ensure
-      Megatest.seed = original_seed
+      config = new_cli("--seed=44").configure
+      assert_equal 44, config.seed
+
+      config = new_cli(env: { "SEED" => "12" }).configure
+      assert_equal 12, config.seed
+
+      config = new_cli("--seed=44", env: { "SEED" => "12" }).configure
+      assert_equal 44, config.seed
     end
 
     def test_execute_directory
@@ -22,11 +23,11 @@ module Megatest
 
     private
 
-    def new_cli(*argv)
+    def new_cli(*argv, env: {})
       @out = StringIO.new
       @err = StringIO.new
       @progname = "megatest"
-      CLI.new(@progname, @out, @err, argv, ENV)
+      CLI.new(@progname, @out, @err, argv, env)
     end
   end
 end

@@ -380,7 +380,7 @@ module Megatest
     def attempt_to_retry(result)
       return false unless @config.retries?
 
-      index = Megatest.seed.rand(0..@redis.call("llen", key("queue")))
+      index = @config.random.rand(0..@redis.call("llen", key("queue")))
       load_script(REQUEUE)
       eval_script(
         REQUEUE,

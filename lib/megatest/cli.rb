@@ -31,15 +31,7 @@ module Megatest
     end
 
     def run
-      if @runner = RUNNERS[@argv.first]
-        @argv.shift
-      end
-
-      Megatest.config = @config
-      parser = build_parser(@runner)
-      parser.parse!(@argv)
-      @argv.shift if @argv.first == "--"
-
+      configure
       case @runner
       when :report
         report
@@ -59,6 +51,18 @@ module Megatest
       1
     end
 
+    def configure
+      if @runner = RUNNERS[@argv.first]
+        @argv.shift
+      end
+
+      Megatest.config = @config
+      parser = build_parser(@runner)
+      parser.parse!(@argv)
+      @argv.shift if @argv.first == "--"
+      @config
+    end
+
     def run_tests
       queue = @config.build_queue
 
@@ -74,7 +78,7 @@ module Megatest
       registry = Megatest.with_registry do
         Megatest.append_load_path(@config)
         Megatest.load_test_helper(selectors.paths)
-        Megatest.load_suites(selectors.paths)
+        Megatest.load_suites(@config.random, selectors.paths)
       end
       test_cases = selectors.select(registry)
 
@@ -82,7 +86,7 @@ module Megatest
       # but file, file we want to shuffle. It also should just be a default we should be able to flip it
       # with CLI arguments.
       test_cases.sort!
-      test_cases.shuffle!(random: Megatest.seed)
+      test_cases.shuffle!(random: @config.random)
 
       queue.populate(test_cases)
       executor.run(queue, default_reporters)
@@ -151,7 +155,7 @@ module Megatest
 
         if runner == :run || runner.nil?
           opts.on("--seed SEED", Integer, "The seed used to define run order") do |seed|
-            Megatest.seed = Random.new(seed)
+            @config.seed = seed
           end
 
           opts.on("-j", "--jobs JOBS", Integer, "Number of processes to use") do |jobs|

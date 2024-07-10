@@ -25,7 +25,7 @@ module Megatest
 
     class SimpleReporter < AbstractReporter
       def start(_executor, queue)
-        @out.puts("Running #{queue.size} test cases with --seed #{Megatest.seed.seed}")
+        @out.puts("Running #{queue.size} test cases with --seed #{@config.seed}")
         @out.puts
       end
 

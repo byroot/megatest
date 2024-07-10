@@ -8,13 +8,9 @@ module Megatest
 
   ROOT = -File.expand_path("../", __FILE__)
   PWD = File.join(Dir.pwd, "/")
-  @seed = Random.new(ENV.fetch("SEED", Random.rand(0xFFFF)).to_i)
-
   IGNORED_ERRORS = [NoMemoryError, SignalException, SystemExit].freeze
 
   class << self
-    attr_accessor :seed
-
     def now
       Process.clock_gettime(Process::CLOCK_REALTIME)
     end
@@ -60,7 +56,7 @@ module Megatest
       nil
     end
 
-    def load_suites(argv)
+    def load_suites(seed, argv)
       test_suites = argv.flat_map do |path|
         path = File.expand_path(path)
         stat = File.stat(path)

@@ -29,10 +29,110 @@ module Megatest
     end
   end
 
+  class CIService
+    @implementations = []
+
+    class << self
+      def inherited(base)
+        super
+        @implementations << base
+      end
+
+      def configure(config, env)
+        @implementations.each do |service|
+          service.new(env).configure(config)
+        end
+      end
+    end
+
+    attr_reader :env
+
+    def initialize(env)
+      @env = env
+    end
+
+    def configure(_config)
+      raise NotImplementedError
+    end
+
+    class CircleCI < self
+      def configure(config)
+        if env["CIRCLE_BUILD_URL"]
+          config.build_id = env["CIRCLE_BUILD_URL"]
+          config.worker_id = env["CIRCLE_NODE_INDEX"]
+          config.seed = env["CIRCLE_SHA1"]&.first(4)&.to_i(16)
+        end
+      end
+    end
+
+    class Buildkite < self
+      def configure(config)
+        if env["BUILDKITE_BUILD_ID"]
+          config.build_id = env["BUILDKITE_BUILD_ID"]
+          config.worker_id = env["BUILDKITE_PARALLEL_JOB"]
+          config.seed = env["BUILDKITE_COMMIT"]&.first(4)&.to_i(16)
+        end
+      end
+    end
+
+    class Travis < self
+      def configure(config)
+        if env["TRAVIS_BUILD_ID"]
+          config.build_id = env["TRAVIS_BUILD_ID"]
+          # Travis doesn't have builtin parallelization
+          # but CI_NODE_INDEX is what is used in their documentation
+          # https://docs.travis-ci.com/user/speeding-up-the-build#parallelizing-rspec-cucumber-and-minitest-on-multiple-vms
+          config.worker_id = env["CI_NODE_INDEX"]
+          config.seed = env["TRAVIS_COMMIT"]&.first(4)&.to_i(16)
+        end
+      end
+    end
+
+    class Heroku < self
+      def configure(config)
+        if env["HEROKU_TEST_RUN_ID"]
+          config.build_id = env["HEROKU_TEST_RUN_ID"]
+          config.worker_id = env["CI_NODE_INDEX"]
+          config.seed = env["HEROKU_TEST_RUN_COMMIT_VERSION"]&.first(4)&.to_i(16)
+        end
+      end
+    end
+
+    class Semaphore < self
+      def configure(config)
+        if env["SEMAPHORE_PIPELINE_ID"]
+          config.build_id = env["SEMAPHORE_PIPELINE_ID"]
+          config.worker_id = env["SEMAPHORE_JOB_ID"]
+          config.seed = env["SEMAPHORE_GIT_SHA"]&.first(4)&.to_i(16)
+        end
+      end
+    end
+
+    class Megatest < self
+      def configure(config)
+        if url = env["MEGATEST_QUEUE_URL"]
+          config.queue_url = url
+        end
+
+        if id = env["MEGATEST_BUILD_ID"]
+          config.build_id = id
+        end
+
+        if id = env["MEGATEST_WORKER_ID"]
+          config.worker_id = id
+        end
+
+        if seed = env["SEED"]
+          config.seed = seed
+        end
+      end
+    end
+  end
+
   class Config
     attr_accessor :queue_url, :retry_tolerance, :max_retries, :jobs_count, :job_index, :load_paths,
                   :build_id, :worker_id, :heartbeat_frequency, :program_name
-    attr_reader :before_fork_callbacks, :global_setup_callbacks, :worker_setup_callbacks, :backtrace, :circuit_breaker
+    attr_reader :before_fork_callbacks, :global_setup_callbacks, :worker_setup_callbacks, :backtrace, :circuit_breaker, :seed
 
     def initialize(env)
       @load_paths = ["test"] # For easier transition from other frameworks
@@ -50,10 +150,22 @@ module Megatest
       @backtrace = Backtrace.new
       @program_name = "megatest"
       @circuit_breaker = CircuitBreaker.new(Float::INFINITY)
+      @seed = Random.rand(0xFFFF)
+      CIService.configure(self, env)
     end
 
     def max_consecutive_failures=(max)
       @circuit_breaker = CircuitBreaker.new(max)
+    end
+
+    # We always return a new generator with the same seed as to
+    # best reproduce remote builds locally if the same seed is given.
+    def random
+      Random.new(@seed)
+    end
+
+    def seed=(seed)
+      @seed = Integer(seed)
     end
 
     def build_queue
