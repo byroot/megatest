@@ -115,20 +115,16 @@ class MegatestTest < MegaTestCase
     assert_equal <<~ORDER.strip, TestedApp.order.join("\n")
       test_case_before_setup
       callbacks_test_before_setup
-      test_case_setup_block_1
-      test_case_setup_block_2
-      callbacks_test_setup_block_1
-      callbacks_test_setup_block_2
+      test_case_setup_block
+      callbacks_test_setup_block
       test_case_setup_method
       callbacks_test_setup_method
       test_case_after_setup
       callbacks_test_after_setup
       test_case_before_teardown
       callbacks_test_before_teardown
-      callbacks_test_teardown_block_1
-      callbacks_test_teardown_block_2
-      test_case_teardown_block_1
-      test_case_teardown_block_2
+      callbacks_test_teardown_block
+      test_case_teardown_block
       test_case_teardown_method
       callbacks_test_teardown_method
       test_case_after_teardown

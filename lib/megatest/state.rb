@@ -26,28 +26,24 @@ module Megatest
     using Compat::StartWith unless Symbol.method_defined?(:start_with?)
 
     class Suite
-      attr_reader :setup_callbacks, :teardown_callbacks
+      attr_reader :setup_callback, :teardown_callback
 
       def initialize(registry)
         @registry = registry
-        @setup_callbacks = nil
-        @teardown_callbacks = nil
-      end
-
-      def each_setup_callback(&block)
-        @setup_callbacks&.each(&block)
+        @setup_callback = nil
+        @teardown_callback = nil
       end
 
       def on_setup(block)
-        (@setup_callbacks ||= []) << block
-      end
+        raise Error, "The setup block is already defined" if @setup_callback
 
-      def each_teardown_callback(&block)
-        @teardown_callbacks&.each(&block)
+        @setup_callback = block
       end
 
       def on_teardown(block)
-        (@teardown_callbacks ||= []) << block
+        raise Error, "The teardown block is already defined" if @teardown_callback
+
+        @teardown_callback = block
       end
     end
 
@@ -449,15 +445,15 @@ module Megatest
       cmp || 0
     end
 
-    def each_setup_callback(&block)
+    def each_setup_callback
       @test_suite.ancestors.reverse_each do |test_suite|
-        test_suite.each_setup_callback(&block)
+        yield test_suite.setup_callback if test_suite.setup_callback
       end
     end
 
-    def each_teardown_callback(&block)
+    def each_teardown_callback
       @test_suite.ancestors.each do |test_suite|
-        test_suite.each_teardown_callback(&block)
+        yield test_suite.teardown_callback if test_suite.teardown_callback
       end
     end
 

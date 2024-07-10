@@ -8,11 +8,7 @@ module TestedApp
 
   class TestCase < Megatest::Test
     setup do
-      TestedApp.order << :test_case_setup_block_1
-    end
-
-    setup do
-      TestedApp.order << :test_case_setup_block_2
+      TestedApp.order << :test_case_setup_block
     end
 
     def before_setup
@@ -31,11 +27,7 @@ module TestedApp
     end
 
     teardown do
-      TestedApp.order << :test_case_teardown_block_1
-    end
-
-    teardown do
-      TestedApp.order << :test_case_teardown_block_2
+      TestedApp.order << :test_case_teardown_block
     end
 
     def before_teardown
@@ -56,11 +48,7 @@ module TestedApp
 
   class CallbacksTest < TestCase
     setup do
-      TestedApp.order << :callbacks_test_setup_block_1
-    end
-
-    setup do
-      TestedApp.order << :callbacks_test_setup_block_2
+      TestedApp.order << :callbacks_test_setup_block
     end
 
     def before_setup
@@ -79,11 +67,7 @@ module TestedApp
     end
 
     teardown do
-      TestedApp.order << :callbacks_test_teardown_block_1
-    end
-
-    teardown do
-      TestedApp.order << :callbacks_test_teardown_block_2
+      TestedApp.order << :callbacks_test_teardown_block
     end
 
     def before_teardown
