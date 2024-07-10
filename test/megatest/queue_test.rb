@@ -18,7 +18,7 @@ module Megatest
     private
 
     def build_queue
-      Queue.new(config)
+      Queue.build(config)
     end
 
     def config

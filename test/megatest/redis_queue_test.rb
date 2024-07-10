@@ -86,8 +86,10 @@ module Megatest
       assert_instance_of Float, first_deadline
       assert_instance_of Float, second_deadline
 
-      sleep 0.01 # Just in case
-      @queue.heartbeat
+      stub_time(10) do
+        @queue.heartbeat
+      end
+
       first, second = @redis.call("zmscore", running_key, poped_tests.map(&:id))
       assert first > first_deadline
       assert second > second_deadline
@@ -106,13 +108,48 @@ module Megatest
       end
     end
 
+    def test_retry_queue
+      failed_tests = []
+      failed_tests << (test = @queue.pop_test)
+      @queue.record_result(build_failure(test))
+
+      failed_tests << (test = @queue.pop_test)
+      @queue.record_result(build_error(test))
+
+      while test = @queue.pop_test
+        @queue.record_result(build_success(test))
+      end
+
+      assert_predicate @queue, :empty?
+      refute_predicate @queue, :success?
+      @queue.cleanup
+
+      retry_queue = RedisQueue.build(@config)
+      assert_instance_of RedisQueue::RetryQueue, retry_queue
+      retry_queue.populate(@test_cases)
+
+      retried_tests = []
+      while test = retry_queue.pop_test
+        retried_tests << test
+        retry_queue.record_result(build_success(test))
+      end
+
+      assert_equal failed_tests, retried_tests
+
+      assert_predicate retry_queue, :empty?
+      assert_predicate retry_queue, :success?
+
+      @queue = build_queue
+      assert_predicate @queue, :success?
+    end
+
     private
 
     def build_queue(worker: nil, build: nil)
       queue_config = config.dup
       queue_config.worker_id = worker if worker
       queue_config.build_id = build if build
-      RedisQueue.new(queue_config)
+      RedisQueue.build(queue_config)
     end
 
     def config

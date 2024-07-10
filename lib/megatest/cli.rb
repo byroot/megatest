@@ -45,6 +45,8 @@ module Megatest
     end
 
     def run_tests
+      queue = @config.build_queue
+
       if queue.distributed?
         raise ArgumentError, "Distributed queues require a build-id" unless @config.build_id
         raise ArgumentError, "Distributed queues require a worker-id" unless @config.worker_id
@@ -73,6 +75,8 @@ module Megatest
     end
 
     def report
+      queue = @config.build_queue
+
       raise ArgumentError, "Only distributed queues can be summarized" unless queue.distributed?
       raise ArgumentError, "Distributed queues require a build-id" unless @config.build_id
 
@@ -82,10 +86,6 @@ module Megatest
     end
 
     private
-
-    def queue
-      @queue ||= @config.build_queue
-    end
 
     def default_reporters
       [

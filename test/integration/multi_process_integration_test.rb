@@ -126,7 +126,7 @@ module Megatest
     def build_queue(config, implementation = Queue)
       test_cases = @registry.test_cases
       test_cases.sort!
-      queue = implementation.new(config)
+      queue = implementation.build(config)
       queue.populate(test_cases)
       queue
     end

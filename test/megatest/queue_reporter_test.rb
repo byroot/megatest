@@ -8,7 +8,7 @@ module Megatest
       assert_equal 4, @test_cases.size
       @test_cases.sort!
       @config = Config.new({})
-      @queue = Queue.new(@config)
+      @queue = Queue.build(@config)
       @queue.populate(@test_cases)
       @out = StringIO.new
       @reporter = QueueReporter.new(@config, @queue, @out)

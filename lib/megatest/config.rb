@@ -32,10 +32,10 @@ module Megatest
     def build_queue
       case @queue_url
       when nil
-        Queue.new(self)
+        Queue.build(self)
       when /\Arediss?:/
         require "megatest/redis_queue"
-        RedisQueue.new(self)
+        RedisQueue.build(self)
       else
         raise ArgumentError, "Unsupported queue type: #{@queue_url.inspect}"
       end

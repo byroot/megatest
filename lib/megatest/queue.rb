@@ -2,6 +2,11 @@
 
 module Megatest
   class AbstractQueue
+    class << self
+      alias_method :build, :new
+      private :new
+    end
+
     attr_reader :test_cases_index, :size
 
     def initialize(config)
@@ -9,6 +14,10 @@ module Megatest
       @size = nil
       @test_cases_index = nil
       @populated = false
+    end
+
+    def retrying?
+      false
     end
 
     def summary
@@ -51,6 +60,9 @@ module Megatest
       @test_cases_index = test_cases.to_h { |t| [t.id, t] }
       @size = test_cases.size
       @populated = true
+    end
+
+    def cleanup
     end
   end
 
