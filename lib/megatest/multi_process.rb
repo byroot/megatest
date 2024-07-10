@@ -218,18 +218,16 @@ module Megatest
             dead_jobs = @jobs.select(&:closed?).each { |j| j.on_exit(queue, reporters) }
             @jobs -= dead_jobs
             break if @jobs.empty?
+            break if queue.empty?
 
             @jobs.select(&:idle?).each do |job|
               job.process(queue, reporters)
             end
 
-            break if @jobs.all?(&:idle?)
-
             reads, = IO.select(@jobs, nil, nil, 1)
             reads&.each do |job|
               job.process(queue, reporters)
             end
-
           end
         rescue Interrupt
           @jobs.each(&:term) # Early exit

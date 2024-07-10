@@ -147,7 +147,7 @@ module Megatest
     end
 
     def empty?
-      @queue.empty?
+      @queue.empty? && @leases.empty?
     end
 
     def populate(test_cases)

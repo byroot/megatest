@@ -61,10 +61,18 @@ module Megatest
       reporters.each { |r| r.start(self, queue) }
 
       begin
-        while (test_case = queue.pop_test)
-          reporters.each { |r| r.before_test_case(queue, test_case) }
-          result = queue.record_result(test_case.run)
-          reporters.each { |r| r.after_test_case(queue, test_case, result) }
+        while true
+          if test_case = queue.pop_test
+            reporters.each { |r| r.before_test_case(queue, test_case) }
+            result = queue.record_result(test_case.run)
+            reporters.each { |r| r.after_test_case(queue, test_case, result) }
+          elsif queue.empty?
+            break
+          else
+            # There was no tests to pop, but not all tests are completed.
+            # So we stick around to pop tests that could be lost.
+            sleep(1)
+          end
         end
       rescue Interrupt
         # Early exit
