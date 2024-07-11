@@ -23,23 +23,28 @@ class MegatestTest < MegaTestCase
 
   def test_inheritance
     load_fixture("inheritance/inheritance_test.rb")
+    cases = @registry.test_cases.sort
+    padding = cases.map { |t| t.id.size }.max + 2
     cases = @registry.test_cases.sort.map do |test_case|
-      "#{test_case.id.ljust(50)} | #{Megatest.relative_path(test_case.source_file)}:#{test_case.source_line}"
+      "#{test_case.id.ljust(padding)} | #{Megatest.relative_path(test_case.source_file)}:#{test_case.source_line}"
     end
 
     file = "fixtures/inheritance/inheritance_test.rb"
 
     assert_equal <<~CLASSES.strip, cases.join("\n")
-      TestedApp::ConcreteATest#concrete A                | #{file}:#{TestedApp::ConcreteATest::TEST_1_LINE}
-      TestedApp::ConcreteATest#overridable               | #{file}:#{TestedApp::ConcreteATest::TEST_2_LINE}
-      TestedApp::ConcreteATest#predefined                | #{file}:#{TestedApp::ConcreteATest::LINE}
-      TestedApp::ConcreteATest#reopened                  | #{file}:#{TestedApp::ConcreteATest::LINE}
-      TestedApp::ConcreteATest#shared                    | #{file}:#{TestedApp::ConcreteATest::SHARED_TESTS_LINE}
-      TestedApp::ConcreteATest#test_compat_shared        | #{file}:#{TestedApp::ConcreteATest::SHARED_COMPAT_TESTS_LINE}
-      TestedApp::ConcreteBTest#concrete B                | #{file}:#{TestedApp::ConcreteBTest::TEST_1_LINE}
-      TestedApp::ConcreteBTest#overridable               | #{file}:#{TestedApp::ConcreteBTest::TEST_2_LINE}
-      TestedApp::ConcreteBTest#predefined                | #{file}:#{TestedApp::ConcreteBTest::LINE}
-      TestedApp::ConcreteBTest#reopened                  | #{file}:#{TestedApp::ConcreteBTest::LINE}
+      TestedApp::BaseCase#overridable               | test_helper.rb:#{TestedApp::BaseCase::OVERRIDABLE_LINE}
+      TestedApp::BaseCase#predefined                | test_helper.rb:#{TestedApp::BaseCase::PREDEFINED_LINE}
+      TestedApp::BaseCase#reopened                  | another_test_helper.rb:#{TestedApp::BaseCase::REOPENED_LINE}
+      TestedApp::ConcreteATest#concrete A           | #{file}:#{TestedApp::ConcreteATest::TEST_1_LINE}
+      TestedApp::ConcreteATest#overridable          | #{file}:#{TestedApp::ConcreteATest::TEST_2_LINE}
+      TestedApp::ConcreteATest#predefined           | #{file}:#{TestedApp::ConcreteATest::LINE}
+      TestedApp::ConcreteATest#reopened             | #{file}:#{TestedApp::ConcreteATest::LINE}
+      TestedApp::ConcreteATest#shared               | #{file}:#{TestedApp::ConcreteATest::SHARED_TESTS_LINE}
+      TestedApp::ConcreteATest#test_compat_shared   | #{file}:#{TestedApp::ConcreteATest::SHARED_COMPAT_TESTS_LINE}
+      TestedApp::ConcreteBTest#concrete B           | #{file}:#{TestedApp::ConcreteBTest::TEST_1_LINE}
+      TestedApp::ConcreteBTest#overridable          | #{file}:#{TestedApp::ConcreteBTest::TEST_2_LINE}
+      TestedApp::ConcreteBTest#predefined           | #{file}:#{TestedApp::ConcreteBTest::LINE}
+      TestedApp::ConcreteBTest#reopened             | #{file}:#{TestedApp::ConcreteBTest::LINE}
     CLASSES
   end
 

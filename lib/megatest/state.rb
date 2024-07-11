@@ -72,10 +72,6 @@ module Megatest
         @ancestors ||= @registry.ancestors(@klass)
       end
 
-      def abstract?
-        !@klass.name || !@klass.name.end_with?("Test")
-      end
-
       def test_cases
         @test_cases.keys
       end
@@ -230,11 +226,7 @@ module Megatest
 
     def test_cases
       @test_suites.flat_map do |_klass, suite|
-        if suite.abstract?
-          []
-        else
-          suite.test_cases
-        end
+        suite.test_cases
       end
     end
 
@@ -395,7 +387,7 @@ module Megatest
       if klass.name
         @id ||= "#{klass.name}##{name}"
       else
-        raise Error, "Can't access the id of an anonymous test"
+        "#{klass}##{name}"
       end
     end
 

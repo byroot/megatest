@@ -21,9 +21,6 @@
   - Diffs
   - Etc
 
-- Fail or warn if some tests are purely abstract?
-  - e.g. defined in a class that doesn't end with `Test`, and isn't inherited.
-
 ### Maybes
 
 - Depend on Zeitwerk?

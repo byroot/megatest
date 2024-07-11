@@ -6,11 +6,13 @@ module TestedApp
   end
 
   class_eval <<~RUBY, "test_helper.rb"
-    class AbstractCase < TestCase
+    class BaseCase < TestCase
+      PREDEFINED_LINE = __LINE__ + 1
       test "predefined" do
         assert true
       end
 
+      OVERRIDABLE_LINE = __LINE__ + 1
       test "overridable" do
         raise NotImplementedError
       end
@@ -35,9 +37,7 @@ module TestedApp
     end
   RUBY
 
-  anonymous_class = Class.new(AbstractCase)
-
-  class ConcreteATest < anonymous_class
+  class ConcreteATest < BaseCase
     LINE = __LINE__ - 1
     SHARED_TESTS_LINE = __LINE__ + 1
     include SharedTests
@@ -56,7 +56,7 @@ module TestedApp
     end
   end
 
-  ConcreteBTest = Class.new(AbstractCase) do
+  ConcreteBTest = Class.new(BaseCase) do
     self::LINE = __LINE__ - 1
 
     self::TEST_1_LINE = __LINE__ + 1
@@ -71,7 +71,8 @@ module TestedApp
   end
 
   class_eval <<~RUBY, "another_test_helper.rb"
-    class AbstractCase < TestCase
+    class BaseCase < TestCase
+      REOPENED_LINE = __LINE__ + 1
       test "reopened" do
         assert true
       end
