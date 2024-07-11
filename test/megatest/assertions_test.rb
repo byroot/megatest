@@ -5,15 +5,18 @@ module Megatest
     class DummyTester
       include Assertions
 
-      def initialize(mega_state)
-        @__mega = mega_state
+      def initialize(result, config)
+        @__mega_result = result
+        @__mega_config = config
       end
     end
 
     def setup
+      @color = Output::ANSIColors
       fake_test_case = BlockTest.new(:__suite__, DummyTester, "fake test case", -> {})
       @result = TestCaseResult.new(fake_test_case)
-      @case = DummyTester.new(@result)
+      @config = Config.new({})
+      @case = DummyTester.new(@result, @config)
     end
 
     def test_flunk_raises
@@ -144,6 +147,22 @@ module Megatest
       assert_equal 4, @result.assertions_count
     end
 
+    def test_assert_equal_multiline_strings
+      expected = "foo\nbar\nbaz\n"
+      actual = "foo\nplop\nbaz\n"
+      message = @color.strip(assert_equal_message(expected, actual))
+      expect = <<~MESSAGE
+        ++ expected
+        -- actual
+
+         foo
+        -bar
+        +plop
+         baz
+      MESSAGE
+      assert_equal expect, message
+    end
+
     def test_assert_predicate
       assert_equal 0, @result.assertions_count
 
@@ -193,6 +212,15 @@ module Megatest
       end
       assert_equal 2, @result.assertions_count
       assert_equal "Expected [] to be an instance of Integer, not Array", assertion.message
+    end
+
+    private
+
+    def assert_equal_message(expected, actual)
+      assertion = assert_raises(Assertion) do
+        @case.assert_equal expected, actual
+      end
+      assertion.message
     end
   end
 end

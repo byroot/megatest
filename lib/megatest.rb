@@ -82,6 +82,8 @@ module Megatest
   end
 end
 
+require "megatest/patience_diff"
+require "megatest/differ"
 require "megatest/output"
 require "megatest/backtrace"
 require "megatest/compat"

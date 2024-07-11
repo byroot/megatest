@@ -49,6 +49,9 @@ Style/RedundantHeredocDelimiterQuotes:
 Style/Alias:
   Enabled: false # Are you out of your mind?
 
+Style/PercentLiteralDelimiters:
+  Enabled: false # Mind your own business
+
 Style/EmptyMethod:
   Enabled: false # Disagree.
 
@@ -64,6 +67,9 @@ Style/ConditionalAssignment:
 
 Style/AccessorGrouping:
   Enabled: false # Sometimes needed for documentation purposes
+
+Style/ModuleFunction:
+  Enabled: false # Just no.
 
 
 Layout/CaseIndentation:

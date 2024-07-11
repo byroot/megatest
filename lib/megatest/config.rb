@@ -131,7 +131,7 @@ module Megatest
 
   class Config
     attr_accessor :queue_url, :retry_tolerance, :max_retries, :jobs_count, :job_index, :load_paths,
-                  :build_id, :worker_id, :heartbeat_frequency, :program_name
+                  :build_id, :worker_id, :heartbeat_frequency, :program_name, :differ, :colors
     attr_reader :before_fork_callbacks, :global_setup_callbacks, :worker_setup_callbacks, :backtrace, :circuit_breaker, :seed
 
     def initialize(env)
@@ -143,6 +143,7 @@ module Megatest
       @build_id = nil
       @worker_id = nil
       @jobs_count = 1
+      @colors = nil # auto
       @before_fork_callbacks = []
       @global_setup_callbacks = []
       @job_setup_callbacks = []
@@ -152,10 +153,19 @@ module Megatest
       @circuit_breaker = CircuitBreaker.new(Float::INFINITY)
       @seed = Random.rand(0xFFFF)
       CIService.configure(self, env)
+      @differ = Differ.new(self)
     end
 
     def max_consecutive_failures=(max)
       @circuit_breaker = CircuitBreaker.new(max)
+    end
+
+    def diff(expected, actual)
+      @differ&.call(expected, actual)
+    end
+
+    def pretty_print(object)
+      object.inspect # TODO: be smart
     end
 
     # We always return a new generator with the same seed as to

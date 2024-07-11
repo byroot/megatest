@@ -112,7 +112,7 @@ module Megatest # :nodoc:
     def make_test_cmd
       cmd = ["megatest"]
       cmd << "-I#{libs.join(File::PATH_SEPARATOR)}" unless libs.empty?
-      cmd << "-w" if warning
+      # cmd << "-w" if warning
       cmd << "--backtrace" if full_backtrace
       cmd.concat(extra_args)
       cmd.concat(tests)

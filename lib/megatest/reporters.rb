@@ -7,7 +7,7 @@ module Megatest
 
       def initialize(config, out)
         @config = config
-        @out = Output.new(out)
+        @out = Output.new(out, colors: config.colors)
       end
 
       def start(_executor, _queue)
@@ -58,9 +58,9 @@ module Megatest
         str = +str
 
         if result.error?
-          str << "#{result.failure.cause.name}: #{result.failure.cause.message}\n"
+          str << "#{result.failure.cause.name}: #{@out.colored(result.failure.cause.message)}\n"
         elsif result.failed?
-          str << result.failure.message.to_s
+          str << @out.colored(result.failure.message.to_s)
         end
         str << "\n" unless str.end_with?("\n")
 

@@ -449,9 +449,9 @@ module Megatest
       end
     end
 
-    def run
+    def run(config)
       result = TestCaseResult.new(self)
-      instance = klass.new(result)
+      instance = klass.new(result, config)
       result.record_time do
         result.record_failures do
           instance.before_setup

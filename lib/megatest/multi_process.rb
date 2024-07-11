@@ -98,7 +98,7 @@ module Megatest
 
           begin
             while (test_case = queue.pop_test)
-              result = test_case.run
+              result = test_case.run(@config)
               queue.record_result(result)
 
               @config.circuit_breaker.record_result(result)
@@ -198,7 +198,7 @@ module Megatest
 
       def initialize(config, out)
         @config = config
-        @out = Output.new(out)
+        @out = Output.new(out, colors: config.colors)
       end
 
       def after_fork_in_child(active_job)
