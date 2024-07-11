@@ -2,8 +2,10 @@
 
 require "bundler/gem_tasks"
 
-task :test do
-  sh "exe/megatest", "--backtrace", "test"
+require File.expand_path("../lib/megatest/test_task", __FILE__)
+
+Megatest::TestTask.create do |t|
+  t.full_backtrace = true
 end
 
 require "rubocop/rake_task"

@@ -62,6 +62,9 @@ Style/YodaCondition:
 Style/ConditionalAssignment:
   Enabled: false # Yes but not always
 
+Style/AccessorGrouping:
+  Enabled: false # Sometimes needed for documentation purposes
+
 
 Layout/CaseIndentation:
   EnforcedStyle: end
