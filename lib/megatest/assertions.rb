@@ -112,6 +112,58 @@ module Megatest
       match
     end
 
+    def assert_respond_to(object, method, message: nil, include_all: false)
+      @__mega_result.assertions_count += 1
+      unless object.respond_to?(method, include_all)
+        flunk(message || "Expected #{@__mega_config.pp(object)} to respond to :#{method}")
+      end
+    end
+
+    def refute_respond_to(object, method, message: nil, include_all: false)
+      @__mega_result.assertions_count += 1
+      if object.respond_to?(method, include_all)
+        flunk(message || "Expected #{@__mega_config.pp(object)} to not respond to :#{method}")
+      end
+    end
+
+    def assert_same(expected, actual, message: nil)
+      @__mega_result.assertions_count += 1
+      unless expected.equal?(actual)
+        message ||= begin
+          actual_pp = @__mega_config.pp(actual)
+          expected_pp = @__mega_config.pp(expected)
+          if actual_pp == expected_pp
+            actual_pp += " (id: #{actual.object_id})"
+            expected_pp += " (id: #{expected.object_id})"
+          end
+
+          "Expected          #{actual_pp}\n" \
+          "To be the same as #{expected_pp}"
+        end
+
+        flunk(message)
+      end
+    end
+
+    def refute_same(expected, actual, message: nil)
+      @__mega_result.assertions_count += 1
+      if expected.equal?(actual)
+        message ||= begin
+          actual_pp = @__mega_config.pp(actual)
+          expected_pp = @__mega_config.pp(expected)
+          if actual_pp == expected_pp
+            actual_pp += " (id: #{actual.object_id})"
+            expected_pp += " (id: #{expected.object_id})"
+          end
+
+          "Expected              #{actual_pp}\n" \
+          "To not be the same as #{expected_pp}"
+        end
+
+        flunk(message)
+      end
+    end
+
     def assert_raises(*expected_exceptions, message: nil)
       @__mega_result.assertions_count += 1
 

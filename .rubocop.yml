@@ -52,6 +52,9 @@ Style/WordArray:
 Style/Alias:
   Enabled: false # Are you out of your mind?
 
+Style/ParallelAssignment:
+  Enabled: false # Grumble
+
 Style/PercentLiteralDelimiters:
   Enabled: false # Mind your own business
 

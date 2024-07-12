@@ -228,6 +228,65 @@ module Megatest
       end
     end
 
+    def test_assert_respond_to
+      assert_equal 0, @result.assertions_count
+
+      @case.assert_respond_to 1, :odd?
+      assert_equal 1, @result.assertions_count
+
+      assert_failure_message("Expected 1 to respond to :blah?") do
+        @case.assert_respond_to 1, :blah?
+      end
+      assert_equal 2, @result.assertions_count
+    end
+
+    def test_refute_respond_to
+      assert_equal 0, @result.assertions_count
+
+      @case.refute_respond_to 1, :blah?
+      assert_equal 1, @result.assertions_count
+
+      assert_failure_message("Expected 1 to not respond to :odd?") do
+        @case.refute_respond_to 1, :odd?
+      end
+      assert_equal 2, @result.assertions_count
+    end
+
+    def test_assert_same
+      assert_equal 0, @result.assertions_count
+
+      str = "foo"
+      @case.assert_same str, str
+      assert_equal 1, @result.assertions_count
+
+      expected, actual = "foo", "foo".dup
+      message = <<~MESSAGE.strip
+        Expected          "foo" (id: #{actual.object_id})
+        To be the same as "foo" (id: #{expected.object_id})
+      MESSAGE
+      assert_failure_message(message) do
+        @case.assert_same(expected, actual)
+      end
+      assert_equal 2, @result.assertions_count
+    end
+
+    def test_refute_same
+      assert_equal 0, @result.assertions_count
+
+      @case.refute_same "foo", "foo".dup
+      assert_equal 1, @result.assertions_count
+
+      expected = actual = "foo"
+      message = <<~MESSAGE.strip
+        Expected              "foo" (id: #{actual.object_id})
+        To not be the same as "foo" (id: #{expected.object_id})
+      MESSAGE
+      assert_failure_message(message) do
+        @case.refute_same(expected, actual)
+      end
+      assert_equal 2, @result.assertions_count
+    end
+
     private
 
     def assert_failure_message(message, &block)
