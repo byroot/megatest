@@ -51,7 +51,7 @@ module Megatest
     end
 
     def normalize(text)
-      text.gsub(/(?<=:0x)([\da-f]{16}|[\da-f]{8})/, "00000000decafbad")
+      text.gsub(/(?<=:0x)([\da-f]{16}|[\da-f]{8}|[\da-f]{4})/, "00000000decafbad")
     end
 
     def pp(object)

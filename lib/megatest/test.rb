@@ -14,7 +14,7 @@ module Megatest
           const_source_location = if subclass.name
             ::Object.const_source_location(subclass.name)
           else
-            location = caller_locations.find { |l| l.base_label != "inherited" }
+            location = caller_locations.find { |l| l.base_label != "inherited" && !l.path.start_with?("<internal:") }
             [location.path, location.lineno]
           end
           ::Megatest.registry.register_suite(subclass, const_source_location)
@@ -22,7 +22,7 @@ module Megatest
       else
         def inherited(subclass)
           super
-          location = caller_locations.find { |l| l.base_label != "inherited" }
+          location = caller_locations.find { |l| l.base_label != "inherited" && !l.path.start_with?("<internal:") }
           const_source_location = [location.path, location.lineno]
           ::Megatest.registry.register_suite(subclass, const_source_location)
         end
@@ -33,7 +33,7 @@ module Megatest
           super
 
           location = Thread.each_caller_location do |l|
-            break l if l.base_label != "include"
+            break l if l.base_label != "include" && !l.path.start_with?("<internal:")
           end
           include_location = [location.path, location.lineno]
 

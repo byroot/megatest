@@ -15,6 +15,10 @@ module Megatest
       end
     end
 
+    setup do
+      skip("No fork on this platform") unless Process.respond_to?(:fork)
+    end
+
     def test_crashing_test_case
       load_fixture("crash/crash_test.rb")
 
