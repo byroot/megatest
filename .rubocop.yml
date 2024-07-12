@@ -46,6 +46,9 @@ Style/FormatStringToken:
 Style/RedundantHeredocDelimiterQuotes:
   Enabled: false
 
+Style/WordArray:
+  Enabled: false # Most of the time yes, but not always
+
 Style/Alias:
   Enabled: false # Are you out of your mind?
 

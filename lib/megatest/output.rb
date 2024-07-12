@@ -33,10 +33,22 @@ module Megatest
         colorize(text, 36)
       end
 
+      def grey(text)
+        # TODO: somehow grey is invisible on my terminal (Terminal.app, Pro theme)
+        # Grey for unchanged lines in diff seems like a great idea, but need to figure out
+        # when it's safe to use.
+        # colorize(text, 8)
+        text
+      end
+
       private
 
       def colorize(text, color_code)
-        "\e[#{color_code}m#{text}\e[0m"
+        if text.end_with?("\n")
+          "\e[#{color_code}m#{text.delete_suffix("\n")}\e[0m\n"
+        else
+          "\e[#{color_code}m#{text}\e[0m"
+        end
       end
     end
 
@@ -51,6 +63,7 @@ module Megatest
       alias_method :blue, :red
       alias_method :magenta, :red
       alias_method :cyan, :red
+      alias_method :grey, :red
     end
 
     attr_reader :color
@@ -63,6 +76,13 @@ module Megatest
 
     def colors?
       @colors
+    end
+
+    def indent(text, depth: 2)
+      prefix = " " * depth
+      lines = text.lines
+      lines.map! { |l| "#{prefix}#{l}" }
+      lines.join
     end
 
     def colored(text)
@@ -111,6 +131,10 @@ module Megatest
 
     def cyan(text)
       @color.cyan(text)
+    end
+
+    def grey(text)
+      @color.grey(text)
     end
   end
 end

@@ -5,7 +5,7 @@ require "megatest/queue_shared_tests"
 module Megatest
   class PatienceDiffTest < MegaTestCase
     def setup
-      @differ = PatienceDiff::Differ.new
+      @differ = PatienceDiff::Differ.new(Output::NoColors)
     end
 
     def test_no_difference
@@ -58,17 +58,18 @@ module Megatest
     end
 
     def test_with_colors
-      @colors = Output::ANSIColors
-      @differ = PatienceDiff::Differ.new(color: @colors)
+      @differ = PatienceDiff::Differ.new(Output::ANSIColors)
 
-      expected = %w(foo bar baz)
-      actual = %w(foo plop baz)
-      assert_equal <<~TEXT, @differ.diff_sequences(expected, actual).join("\n") << "\n"
-         foo
-        #{@colors.red("-bar")}
-        #{@colors.green("+plop")}
-         baz
-      TEXT
+      expected = "foo\nbar\nbaz\n".lines
+      actual = "foo\nplop\nbaz\n".lines
+
+      diff = [
+        " foo\n",
+        "\e[31m-bar\e[0m\n", # red
+        "\e[32m+plop\e[0m\n", # green
+        " baz\n",
+      ]
+      assert_equal diff, @differ.diff_sequences(expected, actual)
     end
   end
 end

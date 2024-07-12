@@ -131,7 +131,7 @@ module Megatest
 
   class Config
     attr_accessor :queue_url, :retry_tolerance, :max_retries, :jobs_count, :job_index, :load_paths,
-                  :build_id, :worker_id, :heartbeat_frequency, :program_name, :differ, :colors
+                  :build_id, :worker_id, :heartbeat_frequency, :program_name, :differ
     attr_reader :before_fork_callbacks, :global_setup_callbacks, :worker_setup_callbacks, :backtrace, :circuit_breaker, :seed
 
     def initialize(env)
@@ -152,8 +152,23 @@ module Megatest
       @program_name = "megatest"
       @circuit_breaker = CircuitBreaker.new(Float::INFINITY)
       @seed = Random.rand(0xFFFF)
+      @differ = Differ
       CIService.configure(self, env)
-      @differ = Differ.new(self)
+    end
+
+    def colors(io = nil)
+      case @colors
+      when true
+        Output::ANSIColors
+      when false
+        Output::NoColors
+      else
+        if io && !io.tty?
+          Output::NoColors
+        else
+          Output::ANSIColors
+        end
+      end
     end
 
     def max_consecutive_failures=(max)
@@ -161,7 +176,9 @@ module Megatest
     end
 
     def diff(expected, actual)
-      @differ&.call(expected, actual)
+      return unless @differ
+
+      @differ.new(self).call(expected, actual)
     end
 
     def pretty_print(object)

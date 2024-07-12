@@ -11,8 +11,6 @@ module Megatest
 
       Card = Struct.new(:index, :value, :previous)
 
-      # Options:
-      #   * :context: number of lines of context to use when grouping
       def initialize(context: 3)
         @context = context
       end
@@ -266,9 +264,9 @@ module Megatest
 
     # Formats a plaintext unified diff.
     class Formatter
-      def initialize(differ, color: nil)
+      def initialize(differ, color)
         @differ = differ
-        @color = color || Megatest::Output::NoColors
+        @color = color
       end
 
       def render_hunk_marker(opcodes)
@@ -284,7 +282,7 @@ module Megatest
         opcodes.flat_map do |(code, a_start, a_end, b_start, b_end)|
           case code
           when :equal
-            b[b_start..b_end].map { |line| " #{line}" }
+            b[b_start..b_end].map { |line| @color.grey(" #{line}") }
           when :delete
             a[a_start..a_end].map { |line| @color.red("-#{line}") }
           when :insert
@@ -296,17 +294,10 @@ module Megatest
 
     class Differ
       attr_reader :matcher
-      attr_accessor :all_context, :line_ending, :ignore_whitespace
 
-      # Options:
-      #   * :all_context: Output the entirety of each file. This overrides the sequence matcher's context setting.
-      #   * :line_ending: Delimiter to use when joining diff output. Defaults to $RS.
-      #   * :ignore_whitespace: Before comparing lines, strip trailing whitespace, and treat leading whitespace
-      #     as either present or not. Does not affect output.
-      # Any additional options (e.g. :context) are passed on to the sequence matcher.
-      def initialize(**opts)
-        @formatter = Formatter.new(self, color: opts.delete(:color))
-        @matcher = SequenceMatcher.new(**opts)
+      def initialize(color)
+        @formatter = Formatter.new(self, color)
+        @matcher = SequenceMatcher.new
       end
 
       # Generate a unified diff of the data specified. The left and right values should be strings, or any other indexable, sortable data.
@@ -329,6 +320,13 @@ module Megatest
         lines.flatten!
         lines.compact!
         lines
+      end
+
+      def diff_text(left, right)
+        left = left.lines
+        right = right.lines
+        lines = diff_sequences(left, right)
+        lines.join
       end
     end
 
