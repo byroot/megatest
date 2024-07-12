@@ -77,6 +77,9 @@ Style/AccessorGrouping:
 Style/ModuleFunction:
   Enabled: false # Just no.
 
+Style/RedundantFreeze:
+  Enabled: false # Once again... You're wrong.
+
 
 Layout/CaseIndentation:
   EnforcedStyle: end
@@ -120,3 +123,6 @@ Lint/RedundantRequireStatement:
 
 Security/MarshalLoad:
   Enabled: false # I know what I'm doing, thanks.
+
+Bundler/OrderedGems:
+  Enabled: false # I'm out of words...

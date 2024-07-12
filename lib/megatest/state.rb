@@ -275,8 +275,11 @@ module Megatest
 
     def record_time
       start_time = Megatest.now
-      yield
-      @duration = Megatest.now - start_time
+      begin
+        yield
+      ensure
+        @duration = Megatest.now - start_time
+      end
       self
     end
 
@@ -440,23 +443,23 @@ module Megatest
       runtime = Runtime.new(config, result)
       instance = klass.new(runtime)
       result.record_time do
-        runtime.record_failures do
-          instance.before_setup
-          each_setup_callback do |callback|
-            instance.instance_exec(&callback)
-          end
-          instance.setup
-          instance.after_setup
+        return result if runtime.record_failures { instance.before_setup }
 
-          execute(instance)
-          result.complete
+        each_setup_callback do |callback|
+          return result if runtime.record_failures(downlevel: 1) { instance.instance_exec(&callback) }
         end
+        return result if runtime.record_failures { instance.setup }
+        return result if runtime.record_failures { instance.after_setup }
+
+        return result if runtime.record_failures(downlevel: 2) { execute(instance) }
+
+        result.complete
 
         runtime.record_failures do
           instance.before_teardown
         end
         each_teardown_callback do |callback|
-          runtime.record_failures do
+          runtime.record_failures(downlevel: 1) do
             instance.instance_exec(&callback)
           end
         end
