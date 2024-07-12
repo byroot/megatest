@@ -30,7 +30,9 @@ module Megatest
       end
 
       def after_test_case(_queue, _test_case, result)
-        if result.retried?
+        if result.skipped?
+          @out.print(@out.yellow("S"))
+        elsif result.retried?
           @out.print(@out.yellow("R"))
         elsif result.error?
           @out.print(@out.red("E"))
