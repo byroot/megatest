@@ -5,9 +5,8 @@ module Megatest
     class DummyTester
       include Assertions
 
-      def initialize(result, config)
-        @__mega_result = result
-        @__mega_config = config
+      def initialize(runtime)
+        @__m = runtime
       end
     end
 
@@ -16,7 +15,8 @@ module Megatest
       fake_test_case = BlockTest.new(:__suite__, DummyTester, "fake test case", -> {})
       @result = TestCaseResult.new(fake_test_case)
       @config = Config.new({})
-      @case = DummyTester.new(@result, @config)
+      @runtime = Runtime.new(@config, @result)
+      @case = DummyTester.new(@runtime)
     end
 
     def test_flunk_raises

@@ -23,28 +23,29 @@ class MegaTestCase < Megatest::Test
   private
 
   def build_success(test_case)
-    result = Megatest::TestCaseResult.new(test_case)
-    result.record_time do
-      result.assertions_count = 4
+    build_result(test_case) do |runtime|
+      4.times { runtime.assert { nil } }
     end
-    result
   end
 
   def build_error(test_case)
-    result = Megatest::TestCaseResult.new(test_case)
-    result.record_time do
-      result.record_failures do
-        raise "oops"
-      end
+    build_result(test_case) do
+      raise "oops"
     end
-    result
   end
 
   def build_failure(test_case)
+    build_result(test_case) do
+      raise Megatest::Assertion, "2 + 2 != 5"
+    end
+  end
+
+  def build_result(test_case)
     result = Megatest::TestCaseResult.new(test_case)
+    runtime = Megatest::Runtime.new(@config || Megatest::Config.new({}), result)
     result.record_time do
-      result.record_failures do
-        raise Megatest::Assertion, "2 + 2 != 5"
+      runtime.record_failures do
+        yield runtime
       end
     end
     result

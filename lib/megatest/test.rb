@@ -66,9 +66,8 @@ module Megatest
     extend DSL
     include Assertions
 
-    def initialize(result, config)
-      @__mega_result = result
-      @__mega_config = config
+    def initialize(runtime)
+      @__m = runtime
     end
 
     def before_setup

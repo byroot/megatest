@@ -239,18 +239,18 @@ module Megatest
     end
   end
 
-  class TestCaseResult
-    class Failure
-      attr_reader :name, :message, :backtrace, :cause
+  class Failure
+    attr_reader :name, :message, :backtrace, :cause
 
-      def initialize(exception)
-        @name = exception.class.name
-        @message = exception.message
-        @backtrace = exception.backtrace
-        @cause = exception.cause ? Failure.new(exception.cause) : nil
-      end
+    def initialize(exception)
+      @name = exception.class.name
+      @message = exception.message
+      @backtrace = exception.backtrace
+      @cause = exception.cause ? Failure.new(exception.cause) : nil
     end
+  end
 
+  class TestCaseResult
     class << self
       def load(payload)
         Marshal.load(payload)
@@ -282,20 +282,6 @@ module Megatest
 
     def failure
       @failures.first
-    end
-
-    def expect_no_failures
-      yield
-    rescue Assertion, *Megatest::IGNORED_ERRORS
-      raise # Exceptions we shouldn't rescue
-    rescue Exception => original_error
-      raise UnexpectedError, original_error
-    end
-
-    def record_failures(&block)
-      expect_no_failures(&block)
-    rescue Assertion => assertion
-      @failures << Failure.new(assertion)
     end
 
     def ok?
@@ -451,9 +437,10 @@ module Megatest
 
     def run(config)
       result = TestCaseResult.new(self)
-      instance = klass.new(result, config)
+      runtime = Runtime.new(config, result)
+      instance = klass.new(runtime)
       result.record_time do
-        result.record_failures do
+        runtime.record_failures do
           instance.before_setup
           each_setup_callback do |callback|
             instance.instance_exec(&callback)
@@ -465,18 +452,18 @@ module Megatest
           result.complete
         end
 
-        result.record_failures do
+        runtime.record_failures do
           instance.before_teardown
         end
         each_teardown_callback do |callback|
-          result.record_failures do
+          runtime.record_failures do
             instance.instance_exec(&callback)
           end
         end
-        result.record_failures do
+        runtime.record_failures do
           instance.teardown
         end
-        result.record_failures do
+        runtime.record_failures do
           instance.after_teardown
         end
       end
