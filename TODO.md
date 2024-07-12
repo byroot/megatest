@@ -16,11 +16,6 @@
 
 - Implement missing assertions
 
-- Improve assertion failure message
-  - Better inspect
-  - Diffs
-  - Etc
-
 ### Maybes
 
 - Depend on Zeitwerk?

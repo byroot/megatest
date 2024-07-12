@@ -20,6 +20,20 @@ module Megatest
       end
     end
 
+    unless String.method_defined?(:byterindex)
+      module ByteRIndex
+        refine String do
+          def byterindex(matcher, offset = -1)
+            if encoding == Encoding::BINARY
+              rindex(matcher, offset)
+            else
+              b.rindex(matcher, offset)
+            end
+          end
+        end
+      end
+    end
+
     unless UnboundMethod.method_defined?(:bind_call)
       module BindCall
         refine UnboundMethod do

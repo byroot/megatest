@@ -82,11 +82,12 @@ module Megatest
   end
 end
 
+require "megatest/compat"
 require "megatest/patience_diff"
 require "megatest/differ"
+require "megatest/pretty_print"
 require "megatest/output"
 require "megatest/backtrace"
-require "megatest/compat"
 require "megatest/config"
 require "megatest/state"
 require "megatest/reporters"

@@ -8,24 +8,36 @@ module Megatest
       @config = config
     end
 
-    def call(expected, actual)
-      if expected.is_a?(String) && actual.is_a?(String)
-        return unless expected.include?("\n")
+    using Compat::ByteRIndex unless String.method_defined?(:byterindex)
 
-        string_diff(expected, actual)
-      elsif expected.is_a?(Array) && actual.is_a?(Array)
+    def call(expected, actual)
+      if String === expected && String === actual
+        if expected.byterindex("\n", -1) || actual.byterindex("\n", -1)
+          multiline_string_diff(expected, actual)
+        else
+          single_line_string_diff(expected, actual)
+        end
+      elsif Array === expected && Array === actual
         array_diff(expected, actual)
-      elsif expected.is_a?(Hash) && actual.is_a?(Hash)
+      elsif Hash === expected && Hash === actual
         hash_diff(expected, actual)
       end
     end
 
     private
 
-    def string_diff(expected, actual)
+    def pp(object)
+      @config.pretty_print(object)
+    end
+
+    def multiline_string_diff(expected, actual)
       differ = PatienceDiff::Differ.new(@config.colors)
       diff = differ.diff_text(expected, actual)
       "#{HEADER}#{diff}"
+    end
+
+    def single_line_string_diff(expected, actual)
+      "Expected: #{pp(expected)}\n  Actual: #{pp(actual)}"
     end
 
     def array_diff(expected, actual)
@@ -35,7 +47,7 @@ module Megatest
     end
 
     def array_sequence(array)
-      array = array.map { |e| "  ".dup << @config.pretty_print(e).chomp << ",\n" }
+      array = array.map { |e| "  ".dup << pp(e).chomp << ",\n" }
       array.unshift("[\n")
       array << "]\n"
     end
@@ -55,7 +67,7 @@ module Megatest
 
     def hash_sequence(pairs)
       pairs = pairs.map do |k, v|
-        "  ".dup << @config.pretty_print(k) << " => " << @config.pretty_print(v).chomp << ",\n"
+        "  ".dup << pp(k) << " => " << pp(v).chomp << ",\n"
       end
       pairs.unshift("{\n")
       pairs << "}\n"

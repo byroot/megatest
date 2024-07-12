@@ -70,7 +70,7 @@ module Megatest
         flunk(
           message ||
           @__mega_config.diff(expected, actual) ||
-          "Expected: #{@__mega_config.pretty_print(expected)}\n  Actual: #{@__mega_config.pretty_print(actual)}",
+          "Expected: #{@__mega_config.pretty_print(expected)}\n  Actual: #{@__mega_config.pp(actual)}",
         )
       else
         true
@@ -87,15 +87,29 @@ module Megatest
     def assert_predicate(actual, predicate, message: nil)
       @__mega_result.assertions_count += 1
       unless @__mega_result.expect_no_failures { actual.__send__(predicate) }
-        flunk(message || "Expected #{actual.inspect} to be #{predicate}")
+        flunk(message || "Expected #{@__mega_config.pp(actual)} to be #{predicate}")
       end
     end
 
     def refute_predicate(actual, predicate, message: nil)
       @__mega_result.assertions_count += 1
       if @__mega_result.expect_no_failures { actual.__send__(predicate) }
-        flunk(message || "Expected #{actual.inspect} to not be #{predicate}")
+        flunk(message || "Expected #{@__mega_config.pp(actual)} to not be #{predicate}")
       end
+    end
+
+    def assert_match(original_matcher, obj, message: nil)
+      @__mega_result.assertions_count += 1
+      matcher = if ::String === original_matcher
+        ::Regexp.new(::Regexp.escape(original_matcher))
+      else
+        original_matcher
+      end
+
+      unless match = matcher.match(obj)
+        flunk(message || "Expected #{@__mega_config.pp(original_matcher)} to match #{@__mega_config.pp(obj)}")
+      end
+      match
     end
 
     def assert_raises(*expected_exceptions, message: nil)

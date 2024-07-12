@@ -48,5 +48,13 @@ module TestedApp
 
       assert_equal expected, actual
     end
+
+    test "simple objects" do
+      assert_equal Object.new, Object.new
+    end
+
+    test "basic objects" do
+      assert_equal BasicObject.new, BasicObject.new
+    end
   end
 end

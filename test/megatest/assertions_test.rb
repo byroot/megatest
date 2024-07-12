@@ -25,15 +25,13 @@ module Megatest
       end
       assert_equal "Failed", assertion.message
 
-      assertion = assert_raises(Assertion) do
+      assert_failure_message("Positional message") do
         @case.flunk "Positional message"
       end
-      assert_equal "Positional message", assertion.message
 
-      assertion = assert_raises(Assertion) do
+      assert_failure_message("Keyword message") do
         @case.flunk message: "Keyword message"
       end
-      assert_equal "Keyword message", assertion.message
     end
 
     def test_assert_raises
@@ -44,36 +42,33 @@ module Megatest
       end
       assert_equal 1, @result.assertions_count
 
-      assertion = assert_raises(Assertion) do
+      assert_failure_message("[NotImplementedError] exception expected, not #<RuntimeError: Oops>") do
         @case.assert_raises(NotImplementedError) do
           raise "Oops"
         end
       end
       assert_equal 2, @result.assertions_count
-      assert_equal "[NotImplementedError] exception expected, not #<RuntimeError: Oops>", assertion.message
 
       @case.assert_raises(NotImplementedError, RuntimeError) do
         raise "Oops"
       end
       assert_equal 3, @result.assertions_count
 
-      assertion = assert_raises(Assertion) do
+      assert_failure_message("Failed assertion in assert_raises") do
         @case.assert_raises(NotImplementedError) do
           @case.assert false, message: "Failed assertion in assert_raises"
         end
       end
       assert_equal 5, @result.assertions_count
-      assert_equal "Failed assertion in assert_raises", assertion.message
     end
 
     def test_assert
       assert_equal 0, @result.assertions_count
 
-      assertion = assert_raises(Assertion) do
+      assert_failure_message("Expected nil to be truthy") do
         @case.assert nil
       end
       assert_equal 1, @result.assertions_count
-      assert_equal "Expected nil to be truthy", assertion.message
 
       assertion = assert_raises(Assertion) do
         @case.assert false, message: "Keyword"
@@ -105,11 +100,10 @@ module Megatest
       @case.assert_nil(nil)
       assert_equal 1, @result.assertions_count
 
-      assertion = assert_raises(Assertion) do
+      assert_failure_message("Expected 42 to be nil") do
         @case.assert_nil 42
       end
       assert_equal 2, @result.assertions_count
-      assert_equal "Expected 42 to be nil", assertion.message
     end
 
     def test_refute_nil
@@ -118,11 +112,10 @@ module Megatest
       @case.refute_nil(42)
       assert_equal 1, @result.assertions_count
 
-      assertion = assert_raises(Assertion) do
+      assert_failure_message("Expected nil to not be nil") do
         @case.refute_nil nil
       end
       assert_equal 2, @result.assertions_count
-      assert_equal "Expected nil to not be nil", assertion.message
     end
 
     def test_assert_equal
@@ -131,17 +124,15 @@ module Megatest
       @case.assert_equal(1, 1)
       assert_equal 1, @result.assertions_count
 
-      assertion = assert_raises(Assertion) do
+      assert_failure_message("Expected: 1\n  Actual: 2") do
         @case.assert_equal 1, 2
       end
       assert_equal 2, @result.assertions_count
-      assert_equal "Expected: 1\n  Actual: 2", assertion.message
 
-      assertion = assert_raises(Assertion) do
+      assert_failure_message("Use assert_nil if expecting nil, or pass `allow_nil: true`") do
         @case.assert_equal nil, nil
       end
       assert_equal 3, @result.assertions_count
-      assert_equal "Use assert_nil if expecting nil, or pass `allow_nil: true`", assertion.message
 
       @case.assert_equal(nil, nil, allow_nil: true)
       assert_equal 4, @result.assertions_count
@@ -163,23 +154,31 @@ module Megatest
       assert_equal expect, message
     end
 
+    def test_assert_equal_encoded_string
+      expected = "Résultat"
+      actual = "Résultat".b
+      message = assert_equal_message(expected, actual)
+      assert_equal <<~MESSAGE.strip, message
+        Expected: "Résultat"
+          Actual: "R\\xC3\\xA9sultat"
+      MESSAGE
+    end
+
     def test_assert_predicate
       assert_equal 0, @result.assertions_count
 
       @case.assert_predicate(1, :odd?)
       assert_equal 1, @result.assertions_count
 
-      assertion = assert_raises(Assertion) do
+      assert_failure_message("Expected 2 to be odd?") do
         @case.assert_predicate(2, :odd?)
       end
       assert_equal 2, @result.assertions_count
-      assert_equal "Expected 2 to be odd?", assertion.message
 
-      assertion = assert_raises(Assertion) do
+      assert_failure_message("Unexpected exception") do
         @case.assert_predicate(2, :does_not_exist?)
       end
       assert_equal 3, @result.assertions_count
-      assert_equal "Unexpected exception", assertion.message
     end
 
     def test_refute_predicate
@@ -188,17 +187,15 @@ module Megatest
       @case.refute_predicate(2, :odd?)
       assert_equal 1, @result.assertions_count
 
-      assertion = assert_raises(Assertion) do
+      assert_failure_message("Expected 1 to not be odd?") do
         @case.refute_predicate(1, :odd?)
       end
       assert_equal 2, @result.assertions_count
-      assert_equal "Expected 1 to not be odd?", assertion.message
 
-      assertion = assert_raises(Assertion) do
+      assert_failure_message("Unexpected exception") do
         @case.refute_predicate(2, :does_not_exist?)
       end
       assert_equal 3, @result.assertions_count
-      assert_equal "Unexpected exception", assertion.message
     end
 
     def test_instance_of
@@ -207,14 +204,36 @@ module Megatest
       @case.assert_instance_of(Integer, 42)
       assert_equal 1, @result.assertions_count
 
-      assertion = assert_raises(Assertion) do
+      assert_failure_message("Expected [] to be an instance of Integer, not Array") do
         @case.assert_instance_of(Integer, [])
       end
       assert_equal 2, @result.assertions_count
-      assert_equal "Expected [] to be an instance of Integer, not Array", assertion.message
+    end
+
+    def test_assert_match
+      assert_equal 0, @result.assertions_count
+
+      match = @case.assert_match(/bb|[^b]{2}/, "abba")
+      assert_instance_of MatchData, match
+      assert_equal "bb", match[0]
+      assert_equal 1, @result.assertions_count
+
+      match = @case.assert_match("foo/bar[12]", "before foo/bar[12] after")
+      assert_instance_of MatchData, match
+      assert_equal "foo/bar[12]", match[0]
+      assert_equal 2, @result.assertions_count
+
+      assert_failure_message('Expected /bb|[^b]{2}/ to match "baba"') do
+        @case.assert_match(/bb|[^b]{2}/, "baba")
+      end
     end
 
     private
+
+    def assert_failure_message(message, &block)
+      assertion = assert_raises(Assertion, &block)
+      assert_equal message, assertion.message
+    end
 
     def assert_equal_message(expected, actual)
       assertion = assert_raises(Assertion) do

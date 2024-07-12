@@ -131,8 +131,9 @@ module Megatest
 
   class Config
     attr_accessor :queue_url, :retry_tolerance, :max_retries, :jobs_count, :job_index, :load_paths,
-                  :build_id, :worker_id, :heartbeat_frequency, :program_name, :differ
+                  :build_id, :worker_id, :heartbeat_frequency, :program_name
     attr_reader :before_fork_callbacks, :global_setup_callbacks, :worker_setup_callbacks, :backtrace, :circuit_breaker, :seed
+    attr_writer :differ, :pretty_printer
 
     def initialize(env)
       @load_paths = ["test"] # For easier transition from other frameworks
@@ -152,7 +153,8 @@ module Megatest
       @program_name = "megatest"
       @circuit_breaker = CircuitBreaker.new(Float::INFINITY)
       @seed = Random.rand(0xFFFF)
-      @differ = Differ
+      @differ = Differ.new(self)
+      @pretty_printer = PrettyPrint.new(self)
       CIService.configure(self, env)
     end
 
@@ -176,14 +178,13 @@ module Megatest
     end
 
     def diff(expected, actual)
-      return unless @differ
-
-      @differ.new(self).call(expected, actual)
+      @differ&.call(expected, actual)
     end
 
     def pretty_print(object)
-      object.inspect # TODO: be smart
+      @pretty_printer.pretty_print(object)
     end
+    alias_method :pp, :pretty_print
 
     # We always return a new generator with the same seed as to
     # best reproduce remote builds locally if the same seed is given.

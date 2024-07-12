@@ -111,6 +111,9 @@ Lint/AssignmentInCondition:
 Lint/SuppressedException:
   Enabled: false # I know what I'm doing, thanks.
 
+Lint/RedundantRequireStatement:
+  Enabled: false # You're an idiot, I need to require "pp" to use PP.pretty_print
+
 
 Security/MarshalLoad:
   Enabled: false # I know what I'm doing, thanks.
