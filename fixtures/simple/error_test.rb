@@ -17,7 +17,7 @@ module TestedApp
         end
 
         def oops
-          1 + "1"
+          1 + nil
         end
       end
     end
@@ -35,11 +35,17 @@ module TestedApp
     def test_legacy_boom
       assert_equal 2, App.foo
     end
+
+    test "throw" do
+      assert_throws :test do
+        1 + nil
+      end
+    end
   end
 
   class SetupCallbackTest < TestCase
     setup do
-      1 + "1" # rubocop:disable Style/StringConcatenation
+      1 + nil
     end
 
     test "ok" do
@@ -49,7 +55,7 @@ module TestedApp
 
   class BeforeSetupTest < TestCase
     def before_setup
-      1 + "1" # rubocop:disable Style/StringConcatenation
+      1 + nil
     end
 
     test "ok" do
@@ -59,7 +65,27 @@ module TestedApp
 
   class TeardownCallbackTest < TestCase
     teardown do
-      1 + "1" # rubocop:disable Style/StringConcatenation
+      1 + nil
+    end
+
+    test "ok" do
+      assert true
+    end
+  end
+
+  class BeforeTeardownTest < TestCase
+    def before_teardown
+      1 + true
+    end
+
+    test "ok" do
+      assert true
+    end
+  end
+
+  class DefTeardownTest < TestCase
+    def teardown
+      1 + true
     end
 
     test "ok" do

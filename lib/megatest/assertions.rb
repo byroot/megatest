@@ -252,6 +252,26 @@ module Megatest
       end
     end
 
+    def assert_throws(thrown_object, message: nil)
+      @__m.assert do
+        caught = true
+        value = catch(thrown_object) do
+          @__m.expect_no_failures do
+            yield
+          rescue UncaughtThrowError => error
+            @__m.fail(message, "Expected #{@__m.pp(thrown_object)} to have been thrown, not: #{@__m.pp(error.tag)}")
+          end
+          caught = false
+        end
+
+        unless caught
+          @__m.fail(message, "Expected #{@__m.pp(thrown_object)} to have been thrown, but it wasn't")
+        end
+
+        value
+      end
+    end
+
     def assert_operator(left, operator, right, message: nil)
       @__m.assert do
         unless left.__send__(operator, right)

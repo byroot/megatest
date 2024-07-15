@@ -44,13 +44,13 @@ module Megatest
 
       error = assert_raises(Assertion) do
         @case.assert_raises(NotImplementedError) do
-          1 + "1" # rubocop:disable Style/StringConcatenation
+          1 + nil
         end
       end
       lines = error.message.split("\n")
       assert_equal "NotImplementedError exception expected, not:", lines[0]
       assert_equal "Class: <TypeError>", lines[1]
-      assert_equal %{Message: <"String can't be coerced into Integer">}, lines[2]
+      assert_equal %{Message: <"nil can't be coerced into Integer">}, lines[2]
       assert_equal "---Backtrace---", lines[3]
       assert_match(%r{\Atest/megatest/assertions_test.rb:\d+:in .*\+.*}, lines[4])
       assert_match(%r{\Atest/megatest/assertions_test.rb:\d+:in .*test_assert_raises.*}, lines[5])
@@ -476,11 +476,48 @@ module Megatest
       assert_equal 2, @result.assertions_count
     end
 
+    def test_assert_throws
+      assert_equal 0, @result.assertions_count
+
+      value = @case.assert_throws :test do
+        throw :test
+      end
+      assert_nil value
+      assert_equal 1, @result.assertions_count
+
+      value = @case.assert_throws :test do
+        throw :test, 42
+      end
+      assert_equal 42, value
+      assert_equal 2, @result.assertions_count
+
+      assert_failure_message("Expected :test to have been thrown, but it wasn't") do
+        @case.assert_throws :test do
+        end
+      end
+      assert_equal 3, @result.assertions_count
+
+      assert_failure_message("Expected :test to have been thrown, not: :not_test") do
+        @case.assert_throws :test do
+          throw :not_test
+        end
+      end
+      assert_equal 4, @result.assertions_count
+
+      assert_failure_message("Unexpected exception") do
+        @case.assert_throws :test do
+          1 + nil
+        end
+      end
+      assert_equal 5, @result.assertions_count
+    end
+
     private
 
     def assert_failure_message(message, &block)
       assertion = assert_raises(Assertion, &block)
-      assert_equal message, assertion.message
+      actual_message = assertion.message
+      assert_equal message, actual_message
     end
 
     def assert_equal_message(expected, actual)

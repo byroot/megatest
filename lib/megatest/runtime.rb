@@ -71,18 +71,12 @@ module Megatest
       end
     end
 
-    def expect_no_failures(downlevel: 0)
+    def expect_no_failures
       yield
-    rescue *Megatest::IGNORED_ERRORS
+    rescue Assertion, *Megatest::IGNORED_ERRORS
       raise # Exceptions we shouldn't rescue
     rescue Exception => unexpected_error
-      error = strip_backtrace(unexpected_error, __FILE__, __LINE__ - 4, downlevel)
-
-      if error.is_a?(Assertion)
-        raise error
-      else
-        raise UnexpectedError, error, EMPTY_BACKTRACE
-      end
+      raise UnexpectedError, unexpected_error, EMPTY_BACKTRACE
     end
 
     EMPTY_BACKTRACE = [].freeze
@@ -107,12 +101,19 @@ module Megatest
       @config.diff(expected, actual)
     end
 
-    def record_failures(downlevel: 0, &block)
-      expect_no_failures(downlevel: downlevel + 1, &block)
-      false
+    def record_failures(downlevel: 1, &block)
+      expect_no_failures(&block)
     rescue Assertion => assertion
+      error = assertion
+      while error
+        error = strip_backtrace(error, __FILE__, __LINE__ - 4, downlevel + 2)
+        error = error.cause
+      end
+
       @result.failures << Failure.new(assertion)
       true
+    else
+      false
     end
   end
 end

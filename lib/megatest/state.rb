@@ -446,7 +446,7 @@ module Megatest
         return result if runtime.record_failures { instance.before_setup }
 
         each_setup_callback do |callback|
-          return result if runtime.record_failures(downlevel: 1) { instance.instance_exec(&callback) }
+          return result if runtime.record_failures(downlevel: 2) { instance.instance_exec(&callback) }
         end
         return result if runtime.record_failures { instance.setup }
         return result if runtime.record_failures { instance.after_setup }
@@ -459,7 +459,7 @@ module Megatest
           instance.before_teardown
         end
         each_teardown_callback do |callback|
-          runtime.record_failures(downlevel: 1) do
+          runtime.record_failures(downlevel: 2) do
             instance.instance_exec(&callback)
           end
         end

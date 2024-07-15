@@ -11,7 +11,7 @@ module TestedApp
     end
 
     def test_the_unexpected
-      1 + "1" # rubocop:disable Style/StringConcatenation
+      1 + nil
     end
   end
 end
