@@ -46,6 +46,11 @@ class MegatestTest < MegaTestCase
       TestedApp::ConcreteBTest#predefined           | #{file}:#{TestedApp::ConcreteBTest::LINE}
       TestedApp::ConcreteBTest#reopened             | #{file}:#{TestedApp::ConcreteBTest::LINE}
     CLASSES
+
+    indexed_cases = @registry.test_cases_by_path.values.flatten.sort.map do |test_case|
+      "#{test_case.id.ljust(padding)} | #{Megatest.relative_path(test_case.source_file)}:#{test_case.source_line}"
+    end
+    assert_equal cases, indexed_cases
   end
 
   def test_already_defined

@@ -35,7 +35,7 @@ module Megatest
             test_case.source_file.start_with?(@path)
           end
         else
-          registry.test_cases_by_path[@path] || []
+          registry.test_cases_by_path(@path)
         end
       end
 
@@ -66,7 +66,7 @@ module Megatest
       end
 
       def select(registry)
-        test_cases = registry.test_cases_by_path[@path]
+        test_cases = registry.test_cases_by_path(@path)
         return [] unless test_cases
 
         test_cases.sort! { |a, b| b.source_line <=> a.source_line }
@@ -108,7 +108,7 @@ module Megatest
       end
 
       def select(registry)
-        test_cases = registry.test_cases_by_path[@path]
+        test_cases = registry.test_cases_by_path(@path)
         return [] unless test_cases
 
         test_cases.select do |t|
@@ -138,7 +138,7 @@ module Megatest
       end
 
       def select(registry)
-        test_cases = registry.test_cases_by_path[@path]
+        test_cases = registry.test_cases_by_path(@path)
         return [] unless test_cases
 
         test_cases.select do |t|

@@ -66,6 +66,9 @@ module Megatest
         else
           {}
         end
+        @test_cases.each_key do |test|
+          @registry.register_test_case(test)
+        end
       end
 
       def ancestors
@@ -83,7 +86,6 @@ module Megatest
           BlockTest.new(self, @klass, name, callable)
         end
         add_test(test)
-        @registry.register_test_case(test)
       end
 
       def add_test(test)
@@ -92,7 +94,8 @@ module Megatest
           return test if test.inherited?
 
           if duplicate.inherited?
-            @test_cases.delete(test)
+            @test_cases.delete(duplicate)
+            @registry.remove_test_case(duplicate)
           else
             # If the pre-existing test wasn't inherited, it means we're defining the
             # same test twice, that's a mistake.
@@ -102,6 +105,8 @@ module Megatest
         end
 
         @test_cases[test] = test
+        @registry.register_test_case(test)
+        test
       end
 
       def inherit_test_case(test_case)
@@ -215,9 +220,26 @@ module Megatest
       line_tests << test_case
 
       each_subclass_of(test_case.klass) do |subclass|
-        child_test_case = suite(subclass).inherit_test_case(test_case)
-        register_test_case(child_test_case)
+        suite(subclass).inherit_test_case(test_case)
       end
+    end
+
+    def remove_test_case(test_case)
+      path_index = @test_cases_by_location[test_case.source_file]
+      line_tests = path_index[test_case.source_line]
+      remove_index = line_tests.index(test_case)
+      line_tests.delete_at(remove_index)
+      case line_tests.size
+      when 0
+        # noop
+      when 1
+        line_tests[0].index = nil
+      else
+        remove_index.upto(line_tests.size - 1) do |index|
+          line_tests[index].index -= 1
+        end
+      end
+      test_cases
     end
 
     def test_suites
@@ -230,10 +252,18 @@ module Megatest
       end
     end
 
-    def test_cases_by_path
-      @test_cases_by_location.transform_values do |line_index|
-        line_index.flat_map do |_line, test_cases|
-          test_cases
+    def test_cases_by_path(path = nil)
+      if path
+        if index = @test_cases_by_location[path]
+          index.values.flatten
+        else
+          []
+        end
+      else
+        @test_cases_by_location.transform_values do |line_index|
+          line_index.flat_map do |_line, test_cases|
+            test_cases
+          end
         end
       end
     end
@@ -474,9 +504,9 @@ module Megatest
 
     def inspect
       if klass.name
-        "#<#{id}>"
+        "#<#{self.class}: #{id} @ #{location_id}>"
       else
-        "#<#{klass.inspect}##{name}>"
+        "#<#{self.class}: #{klass.inspect}##{name} @ #{location_id}>"
       end
     end
 
