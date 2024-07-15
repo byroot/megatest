@@ -216,6 +216,14 @@ module Megatest
       end
     end
 
+    def assert_operator(left, operator, right, message: nil)
+      @__m.assert do
+        unless left.__send__(operator, right)
+          @__m.fail(message, "Expected #{@__m.pp(left)} to be #{operator} #{@__m.pp(right)}")
+        end
+      end
+    end
+
     def skip(message)
       message ||= "Skipped, no message given"
       ::Kernel.raise(::Megatest::Skip, message, nil)

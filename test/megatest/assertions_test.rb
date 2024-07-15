@@ -394,6 +394,18 @@ module Megatest
       assert_equal 2, @result.assertions_count
     end
 
+    def test_assert_operator
+      assert_equal 0, @result.assertions_count
+
+      @case.assert_operator 2, :>, 1
+      assert_equal 1, @result.assertions_count
+
+      assert_failure_message("Expected 1 to be > 2") do
+        @case.assert_operator 1, :>, 2
+      end
+      assert_equal 2, @result.assertions_count
+    end
+
     private
 
     def assert_failure_message(message, &block)
