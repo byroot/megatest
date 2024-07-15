@@ -40,7 +40,8 @@ module Megatest
       @__m.assert {}
     end
 
-    def assert(result, message: nil)
+    def assert(result, msg = nil, message: nil)
+      message = @__m.msg(msg, message)
       @__m.assert do
         return if result
 
@@ -48,7 +49,8 @@ module Megatest
       end
     end
 
-    def refute(result, message: nil)
+    def refute(result, msg = nil, message: nil)
+      message = @__m.msg(msg, message)
       @__m.assert do
         return unless result
 
@@ -56,7 +58,8 @@ module Megatest
       end
     end
 
-    def assert_nil(actual, message: nil)
+    def assert_nil(actual, msg = nil, message: nil)
+      message = @__m.msg(msg, message)
       @__m.assert do
         unless nil.equal?(actual)
           @__m.fail(message, "Expected #{@__m.pp(actual)} to be nil")
@@ -64,7 +67,8 @@ module Megatest
       end
     end
 
-    def refute_nil(actual, message: nil)
+    def refute_nil(actual, msg = nil, message: nil)
+      message = @__m.msg(msg, message)
       @__m.assert do
         if nil.equal?(actual)
           @__m.fail(message, "Expected #{@__m.pp(actual)} to not be nil")
@@ -72,7 +76,8 @@ module Megatest
       end
     end
 
-    def assert_equal(expected, actual, message: nil, allow_nil: false)
+    def assert_equal(expected, actual, msg = nil, message: nil, allow_nil: false)
+      message = @__m.msg(msg, message)
       @__m.assert do
         if !allow_nil && nil == expected
           @__m.fail(nil, "Use assert_nil if expecting nil, or pass `allow_nil: true`")
@@ -88,7 +93,8 @@ module Megatest
       end
     end
 
-    def refute_equal(expected, actual, message: nil, allow_nil: false)
+    def refute_equal(expected, actual, msg = nil, message: nil, allow_nil: false)
+      message = @__m.msg(msg, message)
       @__m.assert do
         if !allow_nil && nil == expected
           @__m.fail(nil, "Use refute_nil if expecting to not be nil, or pass `allow_nil: true`")
@@ -103,7 +109,8 @@ module Megatest
       end
     end
 
-    def assert_includes(collection, object, message: nil)
+    def assert_includes(collection, object, msg = nil, message: nil)
+      message = @__m.msg(msg, message)
       @__m.assert do
         unless collection.include?(object)
           @__m.fail message, "Expected\n\n#{@__m.pp(collection)}\n\nto include\n\n#{@__m.pp(object)}"
@@ -111,7 +118,8 @@ module Megatest
       end
     end
 
-    def refute_includes(collection, object, message: nil)
+    def refute_includes(collection, object, msg = nil, message: nil)
+      message = @__m.msg(msg, message)
       @__m.assert do
         if collection.include?(object)
           @__m.fail message, "Expected\n\n#{@__m.pp(collection)}\n\nto not include\n\n#{@__m.pp(object)}"
@@ -119,7 +127,8 @@ module Megatest
       end
     end
 
-    def assert_empty(object, message: nil)
+    def assert_empty(object, msg = nil, message: nil)
+      message = @__m.msg(msg, message)
       @__m.assert do
         unless object.empty?
           @__m.fail message, "Expected #{@__m.pp(object)} to be empty"
@@ -127,7 +136,8 @@ module Megatest
       end
     end
 
-    def refute_empty(object, message: nil)
+    def refute_empty(object, msg = nil, message: nil)
+      message = @__m.msg(msg, message)
       @__m.assert do
         if object.empty?
           @__m.fail message, "Expected #{@__m.pp(object)} to not be empty"
@@ -135,7 +145,8 @@ module Megatest
       end
     end
 
-    def assert_instance_of(klass, actual, message: nil)
+    def assert_instance_of(klass, actual, msg = nil, message: nil)
+      message = @__m.msg(msg, message)
       @__m.assert do
         unless actual.instance_of?(klass)
           @__m.fail(message, "Expected #{@__m.pp(actual)} to be an instance of #{@__m.pp(klass)}, not #{@__m.pp(actual.class)}")
@@ -143,7 +154,8 @@ module Megatest
       end
     end
 
-    def refute_instance_of(klass, actual, message: nil)
+    def refute_instance_of(klass, actual, msg = nil, message: nil)
+      message = @__m.msg(msg, message)
       @__m.assert do
         if actual.instance_of?(klass)
           @__m.fail(message, "Expected #{@__m.pp(actual)} to not be an instance of #{@__m.pp(klass)}")
@@ -151,7 +163,8 @@ module Megatest
       end
     end
 
-    def assert_kind_of(klass, actual, message: nil)
+    def assert_kind_of(klass, actual, msg = nil, message: nil)
+      message = @__m.msg(msg, message)
       @__m.assert do
         unless actual.kind_of?(klass)
           @__m.fail(message, "Expected #{@__m.pp(actual)} to be a kind of #{@__m.pp(klass)}, not #{@__m.pp(actual.class)}")
@@ -159,7 +172,8 @@ module Megatest
       end
     end
 
-    def refute_kind_of(klass, actual, message: nil)
+    def refute_kind_of(klass, actual, msg = nil, message: nil)
+      message = @__m.msg(msg, message)
       @__m.assert do
         if actual.kind_of?(klass)
           @__m.fail(message, "Expected #{@__m.pp(actual)} to not be a kind of #{@__m.pp(klass)}")
@@ -167,7 +181,8 @@ module Megatest
       end
     end
 
-    def assert_predicate(actual, predicate, message: nil)
+    def assert_predicate(actual, predicate, msg = nil, message: nil)
+      message = @__m.msg(msg, message)
       @__m.assert do
         unless @__m.expect_no_failures { actual.__send__(predicate) }
           @__m.fail(message, "Expected #{@__m.pp(actual)} to be #{predicate}")
@@ -175,7 +190,8 @@ module Megatest
       end
     end
 
-    def refute_predicate(actual, predicate, message: nil)
+    def refute_predicate(actual, predicate, msg = nil, message: nil)
+      message = @__m.msg(msg, message)
       @__m.assert do
         if @__m.expect_no_failures { actual.__send__(predicate) }
           @__m.fail(message, "Expected #{@__m.pp(actual)} to not be #{predicate}")
@@ -183,7 +199,8 @@ module Megatest
       end
     end
 
-    def assert_match(original_matcher, obj, message: nil)
+    def assert_match(original_matcher, obj, msg = nil, message: nil)
+      message = @__m.msg(msg, message)
       @__m.assert do
         matcher = if ::String === original_matcher
           ::Regexp.new(::Regexp.escape(original_matcher))
@@ -199,7 +216,8 @@ module Megatest
       end
     end
 
-    def refute_match(original_matcher, obj, message: nil)
+    def refute_match(original_matcher, obj, msg = nil, message: nil)
+      message = @__m.msg(msg, message)
       @__m.assert do
         matcher = if ::String === original_matcher
           ::Regexp.new(::Regexp.escape(original_matcher))
@@ -213,7 +231,8 @@ module Megatest
       end
     end
 
-    def assert_respond_to(object, method, message: nil, include_all: false)
+    def assert_respond_to(object, method, msg = nil, message: nil, include_all: false)
+      message = @__m.msg(msg, message)
       @__m.assert do
         unless object.respond_to?(method, include_all)
           @__m.fail(message, "Expected #{@__m.pp(object)} to respond to :#{method}")
@@ -221,7 +240,8 @@ module Megatest
       end
     end
 
-    def refute_respond_to(object, method, message: nil, include_all: false)
+    def refute_respond_to(object, method, msg = nil, message: nil, include_all: false)
+      message = @__m.msg(msg, message)
       @__m.assert do
         if object.respond_to?(method, include_all)
           @__m.fail(message, "Expected #{@__m.pp(object)} to not respond to :#{method}")
@@ -229,7 +249,8 @@ module Megatest
       end
     end
 
-    def assert_same(expected, actual, message: nil)
+    def assert_same(expected, actual, msg = nil, message: nil)
+      message = @__m.msg(msg, message)
       @__m.assert do
         unless expected.equal?(actual)
           @__m.fail message, begin
@@ -247,7 +268,8 @@ module Megatest
       end
     end
 
-    def refute_same(expected, actual, message: nil)
+    def refute_same(expected, actual, msg = nil, message: nil)
+      message = @__m.msg(msg, message)
       @__m.assert do
         if expected.equal?(actual)
           @__m.fail message, begin
@@ -266,6 +288,8 @@ module Megatest
     end
 
     def assert_raises(expected = StandardError, *expected_exceptions, message: nil)
+      msg = expected_exceptions.pop if expected_exceptions.last.is_a?(String)
+      message = @__m.msg(msg, message)
       @__m.assert do
         @__m.fail("assert_raises requires a block to capture errors.") unless block_given?
 
@@ -297,7 +321,8 @@ module Megatest
       end
     end
 
-    def assert_throws(thrown_object, message: nil)
+    def assert_throws(thrown_object, msg = nil, message: nil)
+      message = @__m.msg(msg, message)
       @__m.assert do
         caught = true
         value = catch(thrown_object) do
@@ -317,7 +342,8 @@ module Megatest
       end
     end
 
-    def assert_operator(left, operator, right, message: nil)
+    def assert_operator(left, operator, right, msg = nil, message: nil)
+      message = @__m.msg(msg, message)
       @__m.assert do
         unless left.__send__(operator, right)
           @__m.fail(message, "Expected #{@__m.pp(left)} to be #{operator} #{@__m.pp(right)}")
@@ -325,7 +351,8 @@ module Megatest
       end
     end
 
-    def refute_operator(left, operator, right, message: nil)
+    def refute_operator(left, operator, right, msg = nil, message: nil)
+      message = @__m.msg(msg, message)
       @__m.assert do
         if left.__send__(operator, right)
           @__m.fail(message, "Expected #{@__m.pp(left)} to not be #{operator} #{@__m.pp(right)}")
@@ -333,7 +360,8 @@ module Megatest
       end
     end
 
-    def assert_in_delta(expected, actual, delta = 0.001, message: nil)
+    def assert_in_delta(expected, actual, delta = 0.001, msg = nil, message: nil)
+      message = @__m.msg(msg, message)
       @__m.assert do
         diff = (expected - actual).abs
         unless delta >= diff
@@ -342,7 +370,8 @@ module Megatest
       end
     end
 
-    def refute_in_delta(expected, actual, delta = 0.001, message: nil)
+    def refute_in_delta(expected, actual, delta = 0.001, msg = nil, message: nil)
+      message = @__m.msg(msg, message)
       @__m.assert do
         diff = (expected - actual).abs
         if delta >= diff
@@ -351,7 +380,8 @@ module Megatest
       end
     end
 
-    def assert_in_epsilon(expected, actual, epsilon = 0.001, message: nil)
+    def assert_in_epsilon(expected, actual, epsilon = 0.001, msg = nil, message: nil)
+      message = @__m.msg(msg, message)
       @__m.assert do
         diff = (expected - actual).abs
         delta = [expected.abs, actual.abs].min * epsilon
@@ -361,7 +391,8 @@ module Megatest
       end
     end
 
-    def refute_in_epsilon(expected, actual, epsilon = 0.001, message: nil)
+    def refute_in_epsilon(expected, actual, epsilon = 0.001, msg = nil, message: nil)
+      message = @__m.msg(msg, message)
       @__m.assert do
         diff = (expected - actual).abs
         delta = [expected.abs, actual.abs].min * epsilon
@@ -376,7 +407,8 @@ module Megatest
       ::Kernel.raise(::Megatest::Skip, message, nil)
     end
 
-    def flunk(postional_message = nil, message: postional_message)
+    def flunk(msg = nil, message: nil)
+      message = @__m.msg(msg, message)
       @__m.assert do
         @__m.fail(message || "Failed", nil)
       end

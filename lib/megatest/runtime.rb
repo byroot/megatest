@@ -71,6 +71,16 @@ module Megatest
       end
     end
 
+    def msg(positional, keyword)
+      if positional.nil?
+        keyword
+      elsif !keyword.nil?
+        raise ArgumentError, "Can't pass both a positional and keyword assertion message"
+      else
+        positional # TODO: deprecation mecanism
+      end
+    end
+
     def expect_no_failures
       yield
     rescue Assertion, *Megatest::IGNORED_ERRORS

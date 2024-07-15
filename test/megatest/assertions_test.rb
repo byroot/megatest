@@ -34,6 +34,20 @@ module Megatest
       end
     end
 
+    def test_assert_messages
+      assert_failure_message("Keyword message") do
+        @case.assert false, message: "Keyword message"
+      end
+
+      assert_failure_message("Positional message") do
+        @case.assert false, "Positional message"
+      end
+
+      assert_raises(ArgumentError) do
+        @case.assert false, "Positional message", message: "Keyword message"
+      end
+    end
+
     def test_assert_raises
       assert_equal 0, @result.assertions_count
 
