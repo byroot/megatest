@@ -199,6 +199,20 @@ module Megatest
       end
     end
 
+    def refute_match(original_matcher, obj, message: nil)
+      @__m.assert do
+        matcher = if ::String === original_matcher
+          ::Regexp.new(::Regexp.escape(original_matcher))
+        else
+          original_matcher
+        end
+
+        if matcher.match?(obj)
+          @__m.fail(message, "Expected #{@__m.pp(original_matcher)} to not match #{@__m.pp(obj)}")
+        end
+      end
+    end
+
     def assert_respond_to(object, method, message: nil, include_all: false)
       @__m.assert do
         unless object.respond_to?(method, include_all)

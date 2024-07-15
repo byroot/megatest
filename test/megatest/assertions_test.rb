@@ -343,6 +343,17 @@ module Megatest
       end
     end
 
+    def test_refute_match
+      assert_equal 0, @result.assertions_count
+
+      @case.refute_match(/bb|[^b]{2}/, "baba")
+      assert_equal 1, @result.assertions_count
+
+      assert_failure_message('Expected /bb|[^b]{2}/ to not match "abba"') do
+        @case.refute_match(/bb|[^b]{2}/, "abba")
+      end
+    end
+
     def test_assert_respond_to
       assert_equal 0, @result.assertions_count
 
