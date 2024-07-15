@@ -342,6 +342,15 @@ module Megatest
       end
     end
 
+    def refute_in_delta(expected, actual, delta = 0.001, message: nil)
+      @__m.assert do
+        diff = (expected - actual).abs
+        if delta >= diff
+          @__m.fail(message, "Expected |#{@__m.pp(expected)} - #{@__m.pp(actual)}| (#{diff}) to not be <= #{delta}")
+        end
+      end
+    end
+
     def assert_in_epsilon(expected, actual, epsilon = 0.001, message: nil)
       @__m.assert do
         diff = (expected - actual).abs

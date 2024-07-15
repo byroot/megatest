@@ -541,6 +541,18 @@ module Megatest
       assert_equal 2, @result.assertions_count
     end
 
+    def test_refute_in_delta
+      assert_equal 0, @result.assertions_count
+
+      @case.refute_in_delta 10, 9.5, 0.2
+      assert_equal 1, @result.assertions_count
+
+      assert_failure_message("Expected |10 - 9.5| (0.5) to not be <= 0.6") do
+        @case.refute_in_delta 10, 9.5, 0.6
+      end
+      assert_equal 2, @result.assertions_count
+    end
+
     def test_assert_in_epsilon
       assert_equal 0, @result.assertions_count
 
