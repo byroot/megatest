@@ -112,6 +112,30 @@ module Megatest
       end
     end
 
+    def refute_instance_of(klass, actual, message: nil)
+      @__m.assert do
+        if actual.instance_of?(klass)
+          @__m.fail(message, "Expected #{@__m.pp(actual)} to not be an instance of #{@__m.pp(klass)}")
+        end
+      end
+    end
+
+    def assert_kind_of(klass, actual, message: nil)
+      @__m.assert do
+        unless actual.kind_of?(klass)
+          @__m.fail(message, "Expected #{@__m.pp(actual)} to be a kind of #{@__m.pp(klass)}, not #{@__m.pp(actual.class)}")
+        end
+      end
+    end
+
+    def refute_kind_of(klass, actual, message: nil)
+      @__m.assert do
+        if actual.kind_of?(klass)
+          @__m.fail(message, "Expected #{@__m.pp(actual)} to not be a kind of #{@__m.pp(klass)}")
+        end
+      end
+    end
+
     def assert_predicate(actual, predicate, message: nil)
       @__m.assert do
         unless @__m.expect_no_failures { actual.__send__(predicate) }

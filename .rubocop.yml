@@ -64,6 +64,9 @@ Style/EmptyMethod:
 Style/InfiniteLoop:
   Enabled: false
 
+Style/ClassCheck:
+  Enabled: false # How am I supposed to implement assert_kind_of...
+
 Style/YodaCondition:
   # Yoda style is a good idea for a test framework that need to do defensive programing
   Enabled: false

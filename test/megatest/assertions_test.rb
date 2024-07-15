@@ -252,7 +252,7 @@ module Megatest
       assert_equal 3, @result.assertions_count
     end
 
-    def test_instance_of
+    def test_assert_instance_of
       assert_equal 0, @result.assertions_count
 
       @case.assert_instance_of(Integer, 42)
@@ -260,6 +260,42 @@ module Megatest
 
       assert_failure_message("Expected [] to be an instance of Integer, not Array") do
         @case.assert_instance_of(Integer, [])
+      end
+      assert_equal 2, @result.assertions_count
+    end
+
+    def test_refute_instance_of
+      assert_equal 0, @result.assertions_count
+
+      @case.refute_instance_of(Float, 42)
+      assert_equal 1, @result.assertions_count
+
+      assert_failure_message("Expected 1 to not be an instance of Integer") do
+        @case.refute_instance_of(Integer, 1)
+      end
+      assert_equal 2, @result.assertions_count
+    end
+
+    def test_assert_kind_of
+      assert_equal 0, @result.assertions_count
+
+      @case.assert_kind_of(Numeric, 42)
+      assert_equal 1, @result.assertions_count
+
+      assert_failure_message("Expected 1 to be a kind of Enumerable, not Integer") do
+        @case.assert_kind_of(Enumerable, 1)
+      end
+      assert_equal 2, @result.assertions_count
+    end
+
+    def test_refute_kind_of
+      assert_equal 0, @result.assertions_count
+
+      @case.refute_kind_of(Float, 42)
+      assert_equal 1, @result.assertions_count
+
+      assert_failure_message("Expected 1 to not be a kind of Numeric") do
+        @case.refute_kind_of(Numeric, 1)
       end
       assert_equal 2, @result.assertions_count
     end
