@@ -335,7 +335,7 @@ module Megatest
     end
 
     def failure?
-      !@retried && !@failures.empty? && @failures.first&.name != UnexpectedError.name
+      !@retried && !skipped? && !@failures.empty? && @failures.first&.name != UnexpectedError.name
     end
 
     def error?
