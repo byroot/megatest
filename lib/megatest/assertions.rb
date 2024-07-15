@@ -44,7 +44,7 @@ module Megatest
       @__m.assert do
         return if result
 
-        @__m.fail(message || "Expected #{result.inspect} to be truthy")
+        @__m.fail(message || "Expected #{result.inspect} to be truthy", nil)
       end
     end
 
@@ -52,14 +52,14 @@ module Megatest
       @__m.assert do
         return unless result
 
-        @__m.fail(message || "Expected #{result.inspect} to be falsy")
+        @__m.fail(message || "Expected #{result.inspect} to be falsy", nil)
       end
     end
 
     def assert_nil(actual, message: nil)
       @__m.assert do
         unless nil.equal?(actual)
-          @__m.fail(message || "Expected #{actual.inspect} to be nil")
+          @__m.fail(message, "Expected #{actual.inspect} to be nil")
         end
       end
     end
@@ -67,7 +67,7 @@ module Megatest
     def refute_nil(actual, message: nil)
       @__m.assert do
         if nil.equal?(actual)
-          @__m.fail(message || "Expected #{actual.inspect} to not be nil")
+          @__m.fail(message, "Expected #{actual.inspect} to not be nil")
         end
       end
     end
@@ -75,12 +75,12 @@ module Megatest
     def assert_equal(expected, actual, message: nil, allow_nil: false)
       @__m.assert do
         if !allow_nil && nil == expected
-          @__m.fail("Use assert_nil if expecting nil, or pass `allow_nil: true`")
+          @__m.fail(nil, "Use assert_nil if expecting nil, or pass `allow_nil: true`")
         end
 
         if expected != actual
           @__m.fail(
-            message ||
+            message,
             @__m.diff(expected, actual) ||
             "Expected: #{@__m.pp(expected)}\n  Actual: #{@__m.pp(actual)}",
           )
@@ -91,7 +91,7 @@ module Megatest
     def assert_instance_of(klass, actual, message: nil)
       @__m.assert do
         unless actual.instance_of?(klass)
-          @__m.fail(message || "Expected #{actual.inspect} to be an instance of #{klass}, not #{actual.class.name || actual.class}")
+          @__m.fail(message, "Expected #{actual.inspect} to be an instance of #{klass}, not #{actual.class.name || actual.class}")
         end
       end
     end
@@ -99,7 +99,7 @@ module Megatest
     def assert_predicate(actual, predicate, message: nil)
       @__m.assert do
         unless @__m.expect_no_failures { actual.__send__(predicate) }
-          @__m.fail(message || "Expected #{@__m.pp(actual)} to be #{predicate}")
+          @__m.fail(message, "Expected #{@__m.pp(actual)} to be #{predicate}")
         end
       end
     end
@@ -107,7 +107,7 @@ module Megatest
     def refute_predicate(actual, predicate, message: nil)
       @__m.assert do
         if @__m.expect_no_failures { actual.__send__(predicate) }
-          @__m.fail(message || "Expected #{@__m.pp(actual)} to not be #{predicate}")
+          @__m.fail(message, "Expected #{@__m.pp(actual)} to not be #{predicate}")
         end
       end
     end
@@ -121,7 +121,7 @@ module Megatest
         end
 
         unless match = matcher.match(obj)
-          @__m.fail(message || "Expected #{@__m.pp(original_matcher)} to match #{@__m.pp(obj)}")
+          @__m.fail(message, "Expected #{@__m.pp(original_matcher)} to match #{@__m.pp(obj)}")
         end
 
         match
@@ -131,7 +131,7 @@ module Megatest
     def assert_respond_to(object, method, message: nil, include_all: false)
       @__m.assert do
         unless object.respond_to?(method, include_all)
-          @__m.fail(message || "Expected #{@__m.pp(object)} to respond to :#{method}")
+          @__m.fail(message, "Expected #{@__m.pp(object)} to respond to :#{method}")
         end
       end
     end
@@ -139,7 +139,7 @@ module Megatest
     def refute_respond_to(object, method, message: nil, include_all: false)
       @__m.assert do
         if object.respond_to?(method, include_all)
-          @__m.fail(message || "Expected #{@__m.pp(object)} to not respond to :#{method}")
+          @__m.fail(message, "Expected #{@__m.pp(object)} to not respond to :#{method}")
         end
       end
     end
@@ -147,7 +147,7 @@ module Megatest
     def assert_same(expected, actual, message: nil)
       @__m.assert do
         unless expected.equal?(actual)
-          message ||= begin
+          @__m.fail message, begin
             actual_pp = @__m.pp(actual)
             expected_pp = @__m.pp(expected)
             if actual_pp == expected_pp
@@ -158,8 +158,6 @@ module Megatest
             "Expected          #{actual_pp}\n" \
             "To be the same as #{expected_pp}"
           end
-
-          @__m.fail(message)
         end
       end
     end
@@ -167,7 +165,7 @@ module Megatest
     def refute_same(expected, actual, message: nil)
       @__m.assert do
         if expected.equal?(actual)
-          message ||= begin
+          @__m.fail message, begin
             actual_pp = @__m.pp(actual)
             expected_pp = @__m.pp(expected)
             if actual_pp == expected_pp
@@ -178,8 +176,6 @@ module Megatest
             "Expected              #{actual_pp}\n" \
             "To not be the same as #{expected_pp}"
           end
-
-          @__m.fail(message)
         end
       end
     end
@@ -197,10 +193,10 @@ module Megatest
           raise # Pass through
         rescue ::Exception => exception
           # TODO: render exception
-          @__m.fail("#{expected_exceptions.inspect} exception expected, not #{exception.inspect}")
+          @__m.fail(message, "#{expected_exceptions.inspect} exception expected, not #{exception.inspect}")
         end
 
-        @__m.fail(message || "#{expected_exceptions.inspect} expected but nothing was raised.")
+        @__m.fail(message, "#{expected_exceptions.inspect} expected but nothing was raised.")
       end
     end
 
@@ -211,7 +207,7 @@ module Megatest
 
     def flunk(postional_message = nil, message: postional_message)
       @__m.assert do
-        @__m.fail(message || "Failed")
+        @__m.fail(message || "Failed", nil)
       end
     end
   end

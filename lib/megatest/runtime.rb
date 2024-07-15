@@ -83,10 +83,16 @@ module Megatest
 
     EMPTY_BACKTRACE = [].freeze
 
-    def fail(message)
-      message ||= "Failed"
-      message = message.call if message.respond_to?(:call)
-      raise(Assertion, String(message), EMPTY_BACKTRACE)
+    def fail(user_message, message)
+      if user_message
+        user_message = user_message.call if user_message.respond_to?(:call)
+        user_message = String(user_message)
+        if message && !user_message.end_with?("\n")
+          user_message += "\n"
+        end
+        message = "#{user_message}#{message}"
+      end
+      raise(Assertion, message, EMPTY_BACKTRACE)
     end
 
     def pp(object)

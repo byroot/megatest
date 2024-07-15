@@ -133,6 +133,11 @@ module Megatest
         @case.assert_nil 42
       end
       assert_equal 2, @result.assertions_count
+
+      assert_failure_message("Some useful context\nExpected 42 to be nil") do
+        @case.assert_nil 42, message: "Some useful context"
+      end
+      assert_equal 3, @result.assertions_count
     end
 
     def test_refute_nil
@@ -145,6 +150,11 @@ module Megatest
         @case.refute_nil nil
       end
       assert_equal 2, @result.assertions_count
+
+      assert_failure_message("Some useful context\nExpected nil to not be nil") do
+        @case.refute_nil nil, message: "Some useful context"
+      end
+      assert_equal 3, @result.assertions_count
     end
 
     def test_assert_equal
@@ -165,6 +175,11 @@ module Megatest
 
       @case.assert_equal(nil, nil, allow_nil: true)
       assert_equal 4, @result.assertions_count
+
+      assert_failure_message("Some useful context\nExpected: 1\n  Actual: 2") do
+        @case.assert_equal 1, 2, message: "Some useful context\n"
+      end
+      assert_equal 5, @result.assertions_count
     end
 
     def test_assert_equal_multiline_strings
