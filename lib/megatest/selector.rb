@@ -73,7 +73,7 @@ module Megatest
         test_cases = test_cases.drop_while { |t| t.source_line > @line }
 
         # Line not found, fallback to run the whole file?
-        return if test_cases.empty?
+        return [] if test_cases.empty?
 
         real_line = test_cases.first&.source_line
         test_cases = test_cases.take_while { |t| t.source_line == real_line }
