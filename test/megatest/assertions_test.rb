@@ -517,6 +517,18 @@ module Megatest
       assert_equal 2, @result.assertions_count
     end
 
+    def test_refute_operator
+      assert_equal 0, @result.assertions_count
+
+      @case.refute_operator 2, :<, 1
+      assert_equal 1, @result.assertions_count
+
+      assert_failure_message("Expected 1 to not be < 2") do
+        @case.refute_operator 1, :<, 2
+      end
+      assert_equal 2, @result.assertions_count
+    end
+
     def test_assert_in_delta
       assert_equal 0, @result.assertions_count
 

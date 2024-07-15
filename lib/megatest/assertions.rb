@@ -325,6 +325,14 @@ module Megatest
       end
     end
 
+    def refute_operator(left, operator, right, message: nil)
+      @__m.assert do
+        if left.__send__(operator, right)
+          @__m.fail(message, "Expected #{@__m.pp(left)} to not be #{operator} #{@__m.pp(right)}")
+        end
+      end
+    end
+
     def assert_in_delta(expected, actual, delta = 0.001, message: nil)
       @__m.assert do
         diff = (expected - actual).abs
