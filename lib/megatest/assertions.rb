@@ -224,6 +224,25 @@ module Megatest
       end
     end
 
+    def assert_in_delta(expected, actual, delta = 0.001, message: nil)
+      @__m.assert do
+        diff = (expected - actual).abs
+        unless delta >= diff
+          @__m.fail(message, "Expected |#{@__m.pp(expected)} - #{@__m.pp(actual)}| (#{diff}) to be <= #{delta}")
+        end
+      end
+    end
+
+    def assert_in_epsilon(expected, actual, epsilon = 0.001, message: nil)
+      @__m.assert do
+        diff = (expected - actual).abs
+        delta = [expected.abs, actual.abs].min * epsilon
+        unless delta >= diff
+          @__m.fail(message, "Expected |#{@__m.pp(expected)} - #{@__m.pp(actual)}| (#{diff}) to be <= #{delta}")
+        end
+      end
+    end
+
     def skip(message)
       message ||= "Skipped, no message given"
       ::Kernel.raise(::Megatest::Skip, message, nil)
