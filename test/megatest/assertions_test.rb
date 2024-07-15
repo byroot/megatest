@@ -440,6 +440,35 @@ module Megatest
       assert_equal 2, @result.assertions_count
     end
 
+    def test_assert_empty
+      assert_equal 0, @result.assertions_count
+
+      @case.assert_empty []
+      assert_equal 1, @result.assertions_count
+
+      assert_failure_message('Expected ["foo", "bar", "baz"] to be empty') do
+        @case.assert_empty(%w(foo bar baz))
+      end
+      assert_equal 2, @result.assertions_count
+
+      assert_failure_message('Expected "foo\n" + "bar\n" + "baz\n" to be empty') do
+        @case.assert_empty("foo\nbar\nbaz\n")
+      end
+      assert_equal 3, @result.assertions_count
+    end
+
+    def test_refute_empty
+      assert_equal 0, @result.assertions_count
+
+      @case.refute_empty %w(foo)
+      assert_equal 1, @result.assertions_count
+
+      assert_failure_message("Expected [] to not be empty") do
+        @case.refute_empty([])
+      end
+      assert_equal 2, @result.assertions_count
+    end
+
     def test_assert_operator
       assert_equal 0, @result.assertions_count
 

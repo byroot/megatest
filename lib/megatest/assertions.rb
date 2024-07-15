@@ -104,6 +104,22 @@ module Megatest
       end
     end
 
+    def assert_empty(object, message: nil)
+      @__m.assert do
+        unless object.empty?
+          @__m.fail message, "Expected #{@__m.pp(object)} to be empty"
+        end
+      end
+    end
+
+    def refute_empty(object, message: nil)
+      @__m.assert do
+        if object.empty?
+          @__m.fail message, "Expected #{@__m.pp(object)} to not be empty"
+        end
+      end
+    end
+
     def assert_instance_of(klass, actual, message: nil)
       @__m.assert do
         unless actual.instance_of?(klass)
