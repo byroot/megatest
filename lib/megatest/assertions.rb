@@ -88,6 +88,22 @@ module Megatest
       end
     end
 
+    def assert_includes(collection, object, message: nil)
+      @__m.assert do
+        unless collection.include?(object)
+          @__m.fail message, "Expected\n\n#{@__m.pp(collection)}\n\nto include\n\n#{@__m.pp(object)}"
+        end
+      end
+    end
+
+    def refute_includes(collection, object, message: nil)
+      @__m.assert do
+        if collection.include?(object)
+          @__m.fail message, "Expected\n\n#{@__m.pp(collection)}\n\nto not include\n\n#{@__m.pp(object)}"
+        end
+      end
+    end
+
     def assert_instance_of(klass, actual, message: nil)
       @__m.assert do
         unless actual.instance_of?(klass)

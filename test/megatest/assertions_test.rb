@@ -338,6 +338,62 @@ module Megatest
       assert_equal 1, @result.assertions_count
     end
 
+    def test_assert_includes
+      assert_equal 0, @result.assertions_count
+
+      @case.assert_includes %w(foo), "foo"
+      assert_equal 1, @result.assertions_count
+
+      message = <<~MESSAGE.strip
+        Expected
+
+        ["foo", "bar", "baz"]
+
+        to include
+
+        "spam"
+      MESSAGE
+      assert_failure_message(message) do
+        @case.assert_includes(%w(foo bar baz), "spam")
+      end
+      assert_equal 2, @result.assertions_count
+
+      message = <<~'MESSAGE'.strip
+        Expected
+
+        "foo\n" + "bar\n" + "baz\n"
+
+        to include
+
+        "spam"
+      MESSAGE
+      assert_failure_message(message) do
+        @case.assert_includes("foo\nbar\nbaz\n", "spam")
+      end
+      assert_equal 3, @result.assertions_count
+    end
+
+    def test_refute_includes
+      assert_equal 0, @result.assertions_count
+
+      @case.refute_includes %w(foo), "bar"
+      assert_equal 1, @result.assertions_count
+
+      message = <<~MESSAGE.strip
+        Expected
+
+        ["foo", "bar", "baz"]
+
+        to not include
+
+        "bar"
+      MESSAGE
+      assert_failure_message(message) do
+        @case.refute_includes(%w(foo bar baz), "bar")
+      end
+      assert_equal 2, @result.assertions_count
+    end
+
     private
 
     def assert_failure_message(message, &block)
