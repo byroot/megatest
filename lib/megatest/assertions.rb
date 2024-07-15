@@ -36,11 +36,23 @@ module Megatest
   end
 
   module Assertions
+    def pass
+      @__m.assert {}
+    end
+
     def assert(result, message: nil)
       @__m.assert do
         return if result
 
         @__m.fail(message || "Expected #{result.inspect} to be truthy")
+      end
+    end
+
+    def refute(result, message: nil)
+      @__m.assert do
+        return unless result
+
+        @__m.fail(message || "Expected #{result.inspect} to be falsy")
       end
     end
 

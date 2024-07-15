@@ -94,6 +94,35 @@ module Megatest
       assert_equal 6, @result.assertions_count
     end
 
+    def test_refute
+      assert_equal 0, @result.assertions_count
+
+      assert_failure_message("Expected true to be falsy") do
+        @case.refute true
+      end
+      assert_equal 1, @result.assertions_count
+
+      assertion = assert_raises(Assertion) do
+        @case.refute true, message: "Keyword"
+      end
+      assert_equal 2, @result.assertions_count
+      assert_equal "Keyword", assertion.message
+
+      assertion = assert_raises(Assertion) do
+        @case.refute true, message: -> { "Callable" }
+      end
+      assert_equal 3, @result.assertions_count
+      assert_equal "Callable", assertion.message
+
+      @case.refute false
+      assert_equal 4, @result.assertions_count
+
+      assert_raises(Assertion) do
+        @case.refute true
+      end
+      assert_equal 5, @result.assertions_count
+    end
+
     def test_assert_nil
       assert_equal 0, @result.assertions_count
 
@@ -285,6 +314,13 @@ module Megatest
         @case.refute_same(expected, actual)
       end
       assert_equal 2, @result.assertions_count
+    end
+
+    def test_pass
+      assert_equal 0, @result.assertions_count
+
+      @case.pass
+      assert_equal 1, @result.assertions_count
     end
 
     private
