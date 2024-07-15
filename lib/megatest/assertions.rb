@@ -88,6 +88,21 @@ module Megatest
       end
     end
 
+    def refute_equal(expected, actual, message: nil, allow_nil: false)
+      @__m.assert do
+        if !allow_nil && nil == expected
+          @__m.fail(nil, "Use refute_nil if expecting to not be nil, or pass `allow_nil: true`")
+        end
+
+        if expected == actual
+          @__m.fail(
+            message,
+            "Expected #{@__m.pp(expected)} to not equal #{@__m.pp(actual)}",
+          )
+        end
+      end
+    end
+
     def assert_includes(collection, object, message: nil)
       @__m.assert do
         unless collection.include?(object)

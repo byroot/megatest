@@ -192,6 +192,31 @@ module Megatest
       assert_equal 5, @result.assertions_count
     end
 
+    def test_refute_equal
+      assert_equal 0, @result.assertions_count
+
+      @case.refute_equal(1, 2)
+      assert_equal 1, @result.assertions_count
+
+      assert_failure_message("Expected 1 to not equal 1") do
+        @case.refute_equal 1, 1
+      end
+      assert_equal 2, @result.assertions_count
+
+      assert_failure_message("Use refute_nil if expecting to not be nil, or pass `allow_nil: true`") do
+        @case.refute_equal nil, 12
+      end
+      assert_equal 3, @result.assertions_count
+
+      @case.refute_equal(nil, 1, allow_nil: true)
+      assert_equal 4, @result.assertions_count
+
+      assert_failure_message("Some useful context\nExpected 1 to not equal 1") do
+        @case.refute_equal 1, 1, message: "Some useful context\n"
+      end
+      assert_equal 5, @result.assertions_count
+    end
+
     def test_assert_equal_multiline_strings
       expected = "foo\nbar\nbaz\n"
       actual = "foo\nplop\nbaz\n"
