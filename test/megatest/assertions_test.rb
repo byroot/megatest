@@ -565,6 +565,18 @@ module Megatest
       assert_equal 2, @result.assertions_count
     end
 
+    def test_refute_in_epsilon
+      assert_equal 0, @result.assertions_count
+
+      @case.refute_in_epsilon 10, 9.5, 0.00001
+      assert_equal 1, @result.assertions_count
+
+      assert_failure_message("Expected |10000 - 9999| (1) to not be <= 9.999") do
+        @case.refute_in_epsilon 10_000, 9_999, 0.001
+      end
+      assert_equal 2, @result.assertions_count
+    end
+
     def test_assert_throws
       assert_equal 0, @result.assertions_count
 
