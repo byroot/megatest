@@ -31,6 +31,10 @@ module TestedApp
     test "boom" do
       assert_equal 2, App.foo
     end
+
+    def test_legacy_boom
+      assert_equal 2, App.foo
+    end
   end
 
   class SetupCallbackTest < TestCase

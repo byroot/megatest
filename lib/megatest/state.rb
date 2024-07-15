@@ -451,7 +451,7 @@ module Megatest
         return result if runtime.record_failures { instance.setup }
         return result if runtime.record_failures { instance.after_setup }
 
-        return result if runtime.record_failures(downlevel: 2) { execute(instance) }
+        return result if runtime.record_failures(downlevel: execute_frames) { execute(instance) }
 
         result.complete
 
@@ -492,13 +492,27 @@ module Megatest
   end
 
   class BlockTest < AbstractTest
+    def execute_frames
+      2
+    end
+
     def execute(instance)
       instance.instance_exec(&@callable)
     end
   end
 
   class MethodTest < AbstractTest
-    using Compat::BindCall unless UnboundMethod.method_defined?(:bind_call)
+    if UnboundMethod.method_defined?(:bind_call)
+      def execute_frames
+        2
+      end
+    else
+      using Compat::BindCall
+
+      def execute_frames
+        3
+      end
+    end
 
     def execute(instance)
       @callable.bind_call(instance)
