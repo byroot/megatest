@@ -29,27 +29,21 @@ module Megatest
         end
       end
 
-      YIELD_POINT = "#{__FILE__}:#{__LINE__ + 2}".freeze
-      def expect_no_failures(downlevel: 0)
-        yield
-      rescue *Megatest::IGNORED_ERRORS
-        raise # Exceptions we shouldn't rescue
-      rescue Exception => original_error
-        if backtrace = original_error.backtrace_locations
-          backtrace = backtrace.take_while { |l| l.base_label != "expect_no_failures" }
+      def strip_backtrace(error, yield_file, yield_line, downlevel)
+        if backtrace = error.backtrace_locations
+          rindex = backtrace.rindex { |l| l.lineno == yield_line && l.path == yield_file }
+          backtrace = backtrace.slice(0..rindex)
           backtrace.pop(downlevel) unless downlevel.zero?
-          original_error.set_backtrace(backtrace)
-        elsif backtrace = original_error.backtrace
-          backtrace = backtrace.take_while { |l| !l.start_with?(YIELD_POINT) }
+          error.set_backtrace(backtrace)
+        elsif backtrace = error.backtrace
+          yield_point = "#{yield_file}:#{yield_line}:"
+          rindex = backtrace.rindex { |l| l.start_with?(yield_point) }
+          backtrace = backtrace.slice(0..rindex)
           backtrace.pop(downlevel) unless downlevel.zero?
-          original_error.set_backtrace(backtrace)
+          error.set_backtrace(backtrace)
         end
 
-        if original_error.is_a?(Assertion)
-          raise original_error
-        else
-          raise UnexpectedError, original_error, EMPTY_BACKTRACE
-        end
+        error
       end
     else
       def assert(uplevel: 1)
@@ -64,20 +58,30 @@ module Megatest
         end
       end
 
-      YIELD_POINT = "#{__FILE__}:#{__LINE__ + 2}".freeze
-      def expect_no_failures(downlevel: 0)
-        yield
-      rescue *Megatest::IGNORED_ERRORS
-        raise # Exceptions we shouldn't rescue
-      rescue Exception => original_error
-        backtrace = original_error.backtrace.take_while { |l| !l.start_with?(YIELD_POINT) }
-        backtrace.pop(downlevel) unless downlevel.zero?
-        original_error.set_backtrace(backtrace)
-        if original_error.is_a?(Assertion)
-          raise original_error
-        else
-          raise UnexpectedError, original_error, EMPTY_BACKTRACE
+      def strip_backtrace(error, yield_file, yield_line, downlevel)
+        if backtrace = error.backtrace
+          yield_point = "#{yield_file}:#{yield_line}:"
+          rindex = backtrace.rindex { |l| l.start_with?(yield_point) }
+          backtrace = backtrace.slice(0..rindex)
+          backtrace.pop(downlevel) unless downlevel.zero?
+          error.set_backtrace(backtrace)
         end
+
+        error
+      end
+    end
+
+    def expect_no_failures(downlevel: 0)
+      yield
+    rescue *Megatest::IGNORED_ERRORS
+      raise # Exceptions we shouldn't rescue
+    rescue Exception => unexpected_error
+      error = strip_backtrace(unexpected_error, __FILE__, __LINE__ - 4, downlevel)
+
+      if error.is_a?(Assertion)
+        raise error
+      else
+        raise UnexpectedError, error, EMPTY_BACKTRACE
       end
     end
 

@@ -44,7 +44,7 @@ module Megatest
       @__m.assert do
         return if result
 
-        @__m.fail(message || "Expected #{result.inspect} to be truthy", nil)
+        @__m.fail(message || "Expected #{@__m.pp(result)} to be truthy", nil)
       end
     end
 
@@ -52,14 +52,14 @@ module Megatest
       @__m.assert do
         return unless result
 
-        @__m.fail(message || "Expected #{result.inspect} to be falsy", nil)
+        @__m.fail(message || "Expected #{@__m.pp(result)} to be falsy", nil)
       end
     end
 
     def assert_nil(actual, message: nil)
       @__m.assert do
         unless nil.equal?(actual)
-          @__m.fail(message, "Expected #{actual.inspect} to be nil")
+          @__m.fail(message, "Expected #{@__m.pp(actual)} to be nil")
         end
       end
     end
@@ -67,7 +67,7 @@ module Megatest
     def refute_nil(actual, message: nil)
       @__m.assert do
         if nil.equal?(actual)
-          @__m.fail(message, "Expected #{actual.inspect} to not be nil")
+          @__m.fail(message, "Expected #{@__m.pp(actual)} to not be nil")
         end
       end
     end
@@ -107,7 +107,7 @@ module Megatest
     def assert_instance_of(klass, actual, message: nil)
       @__m.assert do
         unless actual.instance_of?(klass)
-          @__m.fail(message, "Expected #{actual.inspect} to be an instance of #{klass}, not #{actual.class.name || actual.class}")
+          @__m.fail(message, "Expected #{@__m.pp(actual)} to be an instance of #{@__m.pp(klass)}, not #{@__m.pp(actual.class)}")
         end
       end
     end
@@ -196,23 +196,35 @@ module Megatest
       end
     end
 
-    def assert_raises(*expected_exceptions, message: nil)
+    def assert_raises(expected = StandardError, *expected_exceptions, message: nil)
       @__m.assert do
-        flunk "assert_raises requires a block to capture errors." unless block_given?
-        expected_exceptions << StandardError if expected_exceptions.empty?
+        @__m.fail("assert_raises requires a block to capture errors.") unless block_given?
 
         begin
           yield
-        rescue *expected_exceptions => exception
+        rescue expected, *expected_exceptions => exception
           return exception
         rescue ::Megatest::Assertion, *::Megatest::IGNORED_ERRORS
           raise # Pass through
-        rescue ::Exception => exception
-          # TODO: render exception
-          @__m.fail(message, "#{expected_exceptions.inspect} exception expected, not #{exception.inspect}")
+        rescue ::Exception => unexepected_exception
+          error = @__m.strip_backtrace(unexepected_exception, __FILE__, __LINE__ - 6, 0)
+
+          expected_pp = if expected_exceptions.empty?
+            @__m.pp(expected)
+          else
+            expected_exceptions.map { |e| @__m.pp(e) }.join(", ") << " or #{@__m.pp(expected)}"
+          end
+
+          @__m.fail(message, "#{expected_pp} exception expected, not:\n#{@__m.pp(error)}")
         end
 
-        @__m.fail(message, "#{expected_exceptions.inspect} expected but nothing was raised.")
+        expected_pp = if expected_exceptions.empty?
+          @__m.pp(expected)
+        else
+          expected_exceptions.map { |e| @__m.pp(e) }.join(", ") << " or #{@__m.pp(expected)}"
+        end
+
+        @__m.fail(message, "#{expected_pp} expected but nothing was raised.")
       end
     end
 

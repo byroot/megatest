@@ -56,5 +56,13 @@ module TestedApp
     test "basic objects" do
       assert_equal BasicObject.new, BasicObject.new
     end
+
+    test "nested" do
+      assert_raises(TypeError) do
+        assert_raises(NotImplementedError) do
+          assert_equal 2, 3
+        end
+      end
+    end
   end
 end

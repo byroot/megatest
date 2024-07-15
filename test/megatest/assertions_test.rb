@@ -42,11 +42,21 @@ module Megatest
       end
       assert_equal 1, @result.assertions_count
 
-      assert_failure_message("[NotImplementedError] exception expected, not #<RuntimeError: Oops>") do
+      error = assert_raises(Assertion) do
         @case.assert_raises(NotImplementedError) do
-          raise "Oops"
+          1 + "1" # rubocop:disable Style/StringConcatenation
         end
       end
+      lines = error.message.split("\n")
+      assert_equal "NotImplementedError exception expected, not:", lines[0]
+      assert_equal "Class: <TypeError>", lines[1]
+      assert_equal %{Message: <"String can't be coerced into Integer">}, lines[2]
+      assert_equal "---Backtrace---", lines[3]
+      assert_match(%r{\Atest/megatest/assertions_test.rb:\d+:in .*\+.*}, lines[4])
+      assert_match(%r{\Atest/megatest/assertions_test.rb:\d+:in .*test_assert_raises.*}, lines[5])
+      assert_match(%r{\Atest/megatest/assertions_test.rb:\d+:in .*test_assert_raises.*}, lines[6])
+      assert_equal "---------------", lines[7]
+      assert_equal 8, lines.size
       assert_equal 2, @result.assertions_count
 
       @case.assert_raises(NotImplementedError, RuntimeError) do

@@ -3,10 +3,7 @@
 require "bundler/gem_tasks"
 
 require File.expand_path("../lib/megatest/test_task", __FILE__)
-
-Megatest::TestTask.create do |t|
-  t.full_backtrace = true
-end
+Megatest::TestTask.create
 
 require "rubocop/rake_task"
 
