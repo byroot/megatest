@@ -47,7 +47,7 @@ module Megatest
         @err.puts error.message
       end
       @err.puts
-      @err.puts parser
+      @err.puts @parser
       1
     end
 
@@ -57,8 +57,8 @@ module Megatest
       end
 
       Megatest.config = @config
-      parser = build_parser(@runner)
-      parser.parse!(@argv)
+      @parser = build_parser(@runner)
+      @parser.parse!(@argv)
       @argv.shift if @argv.first == "--"
       @config
     end
@@ -78,7 +78,11 @@ module Megatest
       registry = Megatest.with_registry do
         Megatest.append_load_path(@config)
         Megatest.load_test_helper(selectors.paths)
-        Megatest.load_suites(@config.random, selectors.paths)
+        begin
+          Megatest.load_suites(@config.random, selectors.paths)
+        rescue Error => error
+          raise InvalidArgument, error.message
+        end
       end
       test_cases = selectors.select(registry)
 

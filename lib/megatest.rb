@@ -5,6 +5,7 @@ require_relative "megatest/version"
 module Megatest
   Error = Class.new(StandardError)
   AlreadyDefinedError = Class.new(Error)
+  LoadError = Class.new(Error)
 
   ROOT = -File.expand_path("../", __FILE__)
   PWD = File.join(Dir.pwd, "/")
@@ -59,7 +60,11 @@ module Megatest
     def load_suites(seed, argv)
       test_suites = argv.flat_map do |path|
         path = File.expand_path(path)
-        stat = File.stat(path)
+        stat = begin
+          File.stat(path)
+        rescue Errno::ENOENT
+          raise LoadError, "#{Megatest.relative_path(path)} is not a valid file or directory"
+        end
 
         if stat.directory?
           Dir.glob(File.join(path, "**/{test_*,*_test}.rb"))
