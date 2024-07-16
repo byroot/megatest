@@ -17,14 +17,18 @@ module Megatest
 
     using Compat::StartWith unless Symbol.method_defined?(:start_with?)
 
-    def test(name, &block)
-      ::Megatest.registry.suite(self).register_test_case(-name, block)
+    def test(name, tags = nil, &block)
+      ::Megatest.registry.suite(self).register_test_case(-name, block, tags)
+    end
+
+    def tag(**kwargs)
+      ::Megatest.registry.suite(self).add_tags(kwargs)
     end
 
     def method_added(name)
       super
       if name.start_with?("test_")
-        ::Megatest.registry.suite(self).register_test_case(name, instance_method(name))
+        ::Megatest.registry.suite(self).register_test_case(name, instance_method(name), nil)
       end
     end
 

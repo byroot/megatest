@@ -30,8 +30,16 @@ module Megatest
 
       def initialize(registry)
         @registry = registry
+        @tags = nil
         @setup_callback = nil
         @teardown_callback = nil
+      end
+
+      def add_tags(tags)
+        return if tags.empty?
+
+        @tags ||= {}
+        @tags.merge!(tags)
       end
 
       def on_setup(block)
@@ -71,6 +79,21 @@ module Megatest
         end
       end
 
+      def tag?(name)
+        @tags&.key?(name)
+      end
+
+      def tag(name)
+        if @tags&.key?(name)
+          @tags[name]
+        else
+          ancestors.each do |ancestor|
+            return ancestor.tag(name) if ancestor.tag?(name)
+          end
+          nil
+        end
+      end
+
       def shared?
         false
       end
@@ -83,11 +106,11 @@ module Megatest
         @test_cases.keys
       end
 
-      def register_test_case(name, callable)
+      def register_test_case(name, callable, tags)
         test = if callable.is_a?(UnboundMethod)
-          MethodTest.new(self, @klass, name.name, callable)
+          MethodTest.new(self, @klass, name.name, callable, tags)
         else
-          BlockTest.new(self, @klass, name, callable)
+          BlockTest.new(self, @klass, name, callable, tags)
         end
         add_test(test)
       end
@@ -129,7 +152,7 @@ module Megatest
         @test_cases = {}
         test_suite.instance_methods.each do |name|
           if name.start_with?("test_")
-            register_test_case(name, test_suite.instance_method(name))
+            register_test_case(name, test_suite.instance_method(name), nil)
           end
         end
       end
@@ -147,11 +170,11 @@ module Megatest
         end
       end
 
-      def register_test_case(name, callable)
+      def register_test_case(name, callable, tags)
         test = if callable.is_a?(UnboundMethod)
-          MethodTest.new(self, @mod, name.name, callable)
+          MethodTest.new(self, @mod, name.name, callable, tags)
         else
-          BlockTest.new(self, @mod, name, callable)
+          BlockTest.new(self, @mod, name, callable, tags)
         end
 
         if @test_cases[test]
@@ -399,7 +422,7 @@ module Megatest
     attr_accessor :index
     attr_reader :klass, :name, :source_file, :source_line
 
-    def initialize(test_suite, klass, name, callable)
+    def initialize(test_suite, klass, name, callable, tags)
       @test_suite = test_suite
       @klass = klass
       @name = name
@@ -408,6 +431,7 @@ module Megatest
       @id = nil
       @index = nil
       @inherited = false
+      @tags = tags
 
       # When a test class is reopened from a different file, tests defined there
       # have a `source_file` can't be use to run a single test file.
@@ -423,6 +447,14 @@ module Megatest
         @id ||= "#{klass.name}##{name}"
       else
         "#{klass}##{name}"
+      end
+    end
+
+    def tag(name)
+      if @tags&.key?(name)
+        @tags[name]
+      else
+        @test_suite.tag(name)
       end
     end
 
