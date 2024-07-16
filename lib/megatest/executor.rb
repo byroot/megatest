@@ -67,7 +67,10 @@ module Megatest
         while true
           if test_case = queue.pop_test
             reporters.each { |r| r.before_test_case(queue, test_case) }
-            result = queue.record_result(runner.execute(test_case))
+
+            result = runner.execute(test_case)
+
+            result = queue.record_result(result)
             reporters.each { |r| r.after_test_case(queue, test_case, result) }
 
             @config.circuit_breaker.record_result(result)

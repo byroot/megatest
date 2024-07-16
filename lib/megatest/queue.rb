@@ -134,6 +134,7 @@ module Megatest
 
       def record_result(result)
         @results << result
+        result
       end
     end
 

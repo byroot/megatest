@@ -101,8 +101,7 @@ module Megatest
           begin
             while (test_case = queue.pop_test)
               result = runner.execute(test_case)
-              queue.record_result(result)
-
+              result = queue.record_result(result)
               @config.circuit_breaker.record_result(result)
               break if @config.circuit_breaker.break?
             end

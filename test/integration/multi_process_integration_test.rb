@@ -84,9 +84,11 @@ module Megatest
       executor = MultiProcess::Executor.new(config, StringIO.new)
       executor.run(queue, [reporter])
 
-      assert_equal 1, queue.summary.retries_count
-      assert_equal 0, queue.summary.failures_count
-      assert_equal 0, queue.summary.errors_count
+      assert_equal [1, 0, 0], [
+        queue.summary.retries_count,
+        queue.summary.failures_count,
+        queue.summary.errors_count,
+      ]
       refute_predicate queue, :success?
       assert_predicate queue.remaining_size, :positive?
     end

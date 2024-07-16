@@ -42,6 +42,10 @@ module Megatest
         @tags.merge!(tags)
       end
 
+      def tag?(name)
+        @tags&.key?(name)
+      end
+
       def on_setup(block)
         raise Error, "The setup block is already defined" if @setup_callback
 
@@ -77,10 +81,6 @@ module Megatest
         @test_cases.each_key do |test|
           @registry.register_test_case(test)
         end
-      end
-
-      def tag?(name)
-        @tags&.key?(name)
       end
 
       def tag(name)
@@ -401,6 +401,10 @@ module Megatest
 
     def error?
       !@retried && @failures.first&.name == UnexpectedError.name
+    end
+
+    def lost?
+      @failures.first&.name == LostTest.name
     end
 
     def skipped?

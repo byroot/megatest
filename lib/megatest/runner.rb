@@ -7,6 +7,28 @@ module Megatest
     end
 
     def execute(test_case)
+      if test_case.tag(:isolated)
+        read, write = IO.pipe.each(&:binmode)
+        pid = Process.fork do
+          read.close
+          result = run(test_case)
+          Marshal.dump(result, write)
+          write.close
+        end
+        write.close
+        result = begin
+          Marshal.load(read)
+        rescue EOFError
+          TestCaseResult.new(test_case).lost
+        end
+        Process.wait(pid)
+        result
+      else
+        run(test_case)
+      end
+    end
+
+    def run(test_case)
       result = TestCaseResult.new(test_case)
       runtime = Runtime.new(@config, result)
       instance = test_case.klass.new(runtime)

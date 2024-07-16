@@ -16,6 +16,10 @@
 
 - Implement missing assertions
 
+- Forkless environment support (Windows / JRuby / TruffleRuby)
+  - `-j` ideally
+  - `isolated: true` would need to work
+
 ### Maybes
 
 - Depend on Zeitwerk?
