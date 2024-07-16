@@ -34,8 +34,9 @@ class MegatestTest < MegaTestCase
     assert_equal <<~CLASSES.strip, cases.join("\n")
       TestedApp::BaseCase#overridable               | test_helper.rb:#{TestedApp::BaseCase::OVERRIDABLE_LINE}
       TestedApp::BaseCase#predefined                | test_helper.rb:#{TestedApp::BaseCase::PREDEFINED_LINE}
-      TestedApp::BaseCase#reopened                  | another_test_helper.rb:#{TestedApp::BaseCase::REOPENED_LINE}
+      TestedApp::BaseCase#reopened                  | test_helper.rb:#{TestedApp::BaseCase::LINE}
       TestedApp::ConcreteATest#concrete A           | #{file}:#{TestedApp::ConcreteATest::TEST_1_LINE}
+      TestedApp::ConcreteATest#included shared      | #{file}:#{TestedApp::ConcreteATest::LINE}
       TestedApp::ConcreteATest#overridable          | #{file}:#{TestedApp::ConcreteATest::TEST_2_LINE}
       TestedApp::ConcreteATest#predefined           | #{file}:#{TestedApp::ConcreteATest::LINE}
       TestedApp::ConcreteATest#reopened             | #{file}:#{TestedApp::ConcreteATest::LINE}

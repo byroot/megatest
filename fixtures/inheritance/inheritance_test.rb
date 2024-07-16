@@ -7,6 +7,8 @@ module TestedApp
 
   class_eval <<~RUBY, "test_helper.rb"
     class BaseCase < TestCase
+      LINE = __LINE__ - 1
+
       PREDEFINED_LINE = __LINE__ + 1
       test "predefined" do
         assert true
@@ -37,6 +39,18 @@ module TestedApp
     end
   RUBY
 
+  class_eval <<~RUBY, "included_shared_tests.rb"
+    module IncludedSharedTests
+      # Found in Active Support test suite.
+      # It's ugly but I think we should support it.
+      def self.included(base)
+        base.test "included shared" do
+          assert true
+        end
+      end
+    end
+  RUBY
+
   class ConcreteATest < BaseCase
     LINE = __LINE__ - 1
     SHARED_TESTS_LINE = __LINE__ + 1
@@ -44,6 +58,9 @@ module TestedApp
 
     SHARED_COMPAT_TESTS_LINE = __LINE__ + 1
     include SharedCompatTests
+
+    INCLUDED_SHARED_TESTS_LINE = __LINE__ + 1
+    include IncludedSharedTests
 
     TEST_1_LINE = __LINE__ + 1
     test "concrete A" do

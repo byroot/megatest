@@ -71,6 +71,10 @@ module Megatest
         end
       end
 
+      def shared?
+        false
+      end
+
       def ancestors
         @ancestors ||= @registry.ancestors(@klass)
       end
@@ -128,6 +132,10 @@ module Megatest
             register_test_case(name, test_suite.instance_method(name))
           end
         end
+      end
+
+      def shared?
+        true
       end
 
       def included_by(klass_or_module, include_location)
@@ -400,6 +408,14 @@ module Megatest
       @id = nil
       @index = nil
       @inherited = false
+
+      # When a test class is reopened from a different file, tests defined there
+      # have a `source_file` can't be use to run a single test file.
+      # It's not ideal at all and it would be nice to find a more general solution
+      # to this, but it's also very much a corner case.
+      if !test_suite.shared? && @source_file != test_suite.source_file
+        @source_file, @source_line = test_suite.source_file, test_suite.source_line
+      end
     end
 
     def id
