@@ -80,8 +80,9 @@ module Megatest
         @out.puts
         @out.puts
 
-        unless summary.failures.empty?
-          failures = summary.failures.sort_by(&:test_id)
+        failures = summary.failures.reject(&:skipped?)
+        unless failures.empty?
+          failures = failures.sort_by(&:test_id)
           failures.each_with_index do |result, index|
             @out.print "  #{index + 1}) "
             @out.puts render_failure(result)
