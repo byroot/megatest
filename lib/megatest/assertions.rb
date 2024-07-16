@@ -12,7 +12,7 @@ module Megatest
 
   class LostTest < Assertion
     def initialize(test_id)
-      super("#{test_id} never completed. Might be causing a crash or early exit?")
+      super("#{test_id} never completed. Might be caused by a crash or early exit?")
     end
   end
 
