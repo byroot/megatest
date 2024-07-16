@@ -76,7 +76,7 @@ class MegatestTest < MegaTestCase
 
     first_test = @registry.test_cases.min
     assert_equal "test_the_lie", first_test.name
-    result = first_test.run(@config)
+    result = Megatest::Runner.new(@config).execute(first_test)
 
     assert_equal 1, result.assertions_count
     assert_predicate result, :failed?
@@ -87,7 +87,7 @@ class MegatestTest < MegaTestCase
 
     first_test = @registry.test_cases.first
     assert_equal "the truth", first_test.name
-    result = first_test.run(@config)
+    result = Megatest::Runner.new(@config).execute(first_test)
 
     assert_equal 1, result.assertions_count
     refute_predicate result, :failed?
@@ -98,7 +98,7 @@ class MegatestTest < MegaTestCase
 
     first_test = @registry.test_cases[1]
     assert_equal "the lie", first_test.name
-    result = first_test.run(@config)
+    result = Megatest::Runner.new(@config).execute(first_test)
 
     assert_equal 1, result.assertions_count
     assert_predicate result, :failed?
@@ -109,7 +109,7 @@ class MegatestTest < MegaTestCase
 
     first_test = @registry.test_cases[0]
     assert_equal "the skip", first_test.name
-    result = first_test.run(@config)
+    result = Megatest::Runner.new(@config).execute(first_test)
 
     assert_equal 0, result.assertions_count
     assert_predicate result, :skipped?
@@ -120,7 +120,7 @@ class MegatestTest < MegaTestCase
 
     first_test = @registry.test_cases.first
     assert_equal "callbacks", first_test.name
-    result = first_test.run(@config)
+    result = Megatest::Runner.new(@config).execute(first_test)
     assert_predicate result, :success?
 
     assert_equal <<~ORDER.strip, TestedApp.order.join("\n")

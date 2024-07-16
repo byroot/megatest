@@ -96,9 +96,11 @@ module Megatest
           queue = ClientQueue.new(@child_socket, parent_queue)
           @config.run_job_setup_callbacks(@index)
 
+          runner = Runner.new(@config)
+
           begin
             while (test_case = queue.pop_test)
-              result = test_case.run(@config)
+              result = runner.execute(test_case)
               queue.record_result(result)
 
               @config.circuit_breaker.record_result(result)
