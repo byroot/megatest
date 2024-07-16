@@ -17,7 +17,7 @@ module Megatest
       fake_test_case = BlockTest.new(@suite, DummyTester, "fake test case", -> {}, nil)
       @result = TestCaseResult.new(fake_test_case)
       @config = Config.new({})
-      @runtime = Runtime.new(@config, @result)
+      @runtime = Runtime.new(@config, fake_test_case, @result)
       @case = DummyTester.new(@runtime)
     end
 

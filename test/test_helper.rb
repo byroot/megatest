@@ -42,7 +42,7 @@ class MegaTestCase < Megatest::Test
 
   def build_result(test_case)
     result = Megatest::TestCaseResult.new(test_case)
-    runtime = Megatest::Runtime.new(@config || Megatest::Config.new({}), result)
+    runtime = Megatest::Runtime.new(@config || Megatest::Config.new({}), test_case, result)
     result.record_time do
       runtime.record_failures do
         yield runtime

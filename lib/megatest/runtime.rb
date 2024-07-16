@@ -2,8 +2,11 @@
 
 module Megatest
   class Runtime
-    def initialize(config, result)
+    attr_reader :test_case
+
+    def initialize(config, test_case, result)
       @config = config
+      @test_case = test_case
       @result = result
     end
 

@@ -73,6 +73,15 @@ module Megatest
     def before_setup
     end
 
+    # For Minitest compatibility
+    def name
+      @__m.test_case.name
+    end
+
+    def __test__
+      @__m.test_case
+    end
+
     def setup
     end
 

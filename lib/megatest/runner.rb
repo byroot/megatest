@@ -30,7 +30,7 @@ module Megatest
 
     def run(test_case)
       result = TestCaseResult.new(test_case)
-      runtime = Runtime.new(@config, result)
+      runtime = Runtime.new(@config, test_case, result)
       instance = test_case.klass.new(runtime)
       result.record_time do
         return result if runtime.record_failures { instance.before_setup }
