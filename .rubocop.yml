@@ -105,6 +105,9 @@ Naming/VariableNumber:
 Lint/EmptyBlock:
   Enabled: false # I know what I'm doing, thanks.
 
+Lint/UnusedMethodArgument:
+  AllowUnusedKeywordArguments: true
+
 Lint/AmbiguousBlockAssociation:
   Enabled: false # I know what I'm doing, thanks.
 

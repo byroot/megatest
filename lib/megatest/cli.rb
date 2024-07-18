@@ -72,25 +72,20 @@ module Megatest
       end
 
       selectors = Selector.parse(@argv)
-
-      Megatest.load_config(selectors.paths)
+      Megatest.load_config(selectors.main_paths)
 
       registry = Megatest.with_registry do
         Megatest.append_load_path(@config)
-        Megatest.load_test_helper(selectors.paths)
-        begin
-          Megatest.load_suites(@config.random, selectors.paths)
-        rescue Error => error
-          raise InvalidArgument, error.message
+        Megatest.load_test_helper(selectors.main_paths)
+
+        selectors.paths(random: @config.random).each do |path|
+          Kernel.require(path)
+        rescue LoadError
+          raise InvalidArgument, "Failed to load #{Megatest.relative_path(path)}"
         end
       end
-      test_cases = selectors.select(registry)
 
-      # TODO: figure out when to shuffle. E.g. if passing file:line file:line we want to keep the order
-      # but file, file we want to shuffle. It also should just be a default we should be able to flip it
-      # with CLI arguments.
-      test_cases.sort!
-      test_cases.shuffle!(random: @config.random)
+      test_cases = selectors.select(registry, random: @config.random)
 
       queue.populate(test_cases)
       executor.run(queue, default_reporters)

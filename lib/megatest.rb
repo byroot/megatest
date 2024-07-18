@@ -57,31 +57,15 @@ module Megatest
       nil
     end
 
-    def load_suites(seed, argv)
-      test_suites = argv.flat_map do |path|
-        path = File.expand_path(path)
-        stat = begin
-          File.stat(path)
-        rescue Errno::ENOENT
-          raise LoadError, "#{Megatest.relative_path(path)} is not a valid file or directory"
-        end
-
-        if stat.directory?
-          Dir.glob(File.join(path, "**/{test_*,*_test}.rb"))
-        else
-          [path]
-        end
+    if Dir.method(:glob).parameters.include?(%i(key sort)) # Ruby 2.7+
+      def glob(path)
+        Dir.glob(File.join(path, "**/{test_*,*_test}.rb"))
       end
-
-      # By default test suites are loaded in a random order
-      # to better catch loading order dependencies.
-      # The randomness uses the seed so that problems are
-      # reproductible
-      test_suites.sort!
-      test_suites.shuffle!(random: seed)
-
-      test_suites.each do |suite|
-        require(suite)
+    else
+      def glob(path)
+        paths = Dir.glob(File.join(path, "**/{test_*,*_test}.rb"))
+        paths.sort!
+        paths
       end
     end
   end
