@@ -38,14 +38,6 @@ module Megatest
           registry.test_cases_by_path(@path)
         end
       end
-
-      def match?(test_case)
-        if @directory
-          test_case.source_file.start_with?(@path)
-        else
-          path == test_case.source_file
-        end
-      end
     end
 
     class ExactLineSelector
@@ -83,12 +75,6 @@ module Megatest
         end
         test_cases
       end
-
-      def match?(test_case)
-        path == test_case.source_file &&
-          @line == test_case.line &&
-          (@index.nil? || @index == test_case.index)
-      end
     end
 
     class NameMatchSelector
@@ -114,10 +100,6 @@ module Megatest
         test_cases.select do |t|
           @pattern.match?(t.name) || @pattern.match?(t.id)
         end
-      end
-
-      def match?(test_case)
-        @pattern.match?(test_case.name) || @pattern.match?(test_case.id)
       end
     end
 
@@ -145,10 +127,6 @@ module Megatest
           @name == t.name || @name == t.id
         end
       end
-
-      def match?(test_case)
-        @name == test_case.name || @name == test_case.id
-      end
     end
 
     ALL = [
@@ -169,19 +147,10 @@ module Megatest
 
         until argv.empty?
           argument = argv.shift
-          case argument
-          when "-n"
-            if name = argv.shift
-              selectors << NameSelector.new(name)
-            else
-              raise "Missing -n argument"
-            end
-          else
-            ALL.each do |selector_class|
-              if selector = selector_class.parse(argument)
-                selectors << selector
-                break
-              end
+          ALL.each do |selector_class|
+            if selector = selector_class.parse(argument)
+              selectors << selector
+              break
             end
           end
         end
