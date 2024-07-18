@@ -28,6 +28,7 @@ module Megatest
       @processes = nil
       @config = Config.new(env)
       @runner = nil
+      @verbose = false
     end
 
     def run
@@ -107,9 +108,15 @@ module Megatest
     private
 
     def default_reporters
-      [
-        Reporters::SimpleReporter.new(@config, @out),
-      ]
+      if @verbose
+        [
+          Reporters::VerboseReporter.new(@config, @out),
+        ]
+      else
+        [
+          Reporters::SimpleReporter.new(@config, @out),
+        ]
+      end
     end
 
     def executor
@@ -122,6 +129,7 @@ module Megatest
     end
 
     def build_parser(runner)
+      runner = :run if runner.nil?
       OptionParser.new do |opts|
         case runner
         when :report
@@ -152,7 +160,11 @@ module Megatest
           @config.backtrace.full!
         end
 
-        if runner == :run || runner.nil?
+        if runner == :run
+          opts.on("-v", "--verbose") do
+            @verbose = true
+          end
+
           opts.on("--seed SEED", Integer, "The seed used to define run order") do |seed|
             @config.seed = seed
           end
@@ -175,7 +187,7 @@ module Megatest
           @config.build_id = build_id
         end
 
-        if runner == :run || runner.nil?
+        if runner == :run
           opts.on("--worker-id ID", String) do |worker_id|
             @config.worker_id = worker_id
           end

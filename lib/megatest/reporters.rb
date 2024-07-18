@@ -21,27 +21,8 @@ module Megatest
 
       def summary(_executor, _queue, _summary)
       end
-    end
 
-    class SimpleReporter < AbstractReporter
-      def start(_executor, queue)
-        @out.puts("Running #{queue.size} test cases with --seed #{@config.seed}")
-        @out.puts
-      end
-
-      def after_test_case(_queue, _test_case, result)
-        if result.skipped?
-          @out.print(@out.yellow("S"))
-        elsif result.retried?
-          @out.print(@out.yellow("R"))
-        elsif result.error?
-          @out.print(@out.red("E"))
-        elsif result.failed?
-          @out.print(@out.red("F"))
-        else
-          @out.print(@out.green("."))
-        end
-      end
+      private
 
       LABELS = {
         retried: "Retried",
@@ -74,6 +55,27 @@ module Megatest
         str << @out.yellow("#{@config.program_name} #{Megatest.relative_path(result.test_location)}")
 
         str
+      end
+    end
+
+    class SimpleReporter < AbstractReporter
+      def start(_executor, queue)
+        @out.puts("Running #{queue.size} test cases with --seed #{@config.seed}")
+        @out.puts
+      end
+
+      def after_test_case(_queue, _test_case, result)
+        if result.skipped?
+          @out.print(@out.yellow("S"))
+        elsif result.retried?
+          @out.print(@out.yellow("R"))
+        elsif result.error?
+          @out.print(@out.red("E"))
+        elsif result.failed?
+          @out.print(@out.red("F"))
+        else
+          @out.print(@out.green("."))
+        end
       end
 
       def summary(executor, _queue, summary)
@@ -109,6 +111,20 @@ module Megatest
           summary.retries_count,
           summary.skips_count,
         )
+      end
+    end
+
+    class VerboseReporter < SimpleReporter
+      def before_test_case(_queue, test_case)
+        @out.print("#{test_case.id} = ")
+      end
+
+      def after_test_case(_queue, _test_case, result)
+        super
+        @out.puts
+        if result.bad?
+          @out.puts @out.colored(render_failure(result))
+        end
       end
     end
   end
