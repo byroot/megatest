@@ -413,5 +413,54 @@ module Megatest
         @__m.fail(message || "Failed", nil)
       end
     end
+
+    def assert_output(expected_stdout = nil, expected_stderr = nil, &block)
+      @__m.assert do
+        @__m.fail("assert_output requires a block to capture output.") unless block_given?
+
+        actual_stdout, actual_stderr = @__m.expect_no_failures do
+          capture_io(&block)
+        end
+
+        if expected_stderr
+          if Regexp === expected_stderr
+            assert_match(expected_stderr, actual_stderr, message: "In stderr")
+          else
+            assert_equal(expected_stderr, actual_stderr, message: "In stderr")
+          end
+        end
+
+        if expected_stdout
+          if Regexp === expected_stdout
+            assert_match(expected_stdout, actual_stdout, message: "In stdout")
+          else
+            assert_equal(expected_stdout, actual_stdout, message: "In stdout")
+          end
+        end
+      end
+    end
+
+    def assert_silent(&block)
+      @__m.assert do
+        assert_output("", "", &block)
+      end
+    end
+
+    def capture_io
+      require "stringio" unless defined?(::StringIO)
+      captured_stdout, captured_stderr = ::StringIO.new, ::StringIO.new
+
+      orig_stdout, orig_stderr = $stdout, $stderr
+      $stdout, $stderr = captured_stdout, captured_stderr
+
+      begin
+        yield
+
+        [captured_stdout.string, captured_stderr.string]
+      ensure
+        $stdout = orig_stdout
+        $stderr = orig_stderr
+      end
+    end
   end
 end

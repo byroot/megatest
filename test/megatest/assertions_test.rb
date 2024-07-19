@@ -85,7 +85,7 @@ module Megatest
           @case.assert false, message: "Failed assertion in assert_raises"
         end
       end
-      assert_equal 5, @result.assertions_count
+      assert_equal 4, @result.assertions_count
     end
 
     def test_assert
@@ -629,12 +629,59 @@ module Megatest
       assert_equal 5, @result.assertions_count
     end
 
+    def test_assert_output
+      assert_equal 0, @result.assertions_count
+
+      @case.assert_output "test\n" do
+        $stdout.puts("test")
+      end
+      assert_equal 1, @result.assertions_count
+
+      @case.assert_output nil, "test\n" do
+        $stderr.puts("test")
+      end
+      assert_equal 2, @result.assertions_count
+
+      assert_failure_message(/In stdout/) do
+        @case.assert_output "test" do
+          $stdout.puts("bar")
+        end
+      end
+      assert_equal 3, @result.assertions_count
+
+      @case.assert_output(/foo/, /bar/) do
+        $stdout.puts("prefix foo suffix")
+        $stderr.puts("prefix bar suffix")
+      end
+      assert_equal 4, @result.assertions_count
+    end
+
+    def test_assert_silent
+      assert_equal 0, @result.assertions_count
+
+      @case.assert_silent do
+        # noop
+      end
+      assert_equal 1, @result.assertions_count
+
+      assert_failure_message(/In stdout/) do
+        @case.assert_silent do
+          $stdout.puts("bar")
+        end
+      end
+      assert_equal 2, @result.assertions_count
+    end
+
     private
 
     def assert_failure_message(message, &block)
       assertion = assert_raises(Assertion, &block)
       actual_message = assertion.message
-      assert_equal message, actual_message
+      if Regexp === message
+        assert_match message, actual_message
+      else
+        assert_equal message, actual_message
+      end
     end
 
     def assert_equal_message(expected, actual)

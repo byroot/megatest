@@ -8,6 +8,7 @@ module Megatest
       @config = config
       @test_case = test_case
       @result = result
+      @asserting = false
     end
 
     support_locations = begin
@@ -21,14 +22,21 @@ module Megatest
 
     if support_locations
       def assert(uplevel: 1)
-        @result.assertions_count += 1
-        begin
+        if @asserting
           yield
-        rescue Assertion => failure
-          if failure.backtrace.empty?
-            failure.set_backtrace(caller_locations(uplevel + 2))
+        else
+          @asserting = true
+          @result.assertions_count += 1
+          begin
+            yield
+          rescue Assertion => failure
+            if failure.backtrace.empty?
+              failure.set_backtrace(caller_locations(uplevel + 2))
+            end
+            raise
+          ensure
+            @asserting = false
           end
-          raise
         end
       end
 
@@ -50,14 +58,21 @@ module Megatest
       end
     else
       def assert(uplevel: 1)
-        @result.assertions_count += 1
-        begin
+        if @asserting
           yield
-        rescue Assertion => failure
-          if failure.backtrace.empty?
-            failure.set_backtrace(caller(uplevel + 2))
+        else
+          @asserting = true
+          @result.assertions_count += 1
+          begin
+            yield
+          rescue Assertion => failure
+            if failure.backtrace.empty?
+              failure.set_backtrace(caller(uplevel + 2))
+            end
+            raise
+          ensure
+            @asserting = false
           end
-          raise
         end
       end
 
@@ -85,11 +100,15 @@ module Megatest
     end
 
     def expect_no_failures
+      was_asserting = @asserting
+      @asserting = false
       yield
     rescue Assertion, *Megatest::IGNORED_ERRORS
       raise # Exceptions we shouldn't rescue
     rescue Exception => unexpected_error
       raise UnexpectedError, unexpected_error, EMPTY_BACKTRACE
+    ensure
+      @asserting = was_asserting
     end
 
     EMPTY_BACKTRACE = [].freeze
