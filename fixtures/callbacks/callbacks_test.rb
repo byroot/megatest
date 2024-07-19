@@ -85,8 +85,16 @@ module TestedApp
       TestedApp.order << :callbacks_test_after_teardown
     end
 
-    test "callbacks" do
+    test "success" do
       assert true
+    end
+
+    test "skipped" do
+      skip
+    end
+
+    test "error" do
+      raise NotImplementedError
     end
   end
 end

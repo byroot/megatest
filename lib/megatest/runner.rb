@@ -42,7 +42,7 @@ module Megatest
         return result if runtime.record_failures { instance.after_setup }
 
         return result if test_case.execute(runtime, instance)
-
+      ensure
         result.complete
 
         runtime.record_failures do

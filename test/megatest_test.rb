@@ -118,12 +118,7 @@ class MegatestTest < MegaTestCase
   def test_callbacks
     load_fixture("callbacks/callbacks_test.rb")
 
-    first_test = @registry.test_cases.first
-    assert_equal "callbacks", first_test.name
-    result = Megatest::Runner.new(@config).execute(first_test)
-    assert_predicate result, :success?
-
-    assert_equal <<~ORDER.strip, TestedApp.order.join("\n")
+    expected_order = <<~ORDER
       test_case_before_setup
       callbacks_test_before_setup
       test_case_setup_block
@@ -141,5 +136,26 @@ class MegatestTest < MegaTestCase
       test_case_after_teardown
       callbacks_test_after_teardown
     ORDER
+
+    success_test = @registry.test_cases[0]
+    assert_equal "success", success_test.name
+    result = Megatest::Runner.new(@config).execute(success_test)
+    assert_predicate result, :success?
+    assert_equal expected_order, TestedApp.order.join("\n") << "\n"
+    TestedApp.order.clear
+
+    skipped_test = @registry.test_cases[1]
+    assert_equal "skipped", skipped_test.name
+    result = Megatest::Runner.new(@config).execute(skipped_test)
+    assert_predicate result, :skipped?
+    assert_equal expected_order, TestedApp.order.join("\n") << "\n"
+    TestedApp.order.clear
+
+    error_test = @registry.test_cases[2]
+    assert_equal "error", error_test.name
+    result = Megatest::Runner.new(@config).execute(error_test)
+    assert_predicate result, :error?
+    assert_equal expected_order, TestedApp.order.join("\n") << "\n"
+    TestedApp.order.clear
   end
 end
