@@ -672,6 +672,23 @@ module Megatest
       assert_equal 2, @result.assertions_count
     end
 
+    def test_skip
+      assertion = assert_raises Skip do
+        @case.skip("Nope")
+      end
+      assert_equal "Nope", assertion.message
+
+      assertion = assert_raises Skip do
+        @case.skip
+      end
+      assert_equal "Skipped, no message given", assertion.message
+
+      assertion = assert_raises Skip do
+        @case.skip(nil)
+      end
+      assert_equal "Skipped, no message given", assertion.message
+    end
+
     private
 
     def assert_failure_message(message, &block)

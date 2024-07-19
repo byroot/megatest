@@ -402,7 +402,7 @@ module Megatest
       end
     end
 
-    def skip(message)
+    def skip(message = nil)
       message ||= "Skipped, no message given"
       ::Kernel.raise(::Megatest::Skip, message, nil)
     end
