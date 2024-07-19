@@ -96,7 +96,7 @@ module Megatest
     def refute_equal(expected, actual, msg = nil, message: nil, allow_nil: false)
       message = @__m.msg(msg, message)
       @__m.assert do
-        if !allow_nil && nil == expected
+        if !allow_nil && nil == expected && !@__m.minitest_compatibility?
           @__m.fail(nil, "Use refute_nil if expecting to not be nil, or pass `allow_nil: true`")
         end
 

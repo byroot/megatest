@@ -103,7 +103,7 @@ module Megatest
       refute_predicate other_worker, :leader?
 
       refute_nil test = @queue.pop_test
-      stub_time(@config.heartbeat_frequency * 3) do
+      stub_time(config.heartbeat_frequency * 3) do
         assert_equal test, other_worker.pop_test
       end
     end
@@ -124,7 +124,7 @@ module Megatest
       refute_predicate @queue, :success?
       @queue.cleanup
 
-      retry_queue = RedisQueue.build(@config)
+      retry_queue = RedisQueue.build(config)
       assert_instance_of RedisQueue::RetryQueue, retry_queue
       retry_queue.populate(@test_cases)
 
@@ -153,7 +153,7 @@ module Megatest
     end
 
     def config
-      @config ||= begin
+      @worker_config ||= begin
         config = Config.new({})
         config.queue_url = @redis_url
         config.worker_id = 1

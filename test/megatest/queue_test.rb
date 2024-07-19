@@ -21,8 +21,6 @@ module Megatest
       Queue.build(config)
     end
 
-    def config
-      @config ||= Config.new({})
-    end
+    attr_reader :config
   end
 end

@@ -9,10 +9,12 @@ require "megatest/multi_process"
 require "stringio"
 
 class MegaTestCase < Megatest::Test
+  DEFAULT_CONFIG = Megatest::Config.new({}).freeze
   FIXTURES_PATH = File.expand_path("../../fixtures", __FILE__)
 
   setup do
     @registry = Megatest::Registry.new
+    @config = DEFAULT_CONFIG.dup
   end
 
   teardown do

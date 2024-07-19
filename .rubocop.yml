@@ -104,6 +104,9 @@ Naming/RescuedExceptionsVariableName:
 Naming/VariableNumber:
   Enabled: false # WTF? Mind your own business.
 
+Naming/MemoizedInstanceVariableName:
+  Enabled: false
+
 
 Lint/EmptyBlock:
   Enabled: false # I know what I'm doing, thanks.

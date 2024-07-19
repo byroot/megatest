@@ -42,9 +42,9 @@ module Megatest
         return result if runtime.record_failures { instance.after_setup }
 
         return result if test_case.execute(runtime, instance)
-      ensure
-        result.complete
 
+        result.ensure_assertions unless @config.minitest_compatibility
+      ensure
         runtime.record_failures do
           instance.before_teardown
         end

@@ -370,7 +370,7 @@ module Megatest
       end
     end
 
-    def complete
+    def ensure_assertions
       if @assertions_count.zero? && success?
         @failures << Failure.new(NoAssertion.new)
       end

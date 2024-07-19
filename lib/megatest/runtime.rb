@@ -125,6 +125,10 @@ module Megatest
       raise(Assertion, message, EMPTY_BACKTRACE)
     end
 
+    def minitest_compatibility?
+      @config.minitest_compatibility
+    end
+
     def pp(object)
       @config.pretty_print(object)
     end
