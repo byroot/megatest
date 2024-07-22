@@ -25,6 +25,10 @@ module Megatest
       ::Megatest.registry.suite(self).add_tags(kwargs)
     end
 
+    def context(name, tags = nil, &block)
+      ::Megatest.registry.suite(self).with_context(name, tags, &block)
+    end
+
     def method_added(name)
       super
       if name.start_with?("test_")

@@ -4,10 +4,6 @@
 
 - RSpec style pending?
 
-- context blocks
-  - As a simple prefix for test name
-  - No scoped setup/teardown, need to explicitly reject that.
-
 - Distributed queue (ci-queue style).
   - Other?
 

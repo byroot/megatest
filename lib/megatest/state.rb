@@ -33,6 +33,25 @@ module Megatest
         @tags = nil
         @setup_callback = nil
         @teardown_callback = nil
+        @current_context = nil
+        @current_tags = nil
+      end
+
+      def with_context(context, tags)
+        previous_context = @current_context
+        @current_context = [@current_context, context].compact.join(" ")
+
+        previous_tags = @current_tags
+        if tags
+          @current_tags = @current_tags ? @current_tags.merge(tags) : tags
+        end
+
+        begin
+          yield
+        ensure
+          @current_context = previous_context
+          @current_tags = previous_tags
+        end
       end
 
       def add_tags(tags)
@@ -46,14 +65,34 @@ module Megatest
         @tags&.key?(name)
       end
 
+      def own_tags
+        @tags
+      end
+
+      def build_test_case(name, callable, tags)
+        name = [*@current_context, name].join(" ")
+        tags = if tags
+          @current_tags ? @current_tags.merge(tags) : tags
+        else
+          @current_tags
+        end
+        if callable.is_a?(UnboundMethod)
+          MethodTest.new(self, @klass, name, callable, tags)
+        else
+          BlockTest.new(self, @klass, name, callable, tags)
+        end
+      end
+
       def on_setup(block)
         raise Error, "The setup block is already defined" if @setup_callback
+        raise Error, "setup blocks can't be defined in context blocks" if @current_context
 
         @setup_callback = block
       end
 
       def on_teardown(block)
         raise Error, "The teardown block is already defined" if @teardown_callback
+        raise Error, "teardown blocks can't be defined in context blocks" if @current_context
 
         @teardown_callback = block
       end
@@ -83,6 +122,13 @@ module Megatest
         end
       end
 
+      def tags
+        tags = {}
+        tags.merge!(*ancestors.reverse.map(&:own_tags).compact)
+        tags.merge!(@tags) if @tags
+        tags
+      end
+
       def tag(name)
         if @tags&.key?(name)
           @tags[name]
@@ -107,11 +153,7 @@ module Megatest
       end
 
       def register_test_case(name, callable, tags)
-        test = if callable.is_a?(UnboundMethod)
-          MethodTest.new(self, @klass, name.name, callable, tags)
-        else
-          BlockTest.new(self, @klass, name, callable, tags)
-        end
+        test = build_test_case(name, callable, tags)
         add_test(test)
       end
 
@@ -171,11 +213,7 @@ module Megatest
       end
 
       def register_test_case(name, callable, tags)
-        test = if callable.is_a?(UnboundMethod)
-          MethodTest.new(self, @mod, name.name, callable, tags)
-        else
-          BlockTest.new(self, @mod, name, callable, tags)
-        end
+        test = build_test_case(name, callable, tags)
 
         if @test_cases[test]
           raise AlreadyDefinedError,
@@ -452,6 +490,10 @@ module Megatest
       else
         "#{klass}##{name}"
       end
+    end
+
+    def tags
+      @test_suite.tags.merge(@tags || {})
     end
 
     def tag(name)
