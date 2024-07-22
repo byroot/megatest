@@ -32,6 +32,11 @@ module Megatest
       result = TestCaseResult.new(test_case)
       runtime = Runtime.new(@config, test_case, result)
       instance = test_case.klass.new(runtime)
+
+      # We always reset the seed before running any test as to have the most consistent
+      # result as possible, especially on retries.
+      Random.srand(@config.seed)
+
       result.record_time do
         return result if runtime.record_failures { instance.before_setup }
 

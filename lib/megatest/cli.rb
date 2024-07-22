@@ -75,6 +75,10 @@ module Megatest
       selectors = Selector.parse(@argv)
       Megatest.load_config(selectors.main_paths)
 
+      # We initiale the seed in case there is some Random use
+      # at code loading time.
+      Random.srand(@config.seed)
+
       registry = Megatest.with_registry do
         Megatest.append_load_path(@config)
         Megatest.load_test_helper(selectors.main_paths)
