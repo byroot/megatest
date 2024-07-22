@@ -82,6 +82,30 @@ class MegatestTest < MegaTestCase
     assert_predicate result, :failed?
   end
 
+  def test_context
+    load_fixture("context/context_test.rb")
+    test_cases = @registry.test_cases.sort
+    assert_equal <<~CLASSES.strip, test_cases.map(&:id).join("\n")
+      TestedApp::ContextTest#some context some more context the unexpected
+      TestedApp::ContextTest#some context the lie
+      TestedApp::ContextTest#some context the truth
+      TestedApp::ContextTest#something else the void
+    CLASSES
+    assert_equal [
+      { some_tag: 4, focus: true },
+      { some_tag: 2 },
+      { some_tag: 1 },
+      { some_tag: 0 },
+    ], test_cases.map(&:tags)
+  end
+
+  def test_context_callbacks
+    error = assert_raises(Megatest::Error) do
+      load_fixture("context/callbacks_test.rb")
+    end
+    assert_match "setup", error.message
+  end
+
   def test_successful_run
     load_fixture("simple/simple_test.rb")
 
