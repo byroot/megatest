@@ -22,6 +22,9 @@
 
 ### Maybes
 
+- spec syntax?
+  - Used by Arel test suite
+
 - Depend on Zeitwerk?
   - If we enforced that all test files are loadable by Zeitwerk, then running a test by name becomes trivial.
   - Allow to unload/reload tests
