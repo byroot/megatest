@@ -108,6 +108,10 @@ module Megatest
           rescue Interrupt
           end
           queue.close
+
+          # We don't want to run at_exit hooks the app may have
+          # installed.
+          Process.exit!(0)
         end
         @child_socket.close
       end

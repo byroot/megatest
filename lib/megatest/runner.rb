@@ -14,6 +14,9 @@ module Megatest
           result = run(test_case)
           Marshal.dump(result, write)
           write.close
+          # We don't want to run at_exit hooks the app may have
+          # installed.
+          Process.exit!(0)
         end
         write.close
         result = begin
