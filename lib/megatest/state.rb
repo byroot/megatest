@@ -395,7 +395,7 @@ module Megatest
     end
 
     def ok?
-      success? || retried?
+      success? || retried? || skipped?
     end
 
     def bad?

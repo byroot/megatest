@@ -189,7 +189,7 @@ module Megatest
         if attempt_to_retry(result)
           result = result.retry
         else
-          @success = false
+          @success &&= result.ok?
         end
       end
       @summary.record_result(result)
