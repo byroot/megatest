@@ -12,7 +12,7 @@ module Megatest
 
     def call(expected, actual)
       if String === expected && String === actual
-        if expected.byterindex("\n", -1) || actual.byterindex("\n", -1)
+        if multiline?(expected) || multiline?(actual)
           multiline_string_diff(expected, actual)
         else
           single_line_string_diff(expected, actual)
@@ -32,8 +32,41 @@ module Megatest
 
     def multiline_string_diff(expected, actual)
       differ = PatienceDiff::Differ.new(@config.colors)
+
+      if expected.encoding != actual.encoding
+        expected = encoding_prefix(expected) << expected
+        actual = encoding_prefix(actual) << actual
+      end
+
+      if need_escape?(expected) || need_escape?(actual)
+        expected = escape_string(expected)
+        actual = escape_string(actual)
+      end
+
+      if expected.end_with?("\n") ^ actual.end_with?("\n")
+        expected = "#{expected}\n\\ No newline at end of string" unless expected.end_with?("\n")
+        actual = "#{actual}\n\\ No newline at end of string" unless actual.end_with?("\n")
+      end
       diff = differ.diff_text(expected, actual)
       "#{HEADER}#{diff}"
+    end
+
+    def multiline?(string)
+      string.byterindex("\n", -1)
+    end
+
+    def encoding_prefix(string)
+      encoding_name = string.encoding == Encoding::BINARY ? "BINARY" : string.encoding.name
+      prefix = +"# encoding: #{encoding_name}\n"
+      prefix.force_encoding(string.encoding)
+    end
+
+    def escape_string(string)
+      string.b.split("\n").map { |line| line.inspect.byteslice(1..-2) }.join("\n")
+    end
+
+    def need_escape?(string)
+      (string.encoding == Encoding::BINARY && !string.ascii_only?) || !string.valid_encoding?
     end
 
     def single_line_string_diff(expected, actual)

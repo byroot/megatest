@@ -323,10 +323,14 @@ module Megatest
       end
 
       def diff_text(left, right)
-        left = left.lines
-        right = right.lines
-        lines = diff_sequences(left, right)
-        lines.join
+        left_lines = left.lines
+        right_lines = right.lines
+
+        left_lines[-1] += "\n" unless left_lines.last.end_with?("\n")
+        right_lines[-1] += "\n" unless right_lines.last.end_with?("\n")
+
+        diff_lines = diff_sequences(left_lines, right_lines)
+        diff_lines.join
       end
     end
 
