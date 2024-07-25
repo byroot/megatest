@@ -75,6 +75,10 @@ module Megatest
       selectors = Selector.parse(@argv)
       Megatest.load_config(selectors.main_paths)
 
+      if @config.deprecations && ::Warning.respond_to?(:[]=)
+        ::Warning[:deprecated] = true
+      end
+
       # We initiale the seed in case there is some Random use
       # at code loading time.
       Random.srand(@config.seed)

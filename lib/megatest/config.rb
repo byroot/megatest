@@ -130,7 +130,7 @@ module Megatest
   end
 
   class Config
-    attr_accessor :queue_url, :retry_tolerance, :max_retries, :jobs_count, :job_index, :load_paths,
+    attr_accessor :queue_url, :retry_tolerance, :max_retries, :jobs_count, :job_index, :load_paths, :deprecations,
                   :build_id, :worker_id, :heartbeat_frequency, :program_name, :minitest_compatibility
     attr_reader :before_fork_callbacks, :global_setup_callbacks, :worker_setup_callbacks, :backtrace, :circuit_breaker, :seed
     attr_writer :differ, :pretty_printer
@@ -139,6 +139,7 @@ module Megatest
       @load_paths = ["test"] # For easier transition from other frameworks
       @retry_tolerance = 0.0
       @max_retries = 0
+      @deprecations = true
       @full_backtrace = false
       @queue_url = env["MEGATEST_QUEUE_URL"]
       @build_id = nil
