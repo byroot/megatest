@@ -166,6 +166,68 @@ module Megatest
       TEXT
     end
 
+    def test_hash_diff
+      expected = { foo: 1, bar: 2, baz: 3 }
+      actual = { foo: 1, bar: 4, baz: 3 }
+
+      assert_diff expected, actual, <<~TEXT
+        +++ expected
+        --- actual
+
+         {
+        -  :bar => 2,
+        +  :bar => 4,
+           :baz => 3,
+           :foo => 1,
+         }
+      TEXT
+    end
+
+    def test_nested_hash_diff
+      expected = { foo: 1, bar: { egg: { spam: 2 } }, baz: 3 }
+      actual = { foo: 1, bar: { plop: { spam: 2 } }, baz: 3 }
+
+      assert_diff expected, actual, <<~TEXT
+        +++ expected
+        --- actual
+
+         {
+        -  :bar => {:egg=>{:spam=>2}},
+        +  :bar => {:plop=>{:spam=>2}},
+           :baz => 3,
+           :foo => 1,
+         }
+      TEXT
+    end
+
+    def test_no_diff
+      expected = { foo: 1, bar: 2, baz: 3 }
+
+      assert_diff expected, expected, <<~TEXT
+        No visible difference in the Hash#inspect output.
+        You should look at the implementation of #== on Hash or its members.
+        {:foo=>1, :bar=>2, :baz=>3}
+      TEXT
+    end
+
+    SomeObject = Struct.new(:a, :b)
+
+    def test_object_diff
+      expected = SomeObject.new(1, SomeObject.new(2, SomeObject.new(3, 4)))
+      actual = SomeObject.new(1, SomeObject.new(2, SomeObject.new(5, 4)))
+
+      assert_diff expected, actual, <<~TEXT
+        +++ expected
+        --- actual
+
+          b=
+           #<struct Megatest::DifferTest::SomeObject
+            a=2,
+        -   b=#<struct Megatest::DifferTest::SomeObject a=3, b=4>>>
+        +   b=#<struct Megatest::DifferTest::SomeObject a=5, b=4>>>
+      TEXT
+    end
+
     private
 
     def assert_diff(expected, actual, expected_output)

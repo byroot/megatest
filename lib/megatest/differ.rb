@@ -21,6 +21,13 @@ module Megatest
         array_diff(expected, actual)
       elsif Hash === expected && Hash === actual
         hash_diff(expected, actual)
+      else
+        expected_inspect = pp(expected)
+        actual_inspect = pp(actual)
+
+        if multiline?(expected_inspect) || multiline?(actual_inspect)
+          object_diff(expected, expected_inspect, actual_inspect)
+        end
       end
     end
 
@@ -28,6 +35,12 @@ module Megatest
 
     def pp(object)
       @config.pretty_print(object)
+    end
+
+    def object_diff(expected, expected_inspect, actual_inspect)
+      differ = PatienceDiff::Differ.new(@config.colors)
+      diff = differ.diff_text(expected_inspect, actual_inspect)
+      render_diff(expected, diff)
     end
 
     def multiline_string_diff(expected, actual)
@@ -48,11 +61,23 @@ module Megatest
         actual = "#{actual}\n\\ No newline at end of string" unless actual.end_with?("\n")
       end
       diff = differ.diff_text(expected, actual)
-      "#{HEADER}#{diff}"
+      render_diff(expected, diff)
     end
 
     def multiline?(string)
       string.byterindex("\n", -1)
+    end
+
+    def render_diff(expected, diff)
+      if diff
+        "#{HEADER}#{diff.join}"
+      else
+        <<~TEXT
+          No visible difference in the #{expected.class}#inspect output.
+          You should look at the implementation of #== on #{expected.class.name} or its members.
+          #{pp(expected)}
+        TEXT
+      end
     end
 
     def encoding_prefix(string)
@@ -76,7 +101,7 @@ module Megatest
     def array_diff(expected, actual)
       differ = PatienceDiff::Differ.new(@config.colors)
       diff = differ.diff_sequences(array_sequence(expected), array_sequence(actual))
-      "#{HEADER}#{diff.join}"
+      render_diff(expected, diff)
     end
 
     def array_sequence(array)
@@ -87,9 +112,9 @@ module Megatest
 
     def hash_diff(expected, actual)
       differ = PatienceDiff::Differ.new(@config.colors)
-      expected, actual = hash_sort(expected, actual)
-      diff = differ.diff_sequences(hash_sequence(expected), hash_sequence(actual))
-      "#{HEADER}#{diff.join}"
+      expected_seq, actual_seq = hash_sort(expected, actual)
+      diff = differ.diff_sequences(hash_sequence(expected_seq), hash_sequence(actual_seq))
+      render_diff(expected, diff)
     end
 
     def hash_sort(expected, actual)

@@ -329,8 +329,7 @@ module Megatest
         left_lines[-1] += "\n" unless left_lines.last.end_with?("\n")
         right_lines[-1] += "\n" unless right_lines.last.end_with?("\n")
 
-        diff_lines = diff_sequences(left_lines, right_lines)
-        diff_lines.join
+        diff_sequences(left_lines, right_lines)
       end
     end
 
