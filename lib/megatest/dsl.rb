@@ -40,6 +40,10 @@ module Megatest
       ::Megatest.registry.suite(self).on_setup(block)
     end
 
+    def around(&block)
+      ::Megatest.registry.suite(self).on_around(block)
+    end
+
     def teardown(&block)
       ::Megatest.registry.suite(self).on_teardown(block)
     end

@@ -2,6 +2,18 @@
 
 module Megatest
   module Compat
+    unless Enumerable.method_defined?(:filter_map)
+      module FilterMap
+        refine Enumerable do
+          def filter_map(&block)
+            result = map(&block)
+            result.compact!
+            result
+          end
+        end
+      end
+    end
+
     unless Symbol.method_defined?(:start_with?)
       module StartWith
         refine Symbol do

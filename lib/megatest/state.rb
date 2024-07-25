@@ -26,13 +26,14 @@ module Megatest
     using Compat::StartWith unless Symbol.method_defined?(:start_with?)
 
     class Suite
-      attr_reader :setup_callback, :teardown_callback
+      attr_reader :setup_callback, :teardown_callback, :around_callback
 
       def initialize(registry)
         @registry = registry
         @tags = nil
         @setup_callback = nil
         @teardown_callback = nil
+        @around_callback = nil
         @current_context = nil
         @current_tags = nil
       end
@@ -88,6 +89,13 @@ module Megatest
         raise Error, "setup blocks can't be defined in context blocks" if @current_context
 
         @setup_callback = block
+      end
+
+      def on_around(block)
+        raise Error, "The around block is already defined" if @around_callback
+        raise Error, "around blocks can't be defined in context blocks" if @current_context
+
+        @around_callback = block
       end
 
       def on_teardown(block)
@@ -415,6 +423,10 @@ module Megatest
       self
     end
 
+    def did_not_run
+      @failures << Failure.new(DidNotRun.new)
+    end
+
     def lost
       @failures << Failure.new(LostTest.new(@test_id))
       @duration = 0.0
@@ -554,6 +566,12 @@ module Megatest
       @test_suite.ancestors.reverse_each do |test_suite|
         yield test_suite.setup_callback if test_suite.setup_callback
       end
+    end
+
+    using Compat::FilterMap unless Enumerable.method_defined?(:filter_map)
+
+    def around_callbacks
+      @test_suite.ancestors.filter_map(&:around_callback)
     end
 
     def each_teardown_callback

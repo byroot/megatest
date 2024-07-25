@@ -1,7 +1,5 @@
 ### Wants
 
-- around callbacks?
-
 - RSpec style pending?
 
 - Distributed queue (ci-queue style).

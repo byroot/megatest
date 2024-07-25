@@ -7,6 +7,12 @@ module TestedApp
   @order = []
 
   class TestCase < Megatest::Test
+    around do |block|
+      TestedApp.order << :test_case_around_start
+      block.call
+      TestedApp.order << :test_case_around_end
+    end
+
     setup do
       TestedApp.order << :test_case_setup_block
     end
@@ -47,6 +53,12 @@ module TestedApp
   end
 
   class CallbacksTest < TestCase
+    around do |block|
+      TestedApp.order << :callbacks_test_around_start
+      block.call
+      TestedApp.order << :callbacks_test_around_end
+    end
+
     setup do
       TestedApp.order << :callbacks_test_setup_block
     end

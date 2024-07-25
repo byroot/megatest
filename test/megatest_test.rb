@@ -143,6 +143,8 @@ class MegatestTest < MegaTestCase
     load_fixture("callbacks/callbacks_test.rb")
 
     expected_order = <<~ORDER
+      test_case_around_start
+      callbacks_test_around_start
       test_case_before_setup
       callbacks_test_before_setup
       test_case_setup_block
@@ -159,6 +161,8 @@ class MegatestTest < MegaTestCase
       callbacks_test_teardown_method
       test_case_after_teardown
       callbacks_test_after_teardown
+      callbacks_test_around_end
+      test_case_around_end
     ORDER
 
     success_test = @registry.test_cases[0]

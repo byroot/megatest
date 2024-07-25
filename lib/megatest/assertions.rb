@@ -10,6 +10,12 @@ module Megatest
     end
   end
 
+  class DidNotRun < Assertion
+    def initialize(message = "Test wasn't run. Did an around block failed to yield?")
+      super
+    end
+  end
+
   class LostTest < Assertion
     def initialize(test_id)
       super("#{test_id} never completed. Might be caused by a crash or early exit?")
