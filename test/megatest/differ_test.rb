@@ -13,8 +13,8 @@ module Megatest
       actual = %w(foo plop baz)
 
       assert_equal <<~TEXT, normalize(@differ.call(expected, actual))
-        +++ expected
-        --- actual
+        --- expected
+        +++ actual
 
          [
            "foo",
@@ -29,8 +29,8 @@ module Megatest
       expected = %w(foo bar baz) + (1..100).map(&:to_s) + %w(egg spam)
       actual = %w(foo plop baz) + (1..100).map(&:to_s) + %w(spam egg)
       assert_equal <<~TEXT, normalize(@differ.call(expected, actual))
-        +++ expected
-        --- actual
+        --- expected
+        +++ actual
 
          [
            "foo",
@@ -54,8 +54,8 @@ module Megatest
       actual = "foo\nplop\nbaz\n"
 
       assert_equal <<~TEXT, normalize(@differ.call(expected, actual))
-        +++ expected
-        --- actual
+        --- expected
+        +++ actual
 
          foo
         -bar
@@ -69,8 +69,8 @@ module Megatest
       actual = (%w(foo plop baz) + (1..100).map(&:to_s) + %w(spam egg)).join("\n") << "\n"
 
       assert_equal <<~TEXT, normalize(@differ.call(expected, actual))
-        +++ expected
-        --- actual
+        --- expected
+        +++ actual
 
          foo
         -bar
@@ -91,8 +91,8 @@ module Megatest
       expected = "foo\nbar\nbaz\n"
       actual = "foo\nbar\nbaz"
       assert_diff expected, actual, <<~TEXT
-        +++ expected
-        --- actual
+        --- expected
+        +++ actual
 
          foo
          bar
@@ -101,8 +101,8 @@ module Megatest
       TEXT
 
       assert_diff actual, expected, <<~TEXT
-        +++ expected
-        --- actual
+        --- expected
+        +++ actual
 
          foo
          bar
@@ -113,8 +113,8 @@ module Megatest
       expected = "foo\nbar\nbaz"
       actual = "foo\nbar\nplop"
       assert_diff actual, expected, <<~TEXT
-        +++ expected
-        --- actual
+        --- expected
+        +++ actual
 
          foo
          bar
@@ -127,8 +127,8 @@ module Megatest
       expected = "foo\n\xFF\nbaz\n".b
       actual = "foo\n\xFB\nbaz\n".b
       assert_diff expected, actual, <<~'TEXT'
-        +++ expected
-        --- actual
+        --- expected
+        +++ actual
 
          foo
         -\xFF
@@ -141,8 +141,8 @@ module Megatest
       expected = "foo\n\xFF\nbaz\n"
       actual = "foo\n\xFB\nbaz\n"
       assert_diff expected, actual, <<~'TEXT'
-        +++ expected
-        --- actual
+        --- expected
+        +++ actual
 
          foo
         -\xFF
@@ -155,8 +155,8 @@ module Megatest
       expected = "foo\n€\nbaz\n"
       actual = expected.b
       assert_diff expected, actual, <<~'TEXT'
-        +++ expected
-        --- actual
+        --- expected
+        +++ actual
 
         -# encoding: UTF-8
         +# encoding: BINARY
@@ -171,8 +171,8 @@ module Megatest
       actual = { foo: 1, bar: 4, baz: 3 }
 
       assert_diff expected, actual, <<~TEXT
-        +++ expected
-        --- actual
+        --- expected
+        +++ actual
 
          {
         -  :bar => 2,
@@ -188,8 +188,8 @@ module Megatest
       actual = { foo: 1, bar: { plop: { spam: 2 } }, baz: 3 }
 
       assert_diff expected, actual, <<~TEXT
-        +++ expected
-        --- actual
+        --- expected
+        +++ actual
 
          {
         -  :bar => {:egg=>{:spam=>2}},
@@ -217,8 +217,8 @@ module Megatest
       actual = SomeObject.new(1, SomeObject.new(2, SomeObject.new(5, 4)))
 
       assert_diff expected, actual, <<~TEXT
-        +++ expected
-        --- actual
+        --- expected
+        +++ actual
 
           b=
            #<struct Megatest::DifferTest::SomeObject

@@ -238,8 +238,8 @@ module Megatest
       actual = "foo\nplop\nbaz\n"
       message = @color.strip(assert_equal_message(expected, actual))
       expect = <<~MESSAGE
-        +++ expected
-        --- actual
+        --- expected
+        +++ actual
 
          foo
         -bar

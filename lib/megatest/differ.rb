@@ -2,7 +2,7 @@
 
 module Megatest
   class Differ
-    HEADER = "+++ expected\n--- actual\n\n"
+    HEADER = "--- expected\n+++ actual\n\n"
 
     def initialize(config)
       @config = config
