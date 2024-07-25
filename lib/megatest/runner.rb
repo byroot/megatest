@@ -8,10 +8,20 @@ module Megatest
 
     def execute(test_case)
       if test_case.tag(:isolated)
+        isolate(test_case) do
+          run(test_case)
+        end
+      else
+        run(test_case)
+      end
+    end
+
+    if Process.respond_to?(:fork)
+      def isolate(test_case)
         read, write = IO.pipe.each(&:binmode)
         pid = Process.fork do
           read.close
-          result = run(test_case)
+          result = yield
           Marshal.dump(result, write)
           write.close
           # We don't want to run at_exit hooks the app may have
@@ -26,8 +36,11 @@ module Megatest
         end
         Process.wait(pid)
         result
-      else
-        run(test_case)
+      end
+    else
+      def isolate(test_case)
+        result = TestCaseResult.new(test_case)
+        result.did_not_run("Test wasn't run. Isolated tests require a Ruby implementation with fork support")
       end
     end
 
@@ -73,7 +86,7 @@ module Megatest
           end
         end
 
-        result.did_not_run unless ran
+        result.did_not_run("Test wasn't run. Did an around block failed to yield?") unless ran
       end
     end
 

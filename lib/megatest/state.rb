@@ -423,8 +423,9 @@ module Megatest
       self
     end
 
-    def did_not_run
-      @failures << Failure.new(DidNotRun.new)
+    def did_not_run(reason)
+      @failures << Failure.new(DidNotRun.new(reason))
+      self
     end
 
     def lost

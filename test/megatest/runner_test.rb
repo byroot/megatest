@@ -12,7 +12,11 @@ module Megatest
 
     test "isolated test runs in a subprocess" do
       result = @runner.execute(@isolated)
-      assert_predicate result, :success?
+      if Process.respond_to?(:fork)
+        assert_predicate result, :success?
+      else
+        assert_predicate result, :failed?
+      end
     end
 
     test "not isolated runs in the same process" do
@@ -22,7 +26,11 @@ module Megatest
 
     test "isolated tests can crash" do
       result = @runner.execute(@crashing)
-      assert_predicate result, :lost?
+      if Process.respond_to?(:fork)
+        assert_predicate result, :lost?
+      else
+        assert_predicate result, :failed?
+      end
     end
   end
 end

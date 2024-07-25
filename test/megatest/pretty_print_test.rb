@@ -23,12 +23,19 @@ module Megatest
       object.instance_variable_set(:@foo, 12)
       object.instance_variable_set(:@bar, [1, 2, 3])
       object.instance_variable_set(:@self, object)
-      assert_pp <<~TEXT.strip, object
-        #<Object:0x00000000decafbad
-         @bar=[1, 2, 3],
-         @foo=12,
-         @self=#<Object:0x00000000decafbad ...>>
-      TEXT
+      case RUBY_ENGINE
+      when "truffleruby", "jruby"
+        assert_pp <<~TEXT.strip, object
+          #<Object:0x00000000decafbad @bar=[1, 2, 3], @foo=12, @self=#<Object:0x00000000decafbad ...>>
+        TEXT
+      else
+        assert_pp <<~TEXT.strip, object
+          #<Object:0x00000000decafbad
+           @bar=[1, 2, 3],
+           @foo=12,
+           @self=#<Object:0x00000000decafbad ...>>
+        TEXT
+      end
     end
 
     test "Hash" do
@@ -51,7 +58,7 @@ module Megatest
     end
 
     def normalize(text)
-      text.gsub(/(?<=:0x)([\da-f]{16}|[\da-f]{8}|[\da-f]{4})/, "00000000decafbad")
+      text.gsub(/(?<=:0x)([\da-f]{4,16})/, "00000000decafbad")
     end
 
     def pp(object)
