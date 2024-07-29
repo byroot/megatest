@@ -1,31 +1,91 @@
 # Megatest
 
-TODO: Delete this and the text below, and describe your gem
-
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/megatest`. To experiment with that code, run `bin/console` for an interactive prompt.
+Megatest is a test-unit like framework with a focus on usability.
 
 ## Installation
 
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
-
 Install the gem and add to the application's Gemfile by executing:
 
-    $ bundle add UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
-
-If bundler is not being used to manage dependencies, install the gem by executing:
-
-    $ gem install UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+    $ bundle add megatest
 
 ## Usage
 
-TODO: Write usage instructions here
+### Writing Tests
 
-## Development
+Test suites are Ruby classes that inherit from `Megatest::Test`.
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+Test cases can be defined with the `test` macro, or by defining a method starting with `test_`.
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+All the classic `test-unit` and `minitest` assertion methods are available:
+
+```ruby
+# test/some_test.rb
+
+class SomeTest < MyApp::Test
+  setup do
+    @user = User.new("George")
+  end
+
+  test "the truth" do
+    assert_equal true, Some.truth
+  end
+
+  context "when using old style" do
+    def test_it_works
+      assert_predicate 2, :even?
+    end
+  end
+end
+```
+
+By convention, all the `test_helper.rb` files are automatically loaded,
+which allows to centralize dependencies and define some helpers.
+
+```ruby
+# test/test_helper.rb
+
+require "some_dependency"
+
+module MyApp
+  class Test < Megatest::Test
+
+    def some_helper(arg)
+    end
+  end
+end
+```
+
+### Command Line
+
+Contrary to many alternatives, `megatest` provide a convenient CLI interface to easily run specific tests.
+
+Run all tests in a directory:
+
+```bash
+$ megatest # Run all tests in `test/`
+$ megatest test/integration
+```
+
+Runs tests using 8 processes:
+
+```bash
+$ megatest -j 8
+```
+
+Run a test at the specific line:
+
+```bash
+$ megatest test/some_test.rb:42 test/other_test.rb:24
+```
+
+Run all tests matching a pattern:
+
+```bash
+$ megatest test/some_test.rb:/matching
+```
+
+For more detailed usage, run `megatest --help`.
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/megatest.
+Bug reports and pull requests are welcome on GitHub at https://github.com/byroot/megatest.
