@@ -8,7 +8,9 @@
 - Test leak bisect
   - `test_order.log` first?
 
-- Implement missing assertions
+- Improve assertion errors
+  - Better pretty print
+  - Better multi-line
 
 - Forkless environment support (Windows / JRuby / TruffleRuby)
   - `-j` ideally
