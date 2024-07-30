@@ -1,15 +1,8 @@
 # frozen_string_literal: true
 
+# :stopdoc:
+
 module Megatest
-  class << self
-    attr_writer :config
-
-    def config
-      yield @config if block_given?
-      @config
-    end
-  end
-
   class CircuitBreaker
     def initialize(max)
       @max = max
@@ -120,6 +113,17 @@ module Megatest
           config.seed = seed
         end
       end
+    end
+  end
+
+  # :startdoc:
+
+  class << self
+    attr_writer :config
+
+    def config
+      yield @config if block_given?
+      @config
     end
   end
 

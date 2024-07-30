@@ -2,11 +2,17 @@
 
 require "megatest/assertions"
 
-# Megatest::Test is meant to be subclassed by users, as such it's written in an
-# adversarial way, we expose as little methods, instance variable and constants
-# as possible, and always reference our own constants with their fully qualified name.
 module Megatest
+  ##
+  # Subclass Test to define a test suite
+  #
+  # See Megatest::Assertions and Megatest::DSL
   class Test
+    # :stopdoc:
+    # Megatest::Test is meant to be subclassed by users, as such it's written in an
+    # adversarial way, we expose as little methods, instance variable and constants
+    # as possible, and always reference our own constants with their fully qualified name.
+
     class << self
       if respond_to?(:const_source_location)
         def inherited(subclass)
@@ -63,9 +69,6 @@ module Megatest
       end
     end
 
-    extend DSL
-    include Assertions
-
     def initialize(runtime)
       @__m = runtime
     end
@@ -76,10 +79,6 @@ module Megatest
     # For Minitest compatibility
     def name
       @__m.test_case.name
-    end
-
-    def __test__
-      @__m.test_case
     end
 
     def setup
@@ -95,6 +94,16 @@ module Megatest
     end
 
     def after_teardown
+    end
+
+    # :startdoc:
+    extend DSL
+    include Assertions
+
+    # Returns the current Megatest::State::TestCase instance
+    # Can be used for self introspection
+    def __test__
+      @__m.test_case
     end
   end
 end

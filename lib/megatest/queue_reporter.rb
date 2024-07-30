@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# :stopdoc:
+
 module Megatest
   class QueueReporter
     POLL_FREQUENCY = 1

@@ -3,6 +3,8 @@
 # TODO: Consider inlining and modifying PP
 require "pp"
 
+# :stopdoc:
+
 module Megatest
   class PrettyPrint
     def initialize(config)

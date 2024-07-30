@@ -7,6 +7,8 @@ module Megatest
   AlreadyDefinedError = Class.new(Error)
   LoadError = Class.new(Error)
 
+  # :stopdoc:
+
   ROOT = -File.expand_path("../", __FILE__)
   PWD = File.join(Dir.pwd, "/")
   IGNORED_ERRORS = [NoMemoryError, SignalException, SystemExit].freeze

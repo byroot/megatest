@@ -1,6 +1,6 @@
 # Megatest
 
-Megatest is a test-unit like framework with a focus on usability.
+Megatest is a test-unit like framework with a focus on usability, and designed with continuous integration in mind.
 
 ## Installation
 

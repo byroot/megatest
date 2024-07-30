@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# :stopdoc:
+
 module Megatest
   module Reporters
     class AbstractReporter

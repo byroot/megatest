@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# :stopdoc:
+
 module Megatest
   # This code is a simplified version of the patience_diff gem
   module PatienceDiff

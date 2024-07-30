@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# :stopdoc:
+
 require "optparse"
 require "megatest/selector"
 

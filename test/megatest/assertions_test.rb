@@ -14,7 +14,7 @@ module Megatest
       super
       @color = Output::ANSIColors
       @suite = @registry.register_suite(DummyTester, [__FILE__, __LINE__])
-      fake_test_case = BlockTest.new(@suite, DummyTester, "fake test case", -> {}, nil)
+      fake_test_case = State::BlockTest.new(@suite, DummyTester, "fake test case", -> {}, nil)
       @result = TestCaseResult.new(fake_test_case)
       @config = Config.new({})
       @runtime = Runtime.new(@config, fake_test_case, @result)

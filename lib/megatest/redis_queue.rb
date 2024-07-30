@@ -4,6 +4,8 @@ gem "redis-client", ">= 0.22"
 require "redis-client"
 require "rbconfig"
 
+# :stopdoc:
+
 module Megatest
   # Data structures
   #

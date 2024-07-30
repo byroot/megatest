@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# :stopdoc:
+
 module Megatest
   @registry = nil
 
@@ -229,6 +231,167 @@ module Megatest
         end
 
         @test_cases[test] = test
+      end
+    end
+
+    # :startdoc:
+
+    class Test
+      attr_reader :klass, :name, :source_file, :source_line
+
+      # :stopdoc:
+      attr_accessor :index
+
+      def initialize(test_suite, klass, name, callable, tags)
+        @test_suite = test_suite
+        @klass = klass
+        @name = name
+        @callable = callable
+        @source_file, @source_line = callable.source_location
+        @id = nil
+        @index = nil
+        @inherited = false
+        @tags = tags
+
+        # When a test class is reopened from a different file, tests defined there
+        # have a `source_file` can't be use to run a single test file.
+        # It's not ideal at all and it would be nice to find a more general solution
+        # to this, but it's also very much a corner case.
+        if !test_suite.shared? && @source_file != test_suite.source_file
+          @source_file, @source_line = test_suite.source_file, test_suite.source_line
+        end
+      end
+
+      # :startdoc:
+
+      ##
+      # Returns a unique identifier string for that test, in the form of `klass#name`
+      def id
+        if klass.name
+          @id ||= "#{klass.name}##{name}"
+        else
+          "#{klass}##{name}"
+        end
+      end
+
+      ##
+      # Lookup a tag for that test. Returns +nil+ if the tag isn't set.
+      def tag(name)
+        if @tags&.key?(name)
+          @tags[name]
+        else
+          @test_suite.tag(name)
+        end
+      end
+
+      # :stopdoc:
+
+      def inspect
+        if klass.name
+          "#<#{self.class}: #{id} @ #{location_id}>"
+        else
+          "#<#{self.class}: #{klass.inspect}##{name} @ #{location_id}>"
+        end
+      end
+
+      def tags
+        @test_suite.tags.merge(@tags || {})
+      end
+
+      def location_id
+        if @index
+          "#{@source_file}:#{@source_line}~#{@index}"
+        else
+          "#{@source_file}:#{@source_line}"
+        end
+      end
+
+      def inherited?
+        @inherited
+      end
+
+      def inherited_by(test_suite)
+        copy = dup
+        copy.test_suite = test_suite
+        copy.source_file = test_suite.source_file
+        copy.source_line = test_suite.source_line
+        copy.inherited = true
+        copy
+      end
+
+      def included_by(test_suite, include_location)
+        copy = dup
+        copy.test_suite = test_suite
+        copy.source_file, copy.source_line = include_location
+        copy.inherited = true
+        copy
+      end
+
+      def ==(other)
+        other.is_a?(Test) &&
+          @klass == other.klass &&
+          @name == other.name
+      end
+      alias_method :eql?, :==
+
+      def hash
+        [Test, @klass, @name].hash
+      end
+
+      def <=>(other)
+        cmp = @klass.name <=> other.klass.name
+        cmp = @name <=> other.name if cmp&.zero?
+        cmp || 0
+      end
+
+      def each_setup_callback
+        @test_suite.ancestors.reverse_each do |test_suite|
+          yield test_suite.setup_callback if test_suite.setup_callback
+        end
+      end
+
+      using Compat::FilterMap unless Enumerable.method_defined?(:filter_map)
+
+      def around_callbacks
+        @test_suite.ancestors.filter_map(&:around_callback)
+      end
+
+      def each_teardown_callback
+        @test_suite.ancestors.each do |test_suite|
+          yield test_suite.teardown_callback if test_suite.teardown_callback
+        end
+      end
+
+      protected
+
+      attr_writer :inherited, :source_file, :source_line
+
+      def test_suite=(test_suite)
+        @id = nil
+        @test_suite = test_suite
+        @klass = test_suite.klass
+      end
+    end
+
+    # :stopdoc:
+
+    class BlockTest < Test
+      def execute(runtime, instance)
+        runtime.record_failures(downlevel: 2) { instance.instance_exec(&@callable) }
+      end
+    end
+
+    class MethodTest < Test
+      if UnboundMethod.method_defined?(:bind_call)
+        def execute(runtime, instance)
+          runtime.record_failures(downlevel: 2) { @callable.bind_call(instance) }
+        end
+      else
+        using Compat::BindCall
+
+        def execute(runtime, instance)
+          runtime.record_failures(downlevel: 3) { @callable.bind_call(instance) }
+        end
       end
     end
   end
@@ -471,152 +634,5 @@ module Megatest
     protected
 
     attr_writer :retried
-  end
-
-  class AbstractTest
-    attr_accessor :index
-    attr_reader :klass, :name, :source_file, :source_line
-
-    def initialize(test_suite, klass, name, callable, tags)
-      @test_suite = test_suite
-      @klass = klass
-      @name = name
-      @callable = callable
-      @source_file, @source_line = callable.source_location
-      @id = nil
-      @index = nil
-      @inherited = false
-      @tags = tags
-
-      # When a test class is reopened from a different file, tests defined there
-      # have a `source_file` can't be use to run a single test file.
-      # It's not ideal at all and it would be nice to find a more general solution
-      # to this, but it's also very much a corner case.
-      if !test_suite.shared? && @source_file != test_suite.source_file
-        @source_file, @source_line = test_suite.source_file, test_suite.source_line
-      end
-    end
-
-    def id
-      if klass.name
-        @id ||= "#{klass.name}##{name}"
-      else
-        "#{klass}##{name}"
-      end
-    end
-
-    def tags
-      @test_suite.tags.merge(@tags || {})
-    end
-
-    def tag(name)
-      if @tags&.key?(name)
-        @tags[name]
-      else
-        @test_suite.tag(name)
-      end
-    end
-
-    def location_id
-      if @index
-        "#{@source_file}:#{@source_line}~#{@index}"
-      else
-        "#{@source_file}:#{@source_line}"
-      end
-    end
-
-    def inherited?
-      @inherited
-    end
-
-    def inherited_by(test_suite)
-      copy = dup
-      copy.test_suite = test_suite
-      copy.source_file = test_suite.source_file
-      copy.source_line = test_suite.source_line
-      copy.inherited = true
-      copy
-    end
-
-    def included_by(test_suite, include_location)
-      copy = dup
-      copy.test_suite = test_suite
-      copy.source_file, copy.source_line = include_location
-      copy.inherited = true
-      copy
-    end
-
-    def ==(other)
-      other.is_a?(AbstractTest) &&
-        @klass == other.klass &&
-        @name == other.name
-    end
-    alias_method :eql?, :==
-
-    def hash
-      [AbstractTest, @klass, @name].hash
-    end
-
-    def <=>(other)
-      cmp = @klass.name <=> other.klass.name
-      cmp = @name <=> other.name if cmp&.zero?
-      cmp || 0
-    end
-
-    def each_setup_callback
-      @test_suite.ancestors.reverse_each do |test_suite|
-        yield test_suite.setup_callback if test_suite.setup_callback
-      end
-    end
-
-    using Compat::FilterMap unless Enumerable.method_defined?(:filter_map)
-
-    def around_callbacks
-      @test_suite.ancestors.filter_map(&:around_callback)
-    end
-
-    def each_teardown_callback
-      @test_suite.ancestors.each do |test_suite|
-        yield test_suite.teardown_callback if test_suite.teardown_callback
-      end
-    end
-
-    def inspect
-      if klass.name
-        "#<#{self.class}: #{id} @ #{location_id}>"
-      else
-        "#<#{self.class}: #{klass.inspect}##{name} @ #{location_id}>"
-      end
-    end
-
-    protected
-
-    attr_writer :inherited, :source_file, :source_line
-
-    def test_suite=(test_suite)
-      @id = nil
-      @test_suite = test_suite
-      @klass = test_suite.klass
-    end
-  end
-
-  class BlockTest < AbstractTest
-    def execute(runtime, instance)
-      runtime.record_failures(downlevel: 2) { instance.instance_exec(&@callable) }
-    end
-  end
-
-  class MethodTest < AbstractTest
-    if UnboundMethod.method_defined?(:bind_call)
-      def execute(runtime, instance)
-        runtime.record_failures(downlevel: 2) { @callable.bind_call(instance) }
-      end
-    else
-      using Compat::BindCall
-
-      def execute(runtime, instance)
-        runtime.record_failures(downlevel: 3) { @callable.bind_call(instance) }
-      end
-    end
   end
 end

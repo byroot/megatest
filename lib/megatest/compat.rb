@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# :stopdoc:
+
 module Megatest
   module Compat
     unless Enumerable.method_defined?(:filter_map)

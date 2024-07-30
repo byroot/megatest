@@ -3,6 +3,8 @@
 require "tmpdir"
 require "socket"
 
+# :stopdoc:
+
 module Megatest
   # Fairly experimental multi-process queue implementation.
   # It's absolutely not resilient yet, if something goes a bit wrong
