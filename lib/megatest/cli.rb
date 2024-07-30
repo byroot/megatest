@@ -122,7 +122,7 @@ module Megatest
     private
 
     def default_reporters
-      if @verbose
+      if @verbose || @config.ci
         [
           Reporters::VerboseReporter.new(@config, @out),
         ]
@@ -175,7 +175,7 @@ module Megatest
         end
 
         if runner == :run
-          opts.on("-v", "--verbose") do
+          opts.on("-v", "--verbose", "Use the verbose reporter") do
             @verbose = true
           end
 
@@ -191,31 +191,35 @@ module Megatest
           opts.on("-f", "--fail-fast [COUNT]", Integer, help) do |max|
             @config.max_consecutive_failures = (max || 1)
           end
+
+          opts.on("--max-retries COUNT", Integer, "How many times a given test may be retried") do |max_retries|
+            @config.max_retries = max_retries
+          end
+
+          opts.on("--retry-tolerance RATE", Float, "The proportion of tests that may be retried. e.g. 0.05 for 5% of retried tests") do |retry_tolerance|
+            @config.retry_tolerance = retry_tolerance
+          end
         end
 
-        opts.on("--queue URL", String) do |queue_url|
+        opts.separator ""
+        opts.separator "Test distribution and sharding:"
+        opts.separator ""
+
+        opts.on("--queue URL", String, "URL of queue server to use for test distribution. Default to $MEGATEST_QUEUE_URL") do |queue_url|
           @config.queue_url = queue_url
         end
 
-        opts.on("--build-id ID", String) do |build_id|
+        opts.on("--build-id ID", String, "Unique identifier for the CI build") do |build_id|
           @config.build_id = build_id
         end
 
         if runner == :run
-          opts.on("--worker-id ID", String) do |worker_id|
+          opts.on("--worker-id ID", String, "Unique identifier for the CI job") do |worker_id|
             @config.worker_id = worker_id
           end
 
-          opts.on("--workers-count COUNT", Integer) do |workers_count|
+          opts.on("--workers-count COUNT", Integer, "Number of CI jobs") do |workers_count|
             @config.workers_count = workers_count
-          end
-
-          opts.on("--max-retries=COUNT", Integer) do |max_retries|
-            @config.max_retries = max_retries
-          end
-
-          opts.on("--retry-tolerance=RATE", Float) do |retry_tolerance|
-            @config.retry_tolerance = retry_tolerance
           end
         end
       end

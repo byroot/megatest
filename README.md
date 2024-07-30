@@ -86,6 +86,50 @@ $ megatest test/some_test.rb:/matching
 
 For more detailed usage, run `megatest --help`.
 
+### CI Parallelization
+
+Megatest offer multiple feature to allow running test suites in parallel across
+many CI jobs.
+
+#### Sharding
+
+The simplest way is sharding. Each worker will run its share of the test cases.
+
+Many CI systems provide a way to run the same command on multiple nodes,
+and will generally expose environment variables to help split the workload.
+
+```yaml
+- label: "Run Unit Tests"
+  run: megatest --workers-count $CI_NODE_INDEX --worker-id $CI_NODE_TOTAL
+  parallel: 8
+```
+
+Note that Megatest makes no effort at balancing the shards as it has no
+information about how long each is expected to take. However it does shard
+test cases individually, so you should avoid the most common issue which is
+very large test suites containing lots of slow test cases being sharded as one unit.
+
+If you are using CircleCI, Buildkite or HerokuCI, the workers count and worker id
+will be automatically inferred from the environment.
+
+### Redis Distribution
+
+A more efficient way to parallelize tests on CI is to use a Redis server to act as a queue.
+
+This allow to efficiently and dynamically ensure a near perfect test case balance across all
+the workers. And if for some reason one of the worker is lost or crashes, no test is lost,
+which for builds with hundreds of parallel jobs, is essential for stability.
+
+```yaml
+- label: "Run Unit Tests"
+  run: megatest --queue redis://redis-ci.example.com --build-id $CI_BUILD_ID --worker-id $CI_JOB_ID
+  parallel: 128
+  soft_fail: true # Doesn't matter if they fail or crash, only the "Results" job status matters
+
+- label: "Unit Test Results"
+  run: megatest report --queue redis://redis-ci.example.com --build-id $CI_BUILD_ID
+```
+
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/byroot/megatest.

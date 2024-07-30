@@ -51,6 +51,7 @@ module Megatest
     class CircleCI < self
       def configure(config)
         if env["CIRCLE_BUILD_URL"]
+          config.ci = true
           config.build_id = env["CIRCLE_BUILD_URL"]
           config.worker_id = env["CIRCLE_NODE_INDEX"]
           config.workers_count = Integer(env["CIRCLE_NODE_TOTAL"])
@@ -62,6 +63,7 @@ module Megatest
     class Buildkite < self
       def configure(config)
         if env["BUILDKITE_BUILD_ID"]
+          config.ci = true
           config.build_id = env["BUILDKITE_BUILD_ID"]
           config.worker_id = env["BUILDKITE_PARALLEL_JOB"]
           config.workers_count = env["BUILDKITE_PARALLEL_JOB_COUNT"]
@@ -73,6 +75,7 @@ module Megatest
     class Travis < self
       def configure(config)
         if env["TRAVIS_BUILD_ID"]
+          config.ci = true
           config.build_id = env["TRAVIS_BUILD_ID"]
           # Travis doesn't have builtin parallelization
           # but CI_NODE_INDEX is what is used in their documentation
@@ -87,6 +90,7 @@ module Megatest
     class Heroku < self
       def configure(config)
         if env["HEROKU_TEST_RUN_ID"]
+          config.ci = true
           config.build_id = env["HEROKU_TEST_RUN_ID"]
           config.worker_id = env["CI_NODE_INDEX"]
           config.workers_count = env["CI_NODE_TOTAL"]
@@ -97,6 +101,10 @@ module Megatest
 
     class Megatest < self
       def configure(config)
+        if env["CI"]
+          config.ci = true
+        end
+
         if url = env["MEGATEST_QUEUE_URL"]
           config.queue_url = url
         end
@@ -129,7 +137,7 @@ module Megatest
 
   class Config
     attr_accessor :queue_url, :retry_tolerance, :max_retries, :jobs_count, :job_index, :load_paths, :deprecations,
-                  :build_id, :heartbeat_frequency, :program_name, :minitest_compatibility
+                  :build_id, :heartbeat_frequency, :program_name, :minitest_compatibility, :ci
     attr_reader :before_fork_callbacks, :global_setup_callbacks, :worker_setup_callbacks, :backtrace, :circuit_breaker, :seed,
                 :worker_id, :workers_count
     attr_writer :differ, :pretty_printer
@@ -140,7 +148,8 @@ module Megatest
       @max_retries = 0
       @deprecations = true
       @full_backtrace = false
-      @queue_url = env["MEGATEST_QUEUE_URL"]
+      @queue_url = nil
+      @ci = false
       @build_id = nil
       @worker_id = nil
       @workers_count = 1
