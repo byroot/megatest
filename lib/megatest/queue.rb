@@ -20,6 +20,10 @@ module Megatest
       false
     end
 
+    def sharded?
+      false
+    end
+
     def summary
       raise NotImplementedError
     end
@@ -63,6 +67,20 @@ module Megatest
     end
 
     def cleanup
+    end
+  end
+
+  module ShardeableQueue
+    def sharded?
+      @config.workers_count > 1
+    end
+
+    def populate(test_cases)
+      if sharded?
+        test_cases = test_cases.select.with_index { |_t, index| (index % @config.workers_count) == @config.worker_id }
+      end
+
+      super
     end
   end
 
@@ -138,6 +156,8 @@ module Megatest
       end
     end
 
+    prepend ShardeableQueue
+
     attr_reader :summary
     alias_method :global_summary, :summary
 
@@ -153,6 +173,10 @@ module Megatest
 
     def distributed?
       false
+    end
+
+    def sharded?
+      @config.workers_count > 1
     end
 
     def monitor

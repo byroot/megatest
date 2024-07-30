@@ -60,6 +60,7 @@ module Megatest
         if env["CIRCLE_BUILD_URL"]
           config.build_id = env["CIRCLE_BUILD_URL"]
           config.worker_id = env["CIRCLE_NODE_INDEX"]
+          config.workers_count = Integer(env["CIRCLE_NODE_TOTAL"])
           config.seed = env["CIRCLE_SHA1"]&.first(4)&.to_i(16)
         end
       end
@@ -70,6 +71,7 @@ module Megatest
         if env["BUILDKITE_BUILD_ID"]
           config.build_id = env["BUILDKITE_BUILD_ID"]
           config.worker_id = env["BUILDKITE_PARALLEL_JOB"]
+          config.workers_count = env["BUILDKITE_PARALLEL_JOB_COUNT"]
           config.seed = env["BUILDKITE_COMMIT"]&.first(4)&.to_i(16)
         end
       end
@@ -83,6 +85,7 @@ module Megatest
           # but CI_NODE_INDEX is what is used in their documentation
           # https://docs.travis-ci.com/user/speeding-up-the-build#parallelizing-rspec-cucumber-and-minitest-on-multiple-vms
           config.worker_id = env["CI_NODE_INDEX"]
+          config.workers_count = env["CI_NODE_TOTAL"]
           config.seed = env["TRAVIS_COMMIT"]&.first(4)&.to_i(16)
         end
       end
@@ -93,17 +96,8 @@ module Megatest
         if env["HEROKU_TEST_RUN_ID"]
           config.build_id = env["HEROKU_TEST_RUN_ID"]
           config.worker_id = env["CI_NODE_INDEX"]
+          config.workers_count = env["CI_NODE_TOTAL"]
           config.seed = env["HEROKU_TEST_RUN_COMMIT_VERSION"]&.first(4)&.to_i(16)
-        end
-      end
-    end
-
-    class Semaphore < self
-      def configure(config)
-        if env["SEMAPHORE_PIPELINE_ID"]
-          config.build_id = env["SEMAPHORE_PIPELINE_ID"]
-          config.worker_id = env["SEMAPHORE_JOB_ID"]
-          config.seed = env["SEMAPHORE_GIT_SHA"]&.first(4)&.to_i(16)
         end
       end
     end
@@ -131,8 +125,9 @@ module Megatest
 
   class Config
     attr_accessor :queue_url, :retry_tolerance, :max_retries, :jobs_count, :job_index, :load_paths, :deprecations,
-                  :build_id, :worker_id, :heartbeat_frequency, :program_name, :minitest_compatibility
-    attr_reader :before_fork_callbacks, :global_setup_callbacks, :worker_setup_callbacks, :backtrace, :circuit_breaker, :seed
+                  :build_id, :heartbeat_frequency, :program_name, :minitest_compatibility
+    attr_reader :before_fork_callbacks, :global_setup_callbacks, :worker_setup_callbacks, :backtrace, :circuit_breaker, :seed,
+                :worker_id, :workers_count
     attr_writer :differ, :pretty_printer
 
     def initialize(env)
@@ -144,6 +139,7 @@ module Megatest
       @queue_url = env["MEGATEST_QUEUE_URL"]
       @build_id = nil
       @worker_id = nil
+      @workers_count = 1
       @jobs_count = 1
       @colors = nil # auto
       @before_fork_callbacks = []
@@ -158,6 +154,22 @@ module Megatest
       @pretty_printer = PrettyPrint.new(self)
       @minitest_compatibility = false
       CIService.configure(self, env)
+    end
+
+    def worker_id=(id)
+      @worker_id = if id.is_a?(String) && /\A\d+\z/.match?(id)
+        Integer(id)
+      else
+        id
+      end
+    end
+
+    def workers_count=(count)
+      @workers_count = count ? Integer(count) : 1
+    end
+
+    def valid_worker_index?
+      worker_id.is_a?(Integer) && worker_id.positive? && worker_id < workers_count
     end
 
     def colors(io = nil)

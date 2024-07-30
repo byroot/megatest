@@ -70,6 +70,10 @@ module Megatest
       if queue.distributed?
         raise InvalidArgument, "Distributed queues require a build-id" unless @config.build_id
         raise InvalidArgument, "Distributed queues require a worker-id" unless @config.worker_id
+      elsif queue.sharded?
+        unless @config.valid_worker_index?
+          raise InvalidArgument, "Splitting the queue requires a worker-id lower than workers-count, got: #{@config.worker_id.inspect}"
+        end
       end
 
       selectors = Selector.parse(@argv)
@@ -198,6 +202,10 @@ module Megatest
         if runner == :run
           opts.on("--worker-id ID", String) do |worker_id|
             @config.worker_id = worker_id
+          end
+
+          opts.on("--workers-count COUNT", Integer) do |workers_count|
+            @config.workers_count = workers_count
           end
 
           opts.on("--max-retries=COUNT", Integer) do |max_retries|
