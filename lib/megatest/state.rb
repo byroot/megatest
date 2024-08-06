@@ -72,7 +72,7 @@ module Megatest
         @tags
       end
 
-      def build_test_case(name, callable, tags)
+      def build_test_case(name, callable, tags, source_location)
         name = [*@current_context, name].join(" ")
         tags = if tags
           @current_tags ? @current_tags.merge(tags) : tags
@@ -80,9 +80,9 @@ module Megatest
           @current_tags
         end
         if callable.is_a?(UnboundMethod)
-          MethodTest.new(self, @klass, name, callable, tags)
+          MethodTest.new(self, @klass, name, callable, tags, source_location)
         else
-          BlockTest.new(self, @klass, name, callable, tags)
+          BlockTest.new(self, @klass, name, callable, tags, source_location)
         end
       end
 
@@ -163,8 +163,40 @@ module Megatest
       end
 
       def register_test_case(name, callable, tags)
-        test = build_test_case(name, callable, tags)
+        source_location = callable.source_location
+        if !shared? && source_location[0] != @source_file
+          # When a test class is reopened from a different file, or when a test is defined
+          # using some sort of class method macro, the resulting `source_file` doesn't match
+          # the test suite, hence can't be used to point to the test as it would
+          # have a `source_file` that can't be used to run a single test file.
+          #
+          # So we need some work to try to figure out the actual test definition location,
+          # and if we really can't, then we fallback to the suite location.
+          source_location = fixed_source_location || [@source_file, @source_line]
+        end
+
+        test = build_test_case(name, callable, tags, source_location)
         add_test(test)
+      end
+
+      if Thread.respond_to?(:each_caller_location)
+        def fixed_source_location
+          Thread.each_caller_location do |location|
+            if location.path == @source_file
+              return [location.path, location.lineno]
+            end
+          end
+          nil
+        end
+      else
+        def fixed_source_location
+          caller_locations.each do |location|
+            if location.path == @source_file
+              return [location.path, location.lineno]
+            end
+          end
+          nil
+        end
       end
 
       def add_test(test)
@@ -223,7 +255,7 @@ module Megatest
       end
 
       def register_test_case(name, callable, tags)
-        test = build_test_case(name, callable, tags)
+        test = build_test_case(name, callable, tags, callable.source_location)
 
         if @test_cases[test]
           raise AlreadyDefinedError,
@@ -242,24 +274,16 @@ module Megatest
       # :stopdoc:
       attr_accessor :index
 
-      def initialize(test_suite, klass, name, callable, tags)
+      def initialize(test_suite, klass, name, callable, tags, location)
         @test_suite = test_suite
         @klass = klass
         @name = name
         @callable = callable
-        @source_file, @source_line = callable.source_location
+        @source_file, @source_line = location
         @id = nil
         @index = nil
         @inherited = false
         @tags = tags
-
-        # When a test class is reopened from a different file, tests defined there
-        # have a `source_file` can't be use to run a single test file.
-        # It's not ideal at all and it would be nice to find a more general solution
-        # to this, but it's also very much a corner case.
-        if !test_suite.shared? && @source_file != test_suite.source_file
-          @source_file, @source_line = test_suite.source_file, test_suite.source_line
-        end
       end
 
       # :startdoc:

@@ -25,7 +25,7 @@ class MegatestTest < MegaTestCase
     load_fixture("inheritance/inheritance_test.rb")
     cases = @registry.test_cases.sort
     padding = cases.map { |t| t.id.size }.max + 2
-    cases = @registry.test_cases.sort.map do |test_case|
+    cases = cases.map do |test_case|
       "#{test_case.id.ljust(padding)} | #{Megatest.relative_path(test_case.source_file)}:#{test_case.source_line}"
     end
 
@@ -36,7 +36,7 @@ class MegatestTest < MegaTestCase
       TestedApp::BaseCase#predefined                | test_helper.rb:#{TestedApp::BaseCase::PREDEFINED_LINE}
       TestedApp::BaseCase#reopened                  | test_helper.rb:#{TestedApp::BaseCase::LINE}
       TestedApp::ConcreteATest#concrete A           | #{file}:#{TestedApp::ConcreteATest::TEST_1_LINE}
-      TestedApp::ConcreteATest#included shared      | #{file}:#{TestedApp::ConcreteATest::LINE}
+      TestedApp::ConcreteATest#included shared      | #{file}:#{TestedApp::ConcreteATest::INCLUDED_SHARED_TESTS_LINE}
       TestedApp::ConcreteATest#overridable          | #{file}:#{TestedApp::ConcreteATest::TEST_2_LINE}
       TestedApp::ConcreteATest#predefined           | #{file}:#{TestedApp::ConcreteATest::LINE}
       TestedApp::ConcreteATest#reopened             | #{file}:#{TestedApp::ConcreteATest::LINE}
@@ -52,6 +52,24 @@ class MegatestTest < MegaTestCase
       "#{test_case.id.ljust(padding)} | #{Megatest.relative_path(test_case.source_file)}:#{test_case.source_line}"
     end
     assert_equal cases, indexed_cases
+  end
+
+  def test_generated_tests
+    load_fixture("generated_test.rb")
+    cases = @registry.test_cases.sort_by(&:source_line)
+    padding = cases.map { |t| t.id.size }.max + 2
+    cases = cases.map do |test_case|
+      "#{test_case.id.ljust(padding)} | #{Megatest.relative_path(test_case.source_file)}:#{test_case.source_line}"
+    end
+
+    file = "fixtures/generated_test.rb"
+
+    assert_equal <<~CLASSES.strip, cases.join("\n")
+      TestedApp::GeneratedTest#true is truthy     | #{file}:21
+      TestedApp::GeneratedTest#42 is truthy       | #{file}:22
+      TestedApp::GeneratedTest#"true" is truthy   | #{file}:23
+      TestedApp::GeneratedTest#nil is truthy      | #{file}:24
+    CLASSES
   end
 
   def test_already_defined
