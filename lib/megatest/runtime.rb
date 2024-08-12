@@ -115,7 +115,8 @@ module Megatest
 
     EMPTY_BACKTRACE = [].freeze
 
-    def fail(user_message, message)
+    def fail(user_message, *message)
+      message = build_message(message)
       if user_message
         user_message = user_message.call if user_message.respond_to?(:call)
         user_message = String(user_message)
@@ -125,6 +126,16 @@ module Megatest
         message = "#{user_message}#{message}"
       end
       raise(Assertion, message, EMPTY_BACKTRACE)
+    end
+
+    def build_message(strings)
+      return if strings.empty?
+
+      if (strings.size + strings.sum(&:size)) < 80
+        strings.join(" ")
+      else
+        strings.join("\n\n")
+      end
     end
 
     def minitest_compatibility?

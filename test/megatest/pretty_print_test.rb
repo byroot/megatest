@@ -18,6 +18,13 @@ module Megatest
       assert_pp "#<Object:0x00000000decafbad @bar=[1, 2, 3], @foo=12>", object
     end
 
+    test "String" do
+      assert_pp '"foo"', "foo"
+      assert_pp '"foo\nbar"', "foo\nbar"
+      assert_pp %{"foobarbazeggspam\\n\nfoobarbazeggspam"}, "foobarbazeggspam\nfoobarbazeggspam"
+      assert_pp %{"foobarbazeggspam\\n\nfoobarbazeggspam\\n"}, "foobarbazeggspam\nfoobarbazeggspam\n"
+    end
+
     test "cyclic" do
       object = Object.new
       object.instance_variable_set(:@foo, 12)

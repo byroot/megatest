@@ -304,7 +304,7 @@ module Megatest
       @case.assert_instance_of(Integer, 42)
       assert_equal 1, @result.assertions_count
 
-      assert_failure_message("Expected [] to be an instance of Integer, not Array") do
+      assert_failure_message("Expected [] to be an instance of Integer not Array") do
         @case.assert_instance_of(Integer, [])
       end
       assert_equal 2, @result.assertions_count
@@ -328,7 +328,7 @@ module Megatest
       @case.assert_kind_of(Numeric, 42)
       assert_equal 1, @result.assertions_count
 
-      assert_failure_message("Expected 1 to be a kind of Enumerable, not Integer") do
+      assert_failure_message("Expected 1 to be a kind of Enumerable not Integer") do
         @case.assert_kind_of(Enumerable, 1)
       end
       assert_equal 2, @result.assertions_count
@@ -448,32 +448,44 @@ module Megatest
       assert_equal 1, @result.assertions_count
 
       message = <<~MESSAGE.strip
-        Expected
-
-        ["foo", "bar", "baz"]
-
-        to include
-
-        "spam"
+        Expected ["foo", "bar", "baz"] to include "spam"
       MESSAGE
       assert_failure_message(message) do
         @case.assert_includes(%w(foo bar baz), "spam")
       end
       assert_equal 2, @result.assertions_count
 
-      message = <<~'MESSAGE'.strip
+      message = <<~MESSAGE.strip
         Expected
 
-        "foo\n" + "bar\n" + "baz\n"
+        ["foo",
+         "bar",
+         "baz",
+         "egg",
+         "plop",
+         "fizz",
+         "djin",
+         "iron",
+         "george",
+         "peter",
+         "steven"]
 
         to include
 
         "spam"
       MESSAGE
       assert_failure_message(message) do
-        @case.assert_includes("foo\nbar\nbaz\n", "spam")
+        @case.assert_includes(%w(foo bar baz egg plop fizz djin iron george peter steven), "spam")
       end
       assert_equal 3, @result.assertions_count
+
+      message = <<~'MESSAGE'.strip
+        Expected "foo\nbar\nbaz\n" to include "spam"
+      MESSAGE
+      assert_failure_message(message) do
+        @case.assert_includes("foo\nbar\nbaz\n", "spam")
+      end
+      assert_equal 4, @result.assertions_count
     end
 
     def test_refute_includes
@@ -483,13 +495,7 @@ module Megatest
       assert_equal 1, @result.assertions_count
 
       message = <<~MESSAGE.strip
-        Expected
-
-        ["foo", "bar", "baz"]
-
-        to not include
-
-        "bar"
+        Expected ["foo", "bar", "baz"] to not include "bar"
       MESSAGE
       assert_failure_message(message) do
         @case.refute_includes(%w(foo bar baz), "bar")
@@ -508,7 +514,10 @@ module Megatest
       end
       assert_equal 2, @result.assertions_count
 
-      assert_failure_message('Expected "foo\n" + "bar\n" + "baz\n" to be empty') do
+      message = <<~'MESSAGE'.strip
+        Expected "foo\nbar\nbaz\n" to be empty
+      MESSAGE
+      assert_failure_message(message) do
         @case.assert_empty("foo\nbar\nbaz\n")
       end
       assert_equal 3, @result.assertions_count
@@ -697,12 +706,14 @@ module Megatest
     private
 
     def assert_failure_message(message, &block)
-      assertion = assert_raises(Assertion, &block)
-      actual_message = assertion.message
-      if Regexp === message
-        assert_match message, actual_message
-      else
-        assert_equal message, actual_message
+      @__m.assert do
+        assertion = assert_raises(Assertion, &block)
+        actual_message = assertion.message
+        if Regexp === message
+          assert_match message, actual_message
+        else
+          assert_equal message, actual_message
+        end
       end
     end
 

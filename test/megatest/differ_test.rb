@@ -228,13 +228,27 @@ module Megatest
       TEXT
     end
 
+    def test_different_types_diff
+      expected = { foo: 1, bar: { egg: { spam: 2 } }, baz: 3 }
+      actual = "foo\nbar\nbaz\n"
+
+      assert_no_diff expected, actual
+    end
+
     private
+
+    def assert_no_diff(expected, actual)
+      assert_nil normalize(@differ.call(expected, actual))
+      assert_nil normalize(@differ.call(actual, expected))
+    end
 
     def assert_diff(expected, actual, expected_output)
       assert_equal expected_output, normalize(@differ.call(expected, actual))
     end
 
     def normalize(output)
+      return if output.nil?
+
       output = Output::ANSIColors.strip(output)
       output << "\n" unless output.end_with?("\n")
       output
