@@ -12,14 +12,16 @@
   - Better pretty print
   - Better multi-line
 
-- Forkless environment support (Windows / JRuby / TruffleRuby)
-  - `-j` ideally
-  - `isolated: true` would need to work
+- `-j` for forkless environments (Windows / JRuby / TruffleRuby)
+
+- `minitest/mocks`
+  - I'm not very fond of those, but could be worth offering it as a side gem or something, for completeness sake.
 
 ### Maybes
 
-- spec syntax?
+- `minitest/spec` syntax?
   - Used by Arel test suite
+  - Not really convinced about the usefulness.
 
 - Depend on Zeitwerk?
   - If we enforced that all test files are loadable by Zeitwerk, then running a test by name becomes trivial.
