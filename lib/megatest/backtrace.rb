@@ -2,20 +2,28 @@
 
 module Megatest
   class Backtrace
-    class << self
-      INTERNAL_PATHS = [
-        File.expand_path("../assertions.rb:", __FILE__).freeze,
-        File.expand_path("../runtime.rb:", __FILE__).freeze,
-      ].freeze
-      def reject_internal_methods(backtrace)
-        backtrace.reject do |frame|
-          frame.start_with?(*INTERNAL_PATHS)
+    module InternalFilter
+      class << self
+        INTERNAL_PATHS = [
+          File.expand_path("../assertions.rb:", __FILE__).freeze,
+          File.expand_path("../runtime.rb:", __FILE__).freeze,
+        ].freeze
+
+        def call(backtrace)
+          backtrace.reject do |frame|
+            frame.start_with?(*INTERNAL_PATHS)
+          end
         end
       end
     end
 
-    InternalFilter = method(:reject_internal_methods)
-    RelativePathCleaner = Megatest.method(:relative_path)
+    module RelativePathCleaner
+      class << self
+        def call(path)
+          Megatest.relative_path(path)
+        end
+      end
+    end
 
     attr_accessor :filters, :formatters
 

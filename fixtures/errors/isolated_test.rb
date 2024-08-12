@@ -6,16 +6,16 @@ module TestedApp
   end
 
   class IsolatedTest < TestCase
-    PID = Process.pid
+    INITIAL_PID = Integer(ENV["_MEGATEST_PID"] ||= Process.pid.to_s)
 
     tag isolated: true
 
     test "runs in subprocess" do
-      refute_equal PID, Process.pid
+      refute_equal INITIAL_PID, Process.pid
     end
 
     test "override", isolated: false do
-      assert_equal PID, Process.pid
+      assert_equal INITIAL_PID, Process.pid
     end
 
     test "crash" do

@@ -18,7 +18,7 @@ module Megatest
       end
     end
 
-    if Process.respond_to?(:fork)
+    if Megatest.fork?
       def isolate(test_case)
         read, write = IO.pipe.each(&:binmode)
         pid = Process.fork do
@@ -41,8 +41,24 @@ module Megatest
       end
     else
       def isolate(test_case)
-        result = TestCaseResult.new(test_case)
-        result.did_not_run("Test wasn't run. Isolated tests require a Ruby implementation with fork support")
+        parent_read, child_write = IO.pipe.each(&:binmode)
+        child_read, parent_write = IO.pipe.each(&:binmode)
+        pid = Subprocess.spawn(child_read, child_write, "run_test")
+        child_read.close
+        child_write.close
+
+        Marshal.dump(@config, parent_write)
+        Marshal.dump(test_case.source_file, parent_write)
+        Marshal.dump(test_case.id, parent_write)
+        parent_write.close
+
+        result = begin
+          Marshal.load(parent_read)
+        rescue EOFError
+          TestCaseResult.new(test_case).lost
+        end
+        Process.wait(pid)
+        result
       end
     end
 

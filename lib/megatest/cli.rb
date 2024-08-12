@@ -3,7 +3,6 @@
 # :stopdoc:
 
 require "optparse"
-require "megatest/selector"
 
 module Megatest
   class CLI
@@ -78,29 +77,10 @@ module Megatest
         end
       end
 
-      selectors = Selector.parse(@argv)
-      Megatest.load_config(selectors.main_paths)
-
-      if @config.deprecations && ::Warning.respond_to?(:[]=)
-        ::Warning[:deprecated] = true
-      end
-
-      # We initiale the seed in case there is some Random use
-      # at code loading time.
-      Random.srand(@config.seed)
-
-      registry = Megatest.with_registry do
-        Megatest.append_load_path(@config)
-        Megatest.load_test_helper(selectors.main_paths)
-
-        selectors.paths(random: @config.random).each do |path|
-          Kernel.require(path)
-        rescue LoadError
-          raise InvalidArgument, "Failed to load #{Megatest.relative_path(path)}"
-        end
-      end
-
-      test_cases = selectors.select(registry, random: @config.random)
+      @config.selectors = Selector.parse(@argv)
+      Megatest.load_config(@config)
+      Megatest.init(@config)
+      test_cases = Megatest.load_tests(@config)
 
       queue.populate(test_cases)
       executor.run(queue, default_reporters)
