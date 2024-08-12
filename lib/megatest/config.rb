@@ -137,7 +137,7 @@ module Megatest
 
   class Config
     attr_accessor :queue_url, :retry_tolerance, :max_retries, :jobs_count, :job_index, :load_paths, :deprecations,
-                  :build_id, :heartbeat_frequency, :program_name, :minitest_compatibility, :ci
+                  :build_id, :heartbeat_frequency, :program_name, :minitest_compatibility, :ci, :selectors
     attr_reader :before_fork_callbacks, :global_setup_callbacks, :worker_setup_callbacks, :backtrace, :circuit_breaker, :seed,
                 :worker_id, :workers_count
     attr_writer :differ, :pretty_printer
@@ -166,6 +166,7 @@ module Megatest
       @differ = Differ.new(self)
       @pretty_printer = PrettyPrint.new(self)
       @minitest_compatibility = false
+      @selectors = nil
       CIService.configure(self, env)
     end
 

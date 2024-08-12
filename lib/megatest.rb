@@ -14,6 +14,10 @@ module Megatest
   IGNORED_ERRORS = [NoMemoryError, SignalException, SystemExit].freeze
 
   class << self
+    def fork?
+      Process.respond_to?(:fork) && !ENV["NO_FORK"]
+    end
+
     def now
       Process.clock_gettime(Process::CLOCK_REALTIME)
     end
@@ -29,8 +33,34 @@ module Megatest
       end
     end
 
-    def load_config(paths)
-      load_files(paths, "test_config.rb")
+    def init(config)
+      if config.deprecations && ::Warning.respond_to?(:[]=)
+        ::Warning[:deprecated] = true
+      end
+
+      # We initiale the seed in case there is some Random use
+      # at code loading time.
+      Random.srand(config.seed)
+    end
+
+    def load_tests(config, paths = nil)
+      registry = with_registry do
+        append_load_path(config)
+        load_test_helper(config.selectors.main_paths)
+
+        paths ||= config.selectors.paths(random: config.random)
+        paths.each do |path|
+          Kernel.require(path)
+        rescue LoadError
+          raise InvalidArgument, "Failed to load #{relative_path(path)}"
+        end
+      end
+
+      config.selectors.select(registry, random: config.random)
+    end
+
+    def load_config(config)
+      load_files(config.selectors.main_paths, "test_config.rb")
     end
 
     def load_test_helper(paths)
@@ -80,6 +110,7 @@ require "megatest/pretty_print"
 require "megatest/output"
 require "megatest/backtrace"
 require "megatest/config"
+require "megatest/selector"
 require "megatest/runner"
 require "megatest/runtime"
 require "megatest/state"
@@ -87,5 +118,6 @@ require "megatest/reporters"
 require "megatest/queue"
 require "megatest/queue_reporter"
 require "megatest/executor"
+require "megatest/subprocess"
 require "megatest/dsl"
 require "megatest/test"
