@@ -90,6 +90,9 @@ Style/RedundantFreeze:
 Layout/CaseIndentation:
   EnforcedStyle: end
 
+Layout/LineContinuationLeadingSpace:
+  Enabled: false
+
 Layout/EndAlignment:
   EnforcedStyleAlignWith: start_of_line
 

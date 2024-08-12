@@ -47,7 +47,11 @@ module Megatest
       @__m.assert do
         return if result
 
-        @__m.fail(message || "Expected #{@__m.pp(result)} to be truthy", nil)
+        if message
+          @__m.fail(message)
+        else
+          @__m.fail(message, "Expected", @__m.pp(result), "to be truthy")
+        end
       end
     end
 
@@ -56,7 +60,11 @@ module Megatest
       @__m.assert do
         return unless result
 
-        @__m.fail(message || "Expected #{@__m.pp(result)} to be falsy", nil)
+        if message
+          @__m.fail(message)
+        else
+          @__m.fail(message, "Expected", @__m.pp(result), "to be falsy")
+        end
       end
     end
 
@@ -64,7 +72,7 @@ module Megatest
       message = @__m.msg(msg, message)
       @__m.assert do
         unless nil.equal?(actual)
-          @__m.fail(message, "Expected #{@__m.pp(actual)} to be nil")
+          @__m.fail(message, "Expected", @__m.pp(actual), "to be nil")
         end
       end
     end
@@ -73,7 +81,7 @@ module Megatest
       message = @__m.msg(msg, message)
       @__m.assert do
         if nil.equal?(actual)
-          @__m.fail(message, "Expected #{@__m.pp(actual)} to not be nil")
+          @__m.fail(message, "Expected", @__m.pp(actual), "to not be nil")
         end
       end
     end
@@ -89,7 +97,8 @@ module Megatest
           @__m.fail(
             message,
             @__m.diff(expected, actual) ||
-            "Expected: #{@__m.pp(expected)}\n  Actual: #{@__m.pp(actual)}",
+            "Expected: #{@__m.pp(expected)}\n" \
+            "  Actual: #{@__m.pp(actual)}",
           )
         end
       end
@@ -103,10 +112,7 @@ module Megatest
         end
 
         if expected == actual
-          @__m.fail(
-            message,
-            "Expected #{@__m.pp(expected)} to not equal #{@__m.pp(actual)}",
-          )
+          @__m.fail(message, "Expected", @__m.pp(expected), "to not equal", @__m.pp(actual))
         end
       end
     end
@@ -115,7 +121,7 @@ module Megatest
       message = @__m.msg(msg, message)
       @__m.assert do
         unless collection.include?(object)
-          @__m.fail message, "Expected\n\n#{@__m.pp(collection)}\n\nto include\n\n#{@__m.pp(object)}"
+          @__m.fail message, "Expected", @__m.pp(collection), "to include", @__m.pp(object)
         end
       end
     end
@@ -124,7 +130,7 @@ module Megatest
       message = @__m.msg(msg, message)
       @__m.assert do
         if collection.include?(object)
-          @__m.fail message, "Expected\n\n#{@__m.pp(collection)}\n\nto not include\n\n#{@__m.pp(object)}"
+          @__m.fail message, "Expected", @__m.pp(collection), "to not include", @__m.pp(object)
         end
       end
     end
@@ -133,7 +139,7 @@ module Megatest
       message = @__m.msg(msg, message)
       @__m.assert do
         unless object.empty?
-          @__m.fail message, "Expected #{@__m.pp(object)} to be empty"
+          @__m.fail message, "Expected", @__m.pp(object), "to be empty"
         end
       end
     end
@@ -142,7 +148,7 @@ module Megatest
       message = @__m.msg(msg, message)
       @__m.assert do
         if object.empty?
-          @__m.fail message, "Expected #{@__m.pp(object)} to not be empty"
+          @__m.fail message, "Expected", @__m.pp(object), "to not be empty"
         end
       end
     end
@@ -151,7 +157,7 @@ module Megatest
       message = @__m.msg(msg, message)
       @__m.assert do
         unless actual.instance_of?(klass)
-          @__m.fail(message, "Expected #{@__m.pp(actual)} to be an instance of #{@__m.pp(klass)}, not #{@__m.pp(actual.class)}")
+          @__m.fail(message, "Expected", @__m.pp(actual), "to be an instance of", @__m.pp(klass), "not", @__m.pp(actual.class))
         end
       end
     end
@@ -160,7 +166,7 @@ module Megatest
       message = @__m.msg(msg, message)
       @__m.assert do
         if actual.instance_of?(klass)
-          @__m.fail(message, "Expected #{@__m.pp(actual)} to not be an instance of #{@__m.pp(klass)}")
+          @__m.fail(message, "Expected", @__m.pp(actual), "to not be an instance of", @__m.pp(klass))
         end
       end
     end
@@ -169,7 +175,7 @@ module Megatest
       message = @__m.msg(msg, message)
       @__m.assert do
         unless actual.kind_of?(klass)
-          @__m.fail(message, "Expected #{@__m.pp(actual)} to be a kind of #{@__m.pp(klass)}, not #{@__m.pp(actual.class)}")
+          @__m.fail(message, "Expected", @__m.pp(actual), "to be a kind of", @__m.pp(klass), "not", @__m.pp(actual.class))
         end
       end
     end
@@ -178,7 +184,7 @@ module Megatest
       message = @__m.msg(msg, message)
       @__m.assert do
         if actual.kind_of?(klass)
-          @__m.fail(message, "Expected #{@__m.pp(actual)} to not be a kind of #{@__m.pp(klass)}")
+          @__m.fail(message, "Expected", @__m.pp(actual), "to not be a kind of", @__m.pp(klass))
         end
       end
     end
@@ -187,7 +193,7 @@ module Megatest
       message = @__m.msg(msg, message)
       @__m.assert do
         unless @__m.expect_no_failures { actual.__send__(predicate) }
-          @__m.fail(message, "Expected #{@__m.pp(actual)} to be #{predicate}")
+          @__m.fail(message, "Expected", @__m.pp(actual), "to be #{predicate}")
         end
       end
     end
@@ -196,7 +202,7 @@ module Megatest
       message = @__m.msg(msg, message)
       @__m.assert do
         if @__m.expect_no_failures { actual.__send__(predicate) }
-          @__m.fail(message, "Expected #{@__m.pp(actual)} to not be #{predicate}")
+          @__m.fail(message, "Expected", @__m.pp(actual), "to not be #{predicate}")
         end
       end
     end
@@ -211,7 +217,7 @@ module Megatest
         end
 
         unless match = matcher.match(obj)
-          @__m.fail(message, "Expected #{@__m.pp(original_matcher)} to match #{@__m.pp(obj)}")
+          @__m.fail(message, "Expected", @__m.pp(original_matcher), "to match", @__m.pp(obj))
         end
 
         match
@@ -228,7 +234,7 @@ module Megatest
         end
 
         if matcher.match?(obj)
-          @__m.fail(message, "Expected #{@__m.pp(original_matcher)} to not match #{@__m.pp(obj)}")
+          @__m.fail(message, "Expected", @__m.pp(original_matcher), "to not match", @__m.pp(obj))
         end
       end
     end
@@ -237,7 +243,7 @@ module Megatest
       message = @__m.msg(msg, message)
       @__m.assert do
         unless object.respond_to?(method, include_all)
-          @__m.fail(message, "Expected #{@__m.pp(object)} to respond to :#{method}")
+          @__m.fail(message, "Expected", @__m.pp(object), "to respond to :#{method}")
         end
       end
     end
@@ -246,7 +252,7 @@ module Megatest
       message = @__m.msg(msg, message)
       @__m.assert do
         if object.respond_to?(method, include_all)
-          @__m.fail(message, "Expected #{@__m.pp(object)} to not respond to :#{method}")
+          @__m.fail(message, "Expected", @__m.pp(object), "to not respond to :#{method}")
         end
       end
     end
@@ -319,7 +325,7 @@ module Megatest
           expected_exceptions.map { |e| @__m.pp(e) }.join(", ") << " or #{@__m.pp(expected)}"
         end
 
-        @__m.fail(message, "#{expected_pp} expected but nothing was raised.")
+        @__m.fail(message, "Expected", expected_pp, "but nothing was raised.")
       end
     end
 
@@ -331,13 +337,13 @@ module Megatest
           @__m.expect_no_failures do
             yield
           rescue UncaughtThrowError => error
-            @__m.fail(message, "Expected #{@__m.pp(thrown_object)} to have been thrown, not: #{@__m.pp(error.tag)}")
+            @__m.fail(message, "Expected", @__m.pp(thrown_object), "to have been thrown, not:", @__m.pp(error.tag))
           end
           caught = false
         end
 
         unless caught
-          @__m.fail(message, "Expected #{@__m.pp(thrown_object)} to have been thrown, but it wasn't")
+          @__m.fail(message, "Expected", @__m.pp(thrown_object), "to have been thrown, but it wasn't")
         end
 
         value
@@ -348,7 +354,7 @@ module Megatest
       message = @__m.msg(msg, message)
       @__m.assert do
         unless left.__send__(operator, right)
-          @__m.fail(message, "Expected #{@__m.pp(left)} to be #{operator} #{@__m.pp(right)}")
+          @__m.fail(message, "Expected", @__m.pp(left), "to be #{operator}", @__m.pp(right))
         end
       end
     end
@@ -357,7 +363,7 @@ module Megatest
       message = @__m.msg(msg, message)
       @__m.assert do
         if left.__send__(operator, right)
-          @__m.fail(message, "Expected #{@__m.pp(left)} to not be #{operator} #{@__m.pp(right)}")
+          @__m.fail(message, "Expected", @__m.pp(left), "to not be #{operator}", @__m.pp(right))
         end
       end
     end
@@ -367,7 +373,7 @@ module Megatest
       @__m.assert do
         diff = (expected - actual).abs
         unless delta >= diff
-          @__m.fail(message, "Expected |#{@__m.pp(expected)} - #{@__m.pp(actual)}| (#{diff}) to be <= #{delta}")
+          @__m.fail(message, "Expected", "|#{@__m.pp(expected)} - #{@__m.pp(actual)}| (#{diff})", "to be <= #{delta}")
         end
       end
     end
@@ -377,7 +383,7 @@ module Megatest
       @__m.assert do
         diff = (expected - actual).abs
         if delta >= diff
-          @__m.fail(message, "Expected |#{@__m.pp(expected)} - #{@__m.pp(actual)}| (#{diff}) to not be <= #{delta}")
+          @__m.fail(message, "Expected", "|#{@__m.pp(expected)} - #{@__m.pp(actual)}| (#{diff})", "to not be <= #{delta}")
         end
       end
     end
@@ -388,7 +394,7 @@ module Megatest
         diff = (expected - actual).abs
         delta = [expected.abs, actual.abs].min * epsilon
         unless delta >= diff
-          @__m.fail(message, "Expected |#{@__m.pp(expected)} - #{@__m.pp(actual)}| (#{diff}) to be <= #{delta}")
+          @__m.fail(message, "Expected", "|#{@__m.pp(expected)} - #{@__m.pp(actual)}| (#{diff})", "to be <= #{delta}")
         end
       end
     end
@@ -399,7 +405,7 @@ module Megatest
         diff = (expected - actual).abs
         delta = [expected.abs, actual.abs].min * epsilon
         if delta >= diff
-          @__m.fail(message, "Expected |#{@__m.pp(expected)} - #{@__m.pp(actual)}| (#{diff}) to not be <= #{delta}")
+          @__m.fail(message, "Expected", "|#{@__m.pp(expected)} - #{@__m.pp(actual)}| (#{diff})", "to not be <= #{delta}")
         end
       end
     end
@@ -412,7 +418,7 @@ module Megatest
     def flunk(msg = nil, message: nil)
       message = @__m.msg(msg, message)
       @__m.assert do
-        @__m.fail(message || "Failed", nil)
+        @__m.fail(message || "Failed")
       end
     end
 
