@@ -14,7 +14,8 @@ Install the gem and add to the application's Gemfile by executing:
 
 Test suites are Ruby classes that inherit from `Megatest::Test`.
 
-Test cases can be defined with the `test` macro, or by defining a method starting with `test_`.
+Test cases are be defined with the `test` macro, or for compatibility with existing test suites,
+by defining a method starting with `test_`.
 
 All the classic `test-unit` and `minitest` assertion methods are available:
 
@@ -30,10 +31,8 @@ class SomeTest < MyApp::Test
     assert_equal true, Some.truth
   end
 
-  context "when using old style" do
-    def test_it_works
-      assert_predicate 2, :even?
-    end
+  def test_it_works
+    assert_predicate 2, :even?
   end
 end
 ```
@@ -54,6 +53,28 @@ module MyApp
   end
 end
 ```
+
+It also allow to define test inside `context` blocks, to make it easier to group
+related tests together and have them share a common name prefix.
+
+```ruby
+class SomeTest < MyApp::Test
+  context "when on earth" do
+    test "1 is odd" do
+      App.location = "earth"
+      assert_predicate 1, :odd?
+    end
+
+    test "2 is even" do
+      App.location = "earth"
+      assert_predicate 2, :even?
+    end
+  end
+end
+```
+
+Note however that context blocks aren't test suites, they don't have their own setup or teardown
+blocks, nor their own namespaces.
 
 ### Command Line
 
@@ -105,8 +126,8 @@ and will generally expose environment variables to help split the workload.
 ```
 
 Note that Megatest makes no effort at balancing the shards as it has no
-information about how long each is expected to take. However it does shard
-test cases individually, so you should avoid the most common issue which is
+information about how long each individual test case is expected to take.
+However it does shard test cases individually, so it avoids the most common issue which is
 very large test suites containing lots of slow test cases being sharded as one unit.
 
 If you are using CircleCI, Buildkite or HerokuCI, the workers count and worker id
