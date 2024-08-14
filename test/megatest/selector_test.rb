@@ -145,7 +145,7 @@ module Megatest
     end
 
     def test_name
-      selector = Selector.parse(["fixtures/simple/simple_test.rb:the truth"])
+      selector = Selector.parse(["fixtures/simple/simple_test.rb:#the truth"])
       assert_equal [fixture("simple/simple_test.rb")], selector.paths(random: nil)
 
       load_fixture("simple/simple_test.rb")
@@ -158,7 +158,7 @@ module Megatest
     end
 
     def test_full_name
-      selector = Selector.parse(["fixtures/simple/simple_test.rb:TestedApp::TruthTest#the truth"])
+      selector = Selector.parse(["fixtures/simple/simple_test.rb:#TestedApp::TruthTest#the truth"])
       assert_equal [fixture("simple/simple_test.rb")], selector.paths(random: nil)
 
       load_fixture("simple/simple_test.rb")
@@ -184,12 +184,33 @@ module Megatest
       CLASSES
     end
 
+    def test_tags
+      selector = Selector.parse(["fixtures/simple/simple_test.rb:@focus"])
+      assert_equal [fixture("simple/simple_test.rb")], selector.paths(random: nil)
+
+      load_fixture("simple/simple_test.rb")
+      load_fixture("inheritance/inheritance_test.rb")
+
+      selected_test_cases = selector.select(@registry, random: nil)
+      assert_equal <<~CLASSES.strip, selected_test_cases.map(&:id).join("\n")
+        TestedApp::TruthTest#the lie
+        TestedApp::TruthTest#the unexpected
+      CLASSES
+
+      selector = Selector.parse([":@focus"])
+      selected_test_cases = selector.select(@registry, random: nil)
+      assert_equal <<~CLASSES.strip, selected_test_cases.map(&:id).join("\n")
+        TestedApp::TruthTest#the lie
+        TestedApp::TruthTest#the unexpected
+      CLASSES
+    end
+
     def test_partial_selection_sorted
       selector = Selector.parse(
         [
-          "fixtures/simple/simple_test.rb:TestedApp::TruthTest#the truth",
-          "fixtures/simple/simple_test.rb:TestedApp::TruthTest#the void",
-          "fixtures/simple/simple_test.rb:TestedApp::TruthTest#the unexpected",
+          "fixtures/simple/simple_test.rb:#TestedApp::TruthTest#the truth",
+          "fixtures/simple/simple_test.rb:#TestedApp::TruthTest#the void",
+          "fixtures/simple/simple_test.rb:#TestedApp::TruthTest#the unexpected",
         ],
       )
       assert_equal [fixture("simple/simple_test.rb")], selector.paths(random: Random.new)

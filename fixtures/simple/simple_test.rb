@@ -10,11 +10,11 @@ module TestedApp
       assert true
     end
 
-    test "the lie" do
+    test "the lie", focus: true do
       assert false
     end
 
-    test "the unexpected" do
+    test "the unexpected", focus: true do
       1 + nil
     end
 

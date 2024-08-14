@@ -82,6 +82,11 @@ module Megatest
       Megatest.init(@config)
       test_cases = Megatest.load_tests(@config)
 
+      if test_cases.empty?
+        @err.puts "No tests to run"
+        return 1
+      end
+
       queue.populate(test_cases)
       executor.run(queue, default_reporters)
       queue.success? ? 0 : 1
