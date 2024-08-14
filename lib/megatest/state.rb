@@ -536,18 +536,36 @@ module Megatest
   class Failure
     attr_reader :name, :message, :backtrace, :cause
 
+    class << self
+      def load(members)
+        allocate._load(members)
+      end
+    end
+
     def initialize(exception)
       @name = exception.class.name
       @message = exception.message
       @backtrace = exception.backtrace
       @cause = exception.cause ? Failure.new(exception.cause) : nil
     end
+
+    def _load(members)
+      @name = members[0]
+      @message = members[1]
+      @backtrace = members[2]
+      @cause = members[3] && Failure.load(members[3])
+      self
+    end
+
+    def dump
+      [@name, @message, @backtrace, @cause&.dump].compact
+    end
   end
 
   class TestCaseResult
     class << self
       def load(payload)
-        Marshal.load(payload)
+        allocate._load(Marshal.load(payload))
       end
     end
 
@@ -558,13 +576,32 @@ module Megatest
       @test_id = test_case.id
       @test_location = test_case.location_id
       @assertions_count = 0
+      @duration = nil
       @retried = false
       @failures = []
-      @duration = nil
+    end
+
+    def _load(members)
+      @test_id = members[0]
+      @test_location = members[1]
+      @assertions_count = members[2]
+      @duration = members[3]
+      @failures = members[4]&.map { |m| Failure.load(m) } || []
+      @retried = members[5] || false
+      self
     end
 
     def dump
-      Marshal.dump(self)
+      members = [
+        @test_id,
+        @test_location,
+        @assertions_count,
+        @duration,
+        @failures.empty? ? nil : @failures.map(&:dump),
+        @retried || nil,
+      ]
+      members.compact!
+      Marshal.dump(members)
     end
 
     def record_time
