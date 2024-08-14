@@ -41,6 +41,7 @@ module Megatest
           @out.red(str)
         end
         str = +str
+        str << "\n"
 
         if result.error?
           str << @out.indent("#{result.failure.cause.name}: #{@out.colored(result.failure.cause.message)}\n")
@@ -48,6 +49,7 @@ module Megatest
           str << @out.indent(@out.colored(result.failure.message.to_s))
         end
         str << "\n" unless str.end_with?("\n")
+        str << "\n"
 
         @config.backtrace.clean(result.failure.backtrace)&.each do |frame|
           str << "  #{@out.cyan(frame)}\n"
