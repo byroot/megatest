@@ -8,7 +8,7 @@ module Megatest
       extend self
 
       def strip(text)
-        text.gsub(/\e\[\d+m/, "")
+        text.gsub(/\e\[(\d+(;\d+)?)?m/, "")
       end
 
       def red(text)
