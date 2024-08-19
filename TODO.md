@@ -8,6 +8,12 @@
 - Test leak bisect
   - `test_order.log` first?
 
+- Junit.xml
+
+- List slow tests
+  - Not just X slowest test, but up to X tests that are significantly slower than average.
+  - Exclude them with `:slow` tag.
+
 - Improve assertion errors
   - Better pretty print
   - Better multi-line
