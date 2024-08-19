@@ -86,6 +86,9 @@ Style/ModuleFunction:
 Style/RedundantFreeze:
   Enabled: false # Once again... You're wrong.
 
+Style/RescueStandardError:
+  Enabled: false # Once again... You're wrong.
+
 
 Layout/CaseIndentation:
   EnforcedStyle: end

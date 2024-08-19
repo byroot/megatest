@@ -542,11 +542,20 @@ module Megatest
       end
     end
 
-    def initialize(exception)
-      @name = exception.class.name
-      @message = exception.message
-      @backtrace = exception.backtrace
-      @cause = exception.cause ? Failure.new(exception.cause) : nil
+    if Exception.method_defined?(:detailed_message)
+      def initialize(exception)
+        @name = exception.class.name
+        @message = exception.detailed_message
+        @backtrace = exception.backtrace
+        @cause = exception.cause ? Failure.new(exception.cause) : nil
+      end
+    else
+      def initialize(exception)
+        @name = exception.class.name
+        @message = exception.message
+        @backtrace = exception.backtrace
+        @cause = exception.cause ? Failure.new(exception.cause) : nil
+      end
     end
 
     def _load(members)
