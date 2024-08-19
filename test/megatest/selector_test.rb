@@ -2,6 +2,11 @@
 
 module Megatest
   class SelectorTest < MegaTestCase
+    def test_parse_empty_selector
+      selector = Selector.parse([])
+      assert_equal ["#{File.expand_path("test")}/"], selector.main_paths
+    end
+
     def test_directory_path
       selector = Selector.parse(["fixtures/simple"])
       expected = [

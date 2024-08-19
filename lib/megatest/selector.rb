@@ -243,7 +243,7 @@ module Megatest
     class << self
       def parse(argv)
         if argv.empty?
-          return List.new([PathSelector.parse("test")])
+          return List.new([], [])
         end
 
         argv = argv.dup
