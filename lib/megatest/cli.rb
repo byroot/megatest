@@ -10,7 +10,9 @@ module Megatest
 
     class << self
       def run!
-        exit(new($PROGRAM_NAME, $stdout, $stderr, ARGV, ENV).run)
+        program_name = $PROGRAM_NAME
+        program_name = "megatest" if program_name == `command -v megatest`.strip
+        exit(new(program_name, $stdout, $stderr, ARGV, ENV).run)
       end
     end
 
