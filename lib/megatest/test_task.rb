@@ -81,6 +81,9 @@ module Megatest # :nodoc:
 
     attr_accessor :full_backtrace
 
+    # Task prerequisites.
+    attr_accessor :deps
+
     attr_accessor :command
 
     ##
@@ -88,17 +91,22 @@ module Megatest # :nodoc:
 
     def initialize(name = :test) # :nodoc:
       super()
-      self.libs = []
-      self.name = name
-      self.tests = ["test/"]
-      self.extra_args = []
-      self.verbose = Rake.application.options.trace || Rake.verbose == true
-      self.warning = true
+      @libs = []
+      @name = name
+      @tests = ["test/"]
+      @extra_args = []
+      @verbose = Rake.application.options.trace || Rake.verbose == true
+      @warning = true
+      @deps = []
+      if @name.is_a?(Hash)
+        @deps = @name.values.first
+        @name = @name.keys.first
+      end
     end
 
     def define # :nodoc:
       desc "Run the test suite. Use N, X, A, and TESTOPTS to add flags/args."
-      task name do
+      task name => Array(deps) do
         sh(*make_test_cmd, verbose: verbose)
       end
 
