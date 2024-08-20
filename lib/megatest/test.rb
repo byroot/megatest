@@ -105,5 +105,11 @@ module Megatest
     def __test__
       @__m.test_case
     end
+
+    # Returns the current Megatest::TestCaseResult instance
+    # Can be used for self introspection during teardown
+    def __result__
+      @__m.result
+    end
   end
 end
