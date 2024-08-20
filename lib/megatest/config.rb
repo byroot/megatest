@@ -137,10 +137,10 @@ module Megatest
 
   class Config
     attr_accessor :queue_url, :retry_tolerance, :max_retries, :jobs_count, :job_index, :load_paths, :deprecations,
-                  :build_id, :heartbeat_frequency, :program_name, :minitest_compatibility, :ci, :selectors
+                  :build_id, :heartbeat_frequency, :minitest_compatibility, :ci, :selectors
     attr_reader :before_fork_callbacks, :global_setup_callbacks, :worker_setup_callbacks, :backtrace, :circuit_breaker, :seed,
                 :worker_id, :workers_count
-    attr_writer :differ, :pretty_printer
+    attr_writer :differ, :pretty_printer, :program_name
 
     def initialize(env)
       @load_paths = ["test"] # For easier transition from other frameworks
@@ -160,7 +160,7 @@ module Megatest
       @job_setup_callbacks = []
       @heartbeat_frequency = 5
       @backtrace = Backtrace.new
-      @program_name = "megatest"
+      @program_name = nil
       @circuit_breaker = CircuitBreaker.new(Float::INFINITY)
       @seed = Random.rand(0xFFFF)
       @differ = Differ.new(self)
@@ -168,6 +168,10 @@ module Megatest
       @minitest_compatibility = false
       @selectors = nil
       CIService.configure(self, env)
+    end
+
+    def program_name
+      @program_name || "megatest"
     end
 
     def worker_id=(id)

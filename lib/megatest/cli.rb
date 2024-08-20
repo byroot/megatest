@@ -22,12 +22,12 @@ module Megatest
     }.freeze
 
     def initialize(program_name, out, err, argv, env)
-      @program_name = program_name
       @out = out
       @err = err
       @argv = argv.dup
       @processes = nil
       @config = Config.new(env)
+      @program_name = @config.program_name = program_name
       @runner = nil
       @verbose = false
     end

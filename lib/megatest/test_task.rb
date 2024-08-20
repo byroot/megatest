@@ -81,6 +81,8 @@ module Megatest # :nodoc:
 
     attr_accessor :full_backtrace
 
+    attr_accessor :command
+
     ##
     # Use TestTask.create instead.
 
@@ -110,7 +112,7 @@ module Megatest # :nodoc:
     # Generate the test command-line.
 
     def make_test_cmd
-      cmd = ["megatest"]
+      cmd = [command || "megatest"]
       cmd << "-I#{libs.join(File::PATH_SEPARATOR)}" unless libs.empty?
       # cmd << "-w" if warning
       cmd << "--backtrace" if full_backtrace
