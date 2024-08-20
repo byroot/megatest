@@ -11,7 +11,16 @@ module Megatest
     class << self
       def run!
         program_name = $PROGRAM_NAME
-        program_name = "megatest" if program_name == `command -v megatest`.strip
+        if paths = ENV["PATH"]
+          paths.split(":").each do |path|
+            if program_name.start_with?(path)
+              program_name = program_name.delete_prefix(path)
+              program_name = program_name.delete_prefix("/")
+              break
+            end
+          end
+        end
+
         exit(new(program_name, $stdout, $stderr, ARGV, ENV).run)
       end
     end

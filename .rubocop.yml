@@ -21,6 +21,9 @@ Style/TrailingCommaInHashLiteral:
 Style/TrailingCommaInArguments:
   EnforcedStyleForMultiline: consistent_comma
 
+Style/Next:
+  Enabled: false
+
 Style/Documentation:
   Enabled: false
 
