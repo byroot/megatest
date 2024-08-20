@@ -140,7 +140,7 @@ module Megatest
                   :build_id, :heartbeat_frequency, :minitest_compatibility, :ci, :selectors
     attr_reader :before_fork_callbacks, :global_setup_callbacks, :worker_setup_callbacks, :backtrace, :circuit_breaker, :seed,
                 :worker_id, :workers_count
-    attr_writer :differ, :pretty_printer, :program_name
+    attr_writer :differ, :pretty_printer, :program_name, :colors
 
     def initialize(env)
       @load_paths = ["test"] # For easier transition from other frameworks

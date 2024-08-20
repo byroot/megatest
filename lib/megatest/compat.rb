@@ -4,7 +4,7 @@
 
 module Megatest
   module Compat
-    unless Enumerable.method_defined?(:filter_map)
+    unless Enumerable.method_defined?(:filter_map) # RUBY_VERSION >= "2.7"
       module FilterMap
         refine Enumerable do
           def filter_map(&block)
@@ -16,7 +16,7 @@ module Megatest
       end
     end
 
-    unless Symbol.method_defined?(:start_with?)
+    unless Symbol.method_defined?(:start_with?) # RUBY_VERSION >= "2.7"
       module StartWith
         refine Symbol do
           def start_with?(*args)
@@ -26,7 +26,30 @@ module Megatest
       end
     end
 
-    unless Symbol.method_defined?(:name)
+    unless UnboundMethod.method_defined?(:bind_call) # RUBY_VERSION >= "2.7"
+      module BindCall
+        refine UnboundMethod do
+          def bind_call(receiver, *args, &block)
+            bind(receiver).call(*args, &block)
+          end
+        end
+      end
+    end
+
+    unless Enumerable.method_defined?(:tally) # RUBY_VERSION >= "2.7"
+      module Tally
+        refine Enumerable do
+          def tally(hash = {})
+            each do |element|
+              hash[element] = (hash[element] || 0) + 1
+            end
+            hash
+          end
+        end
+      end
+    end
+
+    unless Symbol.method_defined?(:name) # RUBY_VERSION >= "3.0"
       module Name
         refine Symbol do
           alias_method :name, :to_s
@@ -34,7 +57,7 @@ module Megatest
       end
     end
 
-    unless String.method_defined?(:byterindex)
+    unless String.method_defined?(:byterindex) # RUBY_VERSION >= "3.2"
       module ByteRIndex
         refine String do
           def byterindex(matcher, offset = -1)
@@ -43,16 +66,6 @@ module Megatest
             else
               b.rindex(matcher, offset)
             end
-          end
-        end
-      end
-    end
-
-    unless UnboundMethod.method_defined?(:bind_call)
-      module BindCall
-        refine UnboundMethod do
-          def bind_call(receiver, *args, &block)
-            bind(receiver).call(*args, &block)
           end
         end
       end

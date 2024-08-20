@@ -30,6 +30,7 @@ module Megatest
       @program_name = @config.program_name = program_name
       @runner = nil
       @verbose = false
+      @junit = false
     end
 
     def run
@@ -107,7 +108,7 @@ module Megatest
     private
 
     def default_reporters
-      if @verbose || @config.ci
+      reporters = if @verbose || @config.ci
         [
           Reporters::VerboseReporter.new(@config, @out),
         ]
@@ -116,6 +117,30 @@ module Megatest
           Reporters::SimpleReporter.new(@config, @out),
         ]
       end
+
+      if @junit != false
+        path = @junit || "log/junit.xml"
+        junit_file = begin
+          File.open(path, "w+")
+        rescue Errno::ENOENT
+          mkdir_p(File.dirname(path))
+          retry
+        end
+        reporters << Reporters::JUnitReporter.new(@config, Megatest::Output.new(junit_file, colors: true))
+      end
+
+      reporters
+    end
+
+    def mkdir_p(directory)
+      raise InvalidArgument if directory.empty?
+
+      Dir.mkdir(directory)
+    rescue Errno::ENOENT
+      mkdir_p(File.dirname(directory))
+      retry
+    rescue InvalidArgument
+      raise InvalidArgument, "Couldn't create directory: #{directory}"
     end
 
     def executor
@@ -159,11 +184,15 @@ module Megatest
           @config.backtrace.full!
         end
 
-        if runner == :run
-          opts.on("-v", "--verbose", "Use the verbose reporter") do
-            @verbose = true
-          end
+        opts.on("-v", "--verbose", "Use the verbose reporter") do
+          @verbose = true
+        end
 
+        opts.on("--junit [PATH]", String, "Generate a junit.xml file") do |path|
+          @junit = path
+        end
+
+        if runner == :run
           opts.on("--seed SEED", Integer, "The seed used to define run order") do |seed|
             @config.seed = seed
           end

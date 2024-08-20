@@ -545,7 +545,7 @@ module Megatest
     if Exception.method_defined?(:detailed_message)
       def initialize(exception)
         @name = exception.class.name
-        @message = exception.detailed_message
+        @message = exception.detailed_message.sub(" (#{@name})", "")
         @backtrace = exception.backtrace
         @cause = exception.cause ? Failure.new(exception.cause) : nil
       end

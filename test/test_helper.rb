@@ -30,18 +30,38 @@ class MegaTestCase < Megatest::Test
     end
   end
 
+  def build_skip(test_case)
+    build_result(test_case) do
+      raise Megatest::Skip, "Nah..."
+    end
+  end
+
   def build_error(test_case)
     build_result(test_case) do
-      raise "oops"
+      backtrace = [
+        File.join(Megatest::PWD, "app/my_app.rb:35:in `block in some_method'"),
+        File.join(Megatest::PWD, "test/my_app_test.rb:42:in `block in <class:MyAppTest>'"),
+        "",
+        "",
+        "#{__FILE__}:#{FAILURE_YIELD_LINE}",
+      ]
+      raise RuntimeError, "oops", backtrace
     end
   end
 
   def build_failure(test_case)
     build_result(test_case) do
-      raise Megatest::Assertion, "2 + 2 != 5"
+      backtrace = [
+        File.join(Megatest::PWD, "test/my_app_test.rb:42:in `block in <class:MyAppTest>'"),
+        "",
+        "",
+        "#{__FILE__}:#{FAILURE_YIELD_LINE}",
+      ]
+      raise Megatest::Assertion, "2 + 2 != 5", backtrace
     end
   end
 
+  FAILURE_YIELD_LINE = __LINE__ + 5 # runtime.record_failures do
   def build_result(test_case)
     result = Megatest::TestCaseResult.new(test_case)
     runtime = Megatest::Runtime.new(@config || Megatest::Config.new({}), test_case, result)
@@ -50,6 +70,7 @@ class MegaTestCase < Megatest::Test
         yield runtime
       end
     end
+    result.instance_variable_set(:@duration, 0.42)
     result
   end
 

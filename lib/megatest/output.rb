@@ -71,9 +71,21 @@ module Megatest
     attr_reader :color
 
     def initialize(io, colors: nil)
+      raise ArgumentError, "don't nest outputs" if io.is_a?(Output)
+
       @io = io
-      @colors = colors.nil? ? io.tty? : colors
-      @color = @colors ? ANSIColors : NoColors
+      colors = io.tty? if colors.nil?
+      case colors
+      when true
+        @colors = true
+        @color = ANSIColors
+      when false
+        @colors = false
+        @color = NoColors
+      else
+        @color = colors
+        @colors = @color != NoColors
+      end
     end
 
     def colors?
@@ -105,6 +117,10 @@ module Megatest
 
     def print(*args)
       @io.print(*args)
+    end
+
+    def <<(str)
+      @io << str
     end
 
     def puts(*args)
