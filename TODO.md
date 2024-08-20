@@ -1,36 +1,17 @@
 ### Wants
 
-- RSpec style pending?
-
-- Distributed queue (ci-queue style).
-  - Other?
-
 - Test leak bisect
+  - See ci-queue bisect.
 
 - List slow tests
   - Not just X slowest test, but up to X tests that are significantly slower than average.
   - Exclude them with `:slow` tag.
 
-- Improve assertion errors
-  - Better pretty print
-  - Better multi-line
-
 - `-j` for forkless environments (Windows / JRuby / TruffleRuby)
 
 - `minitest/mocks`
-  - I'm not very fond of those, but could be worth offering it as a side gem or something, for completeness sake.
+  - I'm not very fond of those, but could be worth offering it as a side gem or something, for easier transition.
 
-### Maybes
+### Maybe
 
-- `minitest/spec` syntax?
-  - Used by Arel test suite
-  - Not really convinced about the usefulness.
-
-- Depend on Zeitwerk?
-  - If we enforced that all test files are loadable by Zeitwerk, then running a test by name becomes trivial.
-  - Allow to unload/reload tests
-  - Downside is that it makes minitest compat harder.
-
-- Add multi-threading?
-  - Not convinced of the usefulness, except maybe for alternative rubies.
-  - Also breaks most mocking libaries
+- RSpec style pending?
