@@ -7,3 +7,4 @@
 /spec/reports/
 /tmp/
 /log/junit.xml
+/log/test_order.log

@@ -6,7 +6,6 @@
   - Other?
 
 - Test leak bisect
-  - `test_order.log` first?
 
 - List slow tests
   - Not just X slowest test, but up to X tests that are significantly slower than average.

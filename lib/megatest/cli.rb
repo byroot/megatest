@@ -118,18 +118,23 @@ module Megatest
         ]
       end
 
+      if @config.ci
+        reporters << Reporters::OrderReporter.new(@config, open_file("log/test_order.log"))
+      end
+
       if @junit != false
-        path = @junit || "log/junit.xml"
-        junit_file = begin
-          File.open(path, "w+")
-        rescue Errno::ENOENT
-          mkdir_p(File.dirname(path))
-          retry
-        end
+        junit_file = open_file(@junit || "log/junit.xml")
         reporters << Reporters::JUnitReporter.new(@config, Megatest::Output.new(junit_file, colors: true))
       end
 
       reporters
+    end
+
+    def open_file(path)
+      File.open(path, "w+")
+    rescue Errno::ENOENT
+      mkdir_p(File.dirname(path))
+      retry
     end
 
     def mkdir_p(directory)
