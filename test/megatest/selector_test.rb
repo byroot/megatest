@@ -125,6 +125,7 @@ module Megatest
     def test_negative_file_path_and_line
       selector = Selector.parse(["fixtures/simple/simple_test.rb", "!", "fixtures/simple/simple_test.rb:12"])
       assert_equal [fixture("simple/simple_test.rb")], selector.paths(random: nil)
+      assert_equal [fixture("simple/simple_test.rb")], selector.main_paths
 
       load_fixture("simple/simple_test.rb")
 

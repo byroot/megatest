@@ -106,6 +106,10 @@ module Megatest
         @loader = loader
       end
 
+      def path
+        nil
+      end
+
       def partial?
         @loader.partial?
       end
