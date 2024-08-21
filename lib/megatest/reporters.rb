@@ -130,7 +130,22 @@ module Megatest
       end
 
       def after_test_case(_queue, _test_case, result)
-        super
+        if result.skipped?
+          @out.print(@out.yellow("SKIPPED"))
+        elsif result.retried?
+          @out.print(@out.yellow("RETRIED"))
+        elsif result.error?
+          @out.print(@out.red("ERROR"))
+        elsif result.failed?
+          @out.print(@out.red("FAILED"))
+        else
+          @out.print(@out.green("SUCCESS"))
+        end
+
+        if result.duration
+          @out.print " (in #{result.duration.round(2)}s)"
+        end
+
         @out.puts
         if result.bad?
           @out.puts @out.colored(render_failure(result))
