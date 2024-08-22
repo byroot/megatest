@@ -75,9 +75,10 @@ class MegaTestCase < Megatest::Test
   end
 
   def setup_redis
-    @redis_url = ENV.fetch("REDIS_URL", "redis://127.0.0.1/7")
+    db = @__m.config.job_index.to_i + 1
+    @config.queue_url = @redis_url = ENV.fetch("REDIS_URL", "redis://127.0.0.1/#{db}")
     @redis = RedisClient.new(url: @redis_url)
-    @redis.call("flushdb")
+    @redis.call("flushdb", "async")
   end
 
   def load_fixture(path)

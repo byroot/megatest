@@ -108,6 +108,11 @@ module Megatest
       @__m.test_case
     end
 
+    # Returns the global megatest config object.
+    def __config__
+      @__m.config
+    end
+
     # Returns the current Megatest::TestCaseResult instance
     # Can be used for self introspection during teardown
     def __result__

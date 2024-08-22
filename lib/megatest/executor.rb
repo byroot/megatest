@@ -53,6 +53,10 @@ module Megatest
       @out = Output.new(out, colors: @config.colors)
     end
 
+    def concurrent?
+      false
+    end
+
     def run(queue, reporters)
       start_time = Megatest.now
 

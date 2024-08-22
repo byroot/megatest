@@ -2,8 +2,6 @@
 
 - Improve run by line number: if no exact match fallback to the previous one.
 
-- Make verbose reporter work with multi-processing.
-
 - Test leak bisect
   - See ci-queue bisect.
 

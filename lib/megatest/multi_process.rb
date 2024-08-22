@@ -158,15 +158,17 @@ module Megatest
           @parent_socket.close
         when :pop
           if @assigned_test = queue.pop_test
+            reporters.each { |r| r.before_test_case(queue, @assigned_test) }
             @parent_socket << @assigned_test&.id
           else
             @idle = true
           end
         when :record
           result = queue.record_result(*args)
+          test_case = @assigned_test
           @assigned_test = nil
           @parent_socket << result
-          reporters.each { |r| r.after_test_case(queue, nil, result) }
+          reporters.each { |r| r.after_test_case(queue, test_case, result) }
           @config.circuit_breaker.record_result(result)
         else
           raise "Unexpected message: #{message.inspect}"
@@ -209,6 +211,10 @@ module Megatest
         @out = Output.new(out, colors: config.colors)
       end
 
+      def concurrent?
+        true
+      end
+
       def after_fork_in_child(active_job)
         @jobs.each do |job|
           job.close unless job == active_job
@@ -218,6 +224,7 @@ module Megatest
       def run(queue, reporters)
         start_time = Megatest.now
         @config.run_global_setup_callbacks
+        reporters.each { |r| r.start(self, queue) }
         @jobs = @config.jobs_count.times.map { |index| Job.new(@config, index) }
 
         @config.before_fork_callbacks.each(&:call)

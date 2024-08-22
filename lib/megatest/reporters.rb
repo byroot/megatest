@@ -125,11 +125,21 @@ module Megatest
     end
 
     class VerboseReporter < SimpleReporter
-      def before_test_case(_queue, test_case)
-        @out.print("#{test_case.id} = ")
+      def start(executor, _queue)
+        @concurrent = executor.concurrent?
       end
 
-      def after_test_case(_queue, _test_case, result)
+      def before_test_case(_queue, test_case)
+        unless @concurrent
+          @out.print("#{test_case.id} = ")
+        end
+      end
+
+      def after_test_case(_queue, test_case, result)
+        if @concurrent
+          @out.print("#{test_case.id} = ")
+        end
+
         if result.skipped?
           @out.print(@out.yellow("SKIPPED"))
         elsif result.retried?
@@ -143,7 +153,7 @@ module Megatest
         end
 
         if result.duration
-          @out.print " (in #{result.duration.round(2)}s)"
+          @out.print " (in #{result.duration.round(3)}s)"
         end
 
         @out.puts
