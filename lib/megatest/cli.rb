@@ -196,6 +196,12 @@ module Megatest
         opts.separator "Options:"
         opts.separator ""
 
+        opts.on("-I PATHS", "specify $LOAD_PATH directory (may be used more than once)") do |paths|
+          paths.split(":").each do |path|
+            $LOAD_PATH.unshift(path)
+          end
+        end
+
         opts.on("-b", "--backtrace", "Print full backtraces") do
           @config.backtrace.full!
         end
