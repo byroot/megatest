@@ -56,6 +56,8 @@ module Megatest
       super(config)
 
       @summary = Queue::Summary.new
+      uri = URI(config.queue_url)
+      p uri.path
       @redis = RedisClient.new(
         url: config.queue_url,
         # We retry quite aggressively in case the network
@@ -63,6 +65,7 @@ module Megatest
         # a worker.
         reconnect_attempts: [0, 0, 0.1, 0.5, 1, 3, 5],
       )
+      p @redis.db
       @ttl = ttl
       @load_timeout = 30 # TODO: configurable
       @worker_id = config.worker_id

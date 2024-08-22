@@ -218,6 +218,7 @@ module Megatest
       def run(queue, reporters)
         start_time = Megatest.now
         @config.run_global_setup_callbacks
+        reporters.each { |r| r.start(self, queue) }
         @jobs = @config.jobs_count.times.map { |index| Job.new(@config, index) }
 
         @config.before_fork_callbacks.each(&:call)
