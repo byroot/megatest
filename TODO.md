@@ -1,5 +1,7 @@
 ### Wants
 
+- Make verbose reporter work with multi-processing.
+
 - Test leak bisect
   - See ci-queue bisect.
 
