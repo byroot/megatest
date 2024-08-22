@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "megatest/assertions"
+require "megatest/stubs"
 
 module Megatest
   ##
@@ -99,6 +100,7 @@ module Megatest
     # :startdoc:
     extend DSL
     include Assertions
+    include Stubs
 
     # Returns the current Megatest::State::TestCase instance
     # Can be used for self introspection

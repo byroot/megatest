@@ -4,13 +4,14 @@
 
 module Megatest
   class Runtime
-    attr_reader :test_case, :result
+    attr_reader :test_case, :result, :on_teardown
 
     def initialize(config, test_case, result)
       @config = config
       @test_case = test_case
       @result = result
       @asserting = false
+      @on_teardown = []
     end
 
     support_locations = begin
@@ -148,6 +149,14 @@ module Megatest
 
     def diff(expected, actual)
       @config.diff(expected, actual)
+    end
+
+    def teardown
+      until @on_teardown.empty?
+        record_failures do
+          @on_teardown.pop.call
+        end
+      end
     end
 
     def record_failures(downlevel: 1, &block)

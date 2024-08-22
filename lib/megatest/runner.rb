@@ -88,6 +88,8 @@ module Megatest
 
           result.ensure_assertions unless @config.minitest_compatibility
         ensure
+          runtime.teardown
+
           runtime.record_failures do
             instance.before_teardown
           end

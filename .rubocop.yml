@@ -64,6 +64,9 @@ Style/PercentLiteralDelimiters:
 Style/EmptyMethod:
   Enabled: false # Disagree.
 
+Style/Lambda:
+  Enabled: false
+
 Style/InfiniteLoop:
   Enabled: false
 
