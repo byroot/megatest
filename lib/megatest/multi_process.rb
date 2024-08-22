@@ -113,6 +113,7 @@ module Megatest
 
           # We don't want to run at_exit hooks the app may have
           # installed.
+          @config.run_job_teardown_callbacks(@index)
           Process.exit!(0)
         end
         @child_socket.close

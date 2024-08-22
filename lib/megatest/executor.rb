@@ -98,6 +98,8 @@ module Megatest
         @out.error("Exited early because too many failures were encountered")
       end
 
+      @config.run_job_teardown_callbacks(nil)
+
       queue.cleanup
     end
   end

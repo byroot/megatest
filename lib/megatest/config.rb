@@ -158,6 +158,7 @@ module Megatest
       @before_fork_callbacks = []
       @global_setup_callbacks = []
       @job_setup_callbacks = []
+      @job_teardown_callbacks = []
       @heartbeat_frequency = 5
       @backtrace = Backtrace.new
       @program_name = nil
@@ -262,6 +263,14 @@ module Megatest
 
     def job_setup(&block)
       @job_setup_callbacks << block
+    end
+
+    def run_job_teardown_callbacks(job_index)
+      @job_teardown_callbacks.each { |c| c.call(self, job_index) }
+    end
+
+    def job_teardown(&block)
+      @job_teardown_callbacks << block
     end
 
     def retries?
