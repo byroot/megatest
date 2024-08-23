@@ -27,7 +27,7 @@ module Megatest
       def <<(message)
         begin
           @socket.write(Marshal.dump(message))
-        rescue Errno::EPIPE
+        rescue Errno::EPIPE, Errno::ENOTCONN
           return nil # Other side was closed
         end
         self
