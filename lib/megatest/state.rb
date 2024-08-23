@@ -232,7 +232,7 @@ module Megatest
     class SharedSuite < Suite
       def initialize(registry, test_suite)
         super(registry)
-        @mod = test_suite
+        @klass = test_suite
         @test_cases = {}
         test_suite.instance_methods.each do |name|
           if name.start_with?("test_")

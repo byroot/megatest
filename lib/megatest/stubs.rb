@@ -26,7 +26,10 @@ module Megatest
         old_method = instance_method(method)
         alias_method(method, method) # Silence redefinition warnings
         define_method(method, &proc)
-        -> { define_method(method, old_method) }
+        -> do
+          alias_method(method, method) # Silence redefinition warnings
+          define_method(method, old_method)
+        end
       else
         define_method(method, &proc)
         -> { remove_method(method) }

@@ -1,5 +1,18 @@
 # frozen_string_literal: true
 
+$VERBOSE = true
+module RaiseWarnings
+  def warn(message, *)
+    return if message.include?("Ractor is experimental")
+
+    super
+
+    raise RuntimeError, message, caller(1)
+  end
+  ruby2_keywords :warn if respond_to?(:ruby2_keywords, true)
+end
+Warning.singleton_class.prepend(RaiseWarnings)
+
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "megatest"
 require "megatest/cli"
@@ -94,11 +107,13 @@ class MegaTestCase < Megatest::Test
   def stub_time(diff)
     original_method = Megatest.singleton_class.instance_method(:now)
     begin
+      Megatest.singleton_class.alias_method(:now, :now)
       Megatest.define_singleton_method(:now) do
         original_method.bind(Megatest).call + diff
       end
       yield
     ensure
+      Megatest.singleton_class.alias_method(:now, :now)
       Megatest.define_singleton_method(:now, original_method)
     end
   end
