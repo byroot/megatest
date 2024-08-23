@@ -284,6 +284,19 @@ module Megatest
         @max_retries * size
       end
     end
+
+    NOT_SERIALIZED = %i(@job_teardown_callbacks @job_setup_callbacks @global_setup_callbacks).freeze
+    def marshal_dump
+      instance_variables.reject { |k| NOT_SERIALIZED.include?(k) }.to_h do |name|
+        [name, instance_variable_get(name)]
+      end
+    end
+
+    def marshal_load(hash)
+      hash.each do |name, value|
+        instance_variable_set(name, value)
+      end
+    end
   end
 
   @config = Config.new({})
