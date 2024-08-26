@@ -88,7 +88,7 @@ module Megatest
         end
       end
 
-      def summary(executor, _queue, summary)
+      def summary(executor, queue, summary)
         @out.puts
         @out.puts
 
@@ -102,14 +102,27 @@ module Megatest
           end
         end
 
-        if (wall_time = executor.wall_time.to_f) > 0.0
-          @out.puts format(
-            "Finished in %.2fs, %d cases/s, %d assertions/s, %.2fs tests runtime.",
-            wall_time,
-            (summary.runs_count / wall_time).to_i,
-            (summary.assertions_count / wall_time).to_i,
-            summary.total_time,
-          )
+        # In case of failure we'd rather not print slow tests
+        # as it would blur the output.
+        if queue.success?
+          sorted_results = summary.results.sort_by(&:duration)
+          size = sorted_results.size
+          average = sorted_results.sum(&:duration) / size
+          median = sorted_results[size / 2].duration
+          p90 = sorted_results[(size * 0.9).to_i].duration
+          p99 = sorted_results[(size * 0.99).to_i].duration
+
+          @out.puts "Finished in #{s(executor.wall_time.to_f)}, average: #{ms(average)}, median: #{ms(median)}, p90: #{ms(p90)}, p99: #{ms(p99)}"
+          cuttoff = p90 * 10
+          slowest_tests = sorted_results.last(5).select { |r| r.duration > cuttoff }
+          unless slowest_tests.empty?
+            @out.puts "Slowest tests:"
+            slowest_tests.reverse_each do |result|
+              duration_string = ms(result.duration).rjust(10, " ")
+              @out.puts " - #{duration_string} #{@out.yellow(result.test_id)} @ #{@out.cyan(Megatest.relative_path(result.test_location))}"
+            end
+            @out.puts ""
+          end
         end
 
         @out.puts format(
@@ -121,6 +134,14 @@ module Megatest
           summary.retries_count,
           summary.skips_count,
         )
+      end
+
+      def s(duration)
+        format("%.2fs", duration)
+      end
+
+      def ms(duration)
+        format("%.1fms", duration * 1000.0)
       end
     end
 

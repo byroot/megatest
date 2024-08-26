@@ -585,7 +585,7 @@ module Megatest
       @test_id = test_case.id
       @test_location = test_case.location_id
       @assertions_count = 0
-      @duration = nil
+      @duration = 0.0
       @retried = false
       @failures = []
     end
@@ -663,7 +663,6 @@ module Megatest
 
     def lost
       @failures << Failure.new(LostTest.new(@test_id))
-      @duration = 0.0
       self
     end
 

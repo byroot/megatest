@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+- List slowest tests on success.
+
+## [0.2.0] - 2024-08-26
+
 - Make the VerboseReporter work with concurrent executors.
 - Fix isolated tests on forkless platforms when the config contains procs.
 - Add a `job_teardown callback` to to stand off for at_exit.
