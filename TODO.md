@@ -1,7 +1,5 @@
 ### Wants
 
-- Improve run by line number: if no exact match fallback to the previous one.
-
 - Test leak bisect
   - See ci-queue bisect.
 

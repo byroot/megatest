@@ -120,6 +120,12 @@ module Megatest
       assert_equal <<~CLASSES.strip, selected_test_cases.map(&:id).join("\n")
         TestedApp::TruthTest#the truth
       CLASSES
+
+      selector = Selector.parse(["fixtures/simple/simple_test.rb:11"])
+      selected_test_cases = selector.select(@registry, random: nil)
+      assert_equal <<~CLASSES.strip, selected_test_cases.map(&:id).join("\n")
+        TestedApp::TruthTest#the truth
+      CLASSES
     end
 
     def test_negative_file_path_and_line
