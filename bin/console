@@ -4,8 +4,15 @@
 require "bundler/setup"
 require "megatest"
 
-# You can add fixtures and/or initialization code here to make experimenting
-# with your gem easier. You can also use a different console, if you like.
+def test!
+  queue = Megatest.config.build_queue
+  queue.populate(Megatest.registry.test_cases)
+  executor = Megatest::Executor.new(Megatest.config, $stdout)
+  executor.run(queue, [Megatest::Reporters::SimpleReporter.new(Megatest.config, $stdout)])
+  queue.success?
+end
 
-require "irb"
-IRB.start(__FILE__)
+Megatest.with_registry do
+  require "irb"
+  IRB.start(__FILE__)
+end

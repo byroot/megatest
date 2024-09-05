@@ -36,7 +36,7 @@ module Megatest
     private
 
     def pp(object)
-      @config.pretty_print(object)
+      @config.render_object(object)
     end
 
     def object_diff(expected, expected_inspect, actual_inspect)

@@ -214,10 +214,9 @@ module Megatest
       @differ&.call(expected, actual)
     end
 
-    def pretty_print(object)
+    def render_object(object)
       @pretty_printer.pretty_print(object)
     end
-    alias_method :pp, :pretty_print
 
     # We always return a new generator with the same seed as to
     # best reproduce remote builds locally if the same seed is given.

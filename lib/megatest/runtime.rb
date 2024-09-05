@@ -144,7 +144,7 @@ module Megatest
     end
 
     def pp(object)
-      @config.pretty_print(object)
+      @config.render_object(object)
     end
 
     def diff(expected, actual)
