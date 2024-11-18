@@ -28,6 +28,7 @@ module Megatest
     undef_method :puts, :print # Should only use @out.puts or @err.puts
 
     RUNNERS = {
+      "bisect" => :bisect,
       "report" => :report,
       "run" => :run,
     }.freeze
@@ -51,6 +52,8 @@ module Megatest
         report
       when nil, :run
         run_tests
+      when :bisect
+        bisect_tests
       else
         raise InvalidArgument, "Parsing failure"
       end
@@ -116,6 +119,32 @@ module Megatest
       QueueReporter.new(@config, queue, @out).run(default_reporters) ? 0 : 1
     end
 
+    def bisect_tests
+      require "megatest/multi_process"
+
+      queue = @config.build_queue
+      raise InvalidArgument, "Distributed queues can't be bisected" if queue.distributed?
+
+      @config.selectors = Selector.parse(@argv)
+      Megatest.load_config(@config)
+      Megatest.init(@config)
+      test_cases = Megatest.load_tests(@config)
+      queue.populate(test_cases)
+      candidates = queue.dup
+
+      if test_cases.empty?
+        @err.puts "No tests to run"
+        return 1
+      end
+
+      unless failure = find_failing_test(queue)
+        @err.puts "No failing test"
+        return 1
+      end
+
+      bisect_queue(candidates, failure.test_id)
+    end
+
     private
 
     def default_reporters
@@ -139,6 +168,67 @@ module Megatest
       end
 
       reporters
+    end
+
+    def find_failing_test(queue)
+      @config.max_consecutive_failures = 1
+      @config.jobs_count = 1
+
+      executor = MultiProcess::Executor.new(@config.dup, @out)
+      executor.run(queue, default_reporters)
+      queue.summary.failures.first
+    end
+
+    def bisect_queue(queue, failing_test_id)
+      err = Output.new(@err)
+      tests = queue.to_a
+      failing_test_index = tests.index { |test| test.id == failing_test_id }
+      failing_test = tests[failing_test_index]
+      suspects = tests[0...failing_test_index]
+
+      check_passing = @config.build_queue
+      check_passing.populate([failing_test])
+      executor = MultiProcess::Executor.new(@config.dup, @out, managed: true)
+      executor.run(check_passing, [])
+      unless check_passing.success?
+        err.puts err.red("Test failed by itself, no need to bisect")
+        return 1
+      end
+
+      run_index = 0
+      while suspects.size > 1
+        run_index += 1
+        err.puts "Attempt #{run_index}, #{suspects.size} suspects left."
+
+        before, after = suspects[0...(suspects.size / 2)], suspects[(suspects.size / 2)..]
+        candidates = @config.build_queue
+        candidates.populate(before + [failing_test])
+
+        executor = MultiProcess::Executor.new(@config.dup, @out, managed: true)
+        executor.run(candidates, default_reporters)
+
+        if candidates.success?
+          suspects = after
+        else
+          suspects = before
+        end
+
+        err.puts
+      end
+      suspect = suspects.first
+
+      validation_queue = @config.build_queue
+      validation_queue.populate([suspect, failing_test])
+      executor = MultiProcess::Executor.new(@config.dup, @out, managed: true)
+      executor.run(validation_queue, [])
+      if validation_queue.success?
+        err.puts err.red("Bisect inconclusive")
+        return 1
+      end
+
+      err.print "Found test leak: "
+      err.puts err.yellow "#{@config.program_name} #{Megatest.relative_path(suspect.location_id)} #{Megatest.relative_path(failing_test.location_id)}"
+      0
     end
 
     def open_file(path)
@@ -176,6 +266,8 @@ module Megatest
           opts.banner = "Usage: #{@program_name} report [options]"
         when :run
           opts.banner = "Usage: #{@program_name} run [options] [files or directories]"
+        when :bisect
+          opts.banner = "Usage: #{@program_name} bisect [options] [files or directories]"
         else
           opts.banner = "Usage: #{@program_name} command [options] [files or directories]"
           opts.separator ""
@@ -189,6 +281,11 @@ module Megatest
 
           opts.separator "\treport\t\tWait for the queue to be entirely processed and report the status"
           opts.separator "\t\t\t  $ #{@program_name} report --queue redis://ci-queue.example.com --build-id $CI_BUILD_ID"
+          opts.separator ""
+
+          opts.separator "\tbisect\t\tRepeatedly run subsets of the given tests."
+          opts.separator "\t\t\t  $ #{@program_name} bisect --seed 12345 test/integration"
+          opts.separator "\t\t\t  $ #{@program_name} bisect --queue path/to/test_order.log"
           opts.separator ""
         end
 
@@ -214,11 +311,13 @@ module Megatest
           @junit = path
         end
 
-        if runner == :run
+        if %i[run bisect].include?(runner)
           opts.on("--seed SEED", Integer, "The seed used to define run order") do |seed|
             @config.seed = seed
           end
+        end
 
+        if runner == :run
           opts.on("-j", "--jobs JOBS", Integer, "Number of processes to use") do |jobs|
             @config.jobs_count = jobs
           end
@@ -245,8 +344,10 @@ module Megatest
           @config.queue_url = queue_url
         end
 
-        opts.on("--build-id ID", String, "Unique identifier for the CI build") do |build_id|
-          @config.build_id = build_id
+        if %i[run report].include?(runner)
+          opts.on("--build-id ID", String, "Unique identifier for the CI build") do |build_id|
+            @config.build_id = build_id
+          end
         end
 
         if runner == :run

@@ -171,6 +171,11 @@ module Megatest
       CIService.configure(self, env)
     end
 
+    def initialize_dup(_)
+      super
+      @circuit_breaker = @circuit_breaker.dup
+    end
+
     def program_name
       @program_name || "megatest"
     end

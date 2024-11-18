@@ -206,9 +206,10 @@ module Megatest
     class Executor
       attr_reader :wall_time
 
-      def initialize(config, out)
+      def initialize(config, out, managed: false)
         @config = config
         @out = Output.new(out, colors: config.colors)
+        @managed = managed
       end
 
       def concurrent?
@@ -260,7 +261,7 @@ module Megatest
         @wall_time = Megatest.now - start_time
         reporters.each { |r| r.summary(self, queue, queue.summary) }
 
-        if @config.circuit_breaker.break?
+        if @config.circuit_breaker.break? && !@managed
           @out.error("Exited early because too many failures were encountered")
         end
 

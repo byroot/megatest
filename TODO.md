@@ -1,8 +1,5 @@
 ### Wants
 
-- Test leak bisect
-  - See ci-queue bisect.
-
 - `-j` for forkless environments (Windows / JRuby / TruffleRuby)
 
 - `minitest/mocks`
