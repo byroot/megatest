@@ -4,17 +4,55 @@ Megatest is a test-unit like framework with a focus on usability, and designed w
 
 ## Installation
 
-Install the gem and add to the application's Gemfile by executing:
+Install the gem and add it to the application's Gemfile by executing:
 
     $ bundle add megatest
 
 ## Usage
 
+### Special Files And Directories
+
+By default, tests are assumed to live in the `test` directory. If present, the
+optional files `test/test_config.rb` and `test/test_helper.rb` are loaded
+automatically, and in that order.
+
+#### test/test_config.rb
+
+The `megatest` CLI offers options to override default settings, but if you'd
+like to have some always set, please do so in the optional
+`test/test_config.rb`:
+
+```ruby
+# test/test_config.rb
+
+Megatest.config do |config|
+  # See Megatest::Config.
+end
+```
+
+#### test/test_helper.rb
+
+The optional file `test/test_helper.rb` is meant to centralize dependencies and
+define test helpers:
+
+```ruby
+# test/test_helper.rb
+
+require "some_dependency"
+
+module MyApp
+  class Test < Megatest::Test
+    def some_helper(arg)
+    end
+  end
+end
+```
+
 ### Writing Tests
 
 Test suites are Ruby classes that inherit from `Megatest::Test`.
 
-Test cases are be defined with the `test` macro, or for compatibility with existing test suites,
+Test cases are defined with the `test` macro, or for compatibility with existing test suites,
 by defining a method starting with `test_`.
 
 All the classic `test-unit` and `minitest` assertion methods are available:
@@ -37,24 +75,7 @@ class SomeTest < MyApp::Test
 end
 ```
 
-By convention, all the `test_helper.rb` files are automatically loaded,
-which allows to centralize dependencies and define some helpers.
-
-```ruby
-# test/test_helper.rb
-
-require "some_dependency"
-
-module MyApp
-  class Test < Megatest::Test
-
-    def some_helper(arg)
-    end
-  end
-end
-```
-
-It also allow to define test inside `context` blocks, to make it easier to group
+Megatest also allows to define tests inside `context` blocks, to make it easier to group
 related tests together and have them share a common name prefix.
 
 ```ruby
@@ -78,7 +99,7 @@ blocks, nor their own namespaces.
 
 ### Command Line
 
-Contrary to many alternatives, `megatest` provide a convenient CLI interface to easily run specific tests.
+Contrary to many alternatives, `megatest` provides a convenient CLI interface to easily run specific tests.
 
 Run all tests in a directory:
 
@@ -109,7 +130,7 @@ For more detailed usage, run `megatest --help`.
 
 ### CI Parallelization
 
-Megatest offer multiple feature to allow running test suites in parallel across
+Megatest offers multiple features to allow running test suites in parallel across
 many CI jobs.
 
 #### Sharding
@@ -137,8 +158,8 @@ will be automatically inferred from the environment.
 
 A more efficient way to parallelize tests on CI is to use a Redis server to act as a queue.
 
-This allow to efficiently and dynamically ensure a near perfect test case balance across all
-the workers. And if for some reason one of the worker is lost or crashes, no test is lost,
+This allows to efficiently and dynamically ensure a near perfect test case balance across all
+the workers. And if for some reason one of the workers is lost or crashes, no test is lost,
 which for builds with hundreds of parallel jobs, is essential for stability.
 
 ```yaml

@@ -38,7 +38,7 @@ module Megatest
         ::Warning[:deprecated] = true
       end
 
-      # We initiale the seed in case there is some Random use
+      # We initialize the seed in case there is some Random use
       # at code loading time.
       Random.srand(config.seed)
     end
