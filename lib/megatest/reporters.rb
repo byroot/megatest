@@ -104,7 +104,7 @@ module Megatest
 
         # In case of failure we'd rather not print slow tests
         # as it would blur the output.
-        if queue.success?
+        if queue.success? && !summary.results.empty?
           sorted_results = summary.results.sort_by(&:duration)
           size = sorted_results.size
           average = sorted_results.sum(&:duration) / size
