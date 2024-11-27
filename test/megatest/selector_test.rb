@@ -50,6 +50,7 @@ module Megatest
         "fixtures/generated_test.rb",
         "fixtures/inheritance/inheritance_test.rb",
         "fixtures/large/large_test.rb",
+        "fixtures/leak/leaky_test.rb",
         "fixtures/simple/error_test.rb",
         "fixtures/tags/tagged_test.rb",
       ]
@@ -59,13 +60,14 @@ module Megatest
     def test_directory_path_shuffling
       selector = Selector.parse(["fixtures", "!", "fixtures/simple", "fixtures/simple/error_test.rb"])
       expected = [
-        "fixtures/errors/isolated_test.rb",
-        "fixtures/callbacks/callbacks_test.rb",
         "fixtures/simple/error_test.rb",
-        "fixtures/tags/tagged_test.rb",
+        "fixtures/leak/leaky_test.rb",
+        "fixtures/callbacks/callbacks_test.rb",
+        "fixtures/large/large_test.rb",
+        "fixtures/errors/isolated_test.rb",
         "fixtures/context/callbacks_test.rb",
         "fixtures/compat/compat_test.rb",
-        "fixtures/large/large_test.rb",
+        "fixtures/tags/tagged_test.rb",
         "fixtures/crash/crash_test.rb",
         "fixtures/inheritance/inheritance_test.rb",
         "fixtures/context/context_test.rb",
