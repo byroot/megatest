@@ -12,6 +12,7 @@ GEM
     debug (0.2.1)
     json (2.7.2)
     json (2.7.2-java)
+    ostruct (0.6.1)
     parallel (1.24.0)
     parser (3.3.3.0)
       ast (~> 2.4.1)
@@ -53,6 +54,7 @@ DEPENDENCIES
   base64
   debug
   megatest!
+  ostruct
   rake (~> 13.0)
   redis-client (>= 0.22)
   rubocop (~> 1.21)
