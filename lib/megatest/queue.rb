@@ -236,4 +236,15 @@ module Megatest
       true
     end
   end
+
+  class FileQueue < Queue
+    def populate(test_cases)
+      super
+
+      queue = File.readlines(@config.queue_url, chomp: true)
+      queue.reverse!
+      queue.map! { |test_id| @test_cases_index.fetch(test_id) }
+      @queue = queue
+    end
+  end
 end

@@ -236,7 +236,11 @@ module Megatest
         require "megatest/redis_queue"
         RedisQueue.build(self)
       else
-        raise ArgumentError, "Unsupported queue type: #{@queue_url.inspect}"
+        if @queue_url.is_a?(String) && File.exist?(@queue_url)
+          FileQueue.build(self)
+        else
+          raise ArgumentError, "Unsupported queue type: #{@queue_url.inspect}"
+        end
       end
     end
 
