@@ -94,6 +94,11 @@ module Megatest
         @results = results
       end
 
+      def initialize_dup(_)
+        super
+        @results = @results.dup
+      end
+
       # When running distributed queues, it's possible
       # that a test is considered lost and end up with both
       # a successful and a failed result.
@@ -171,6 +176,18 @@ module Megatest
       @success = true
       @retries = Hash.new(0)
       @leases = {}
+    end
+
+    def initialize_dup(_other)
+      super
+      @queue = @queue.dup
+      @summary = @summary.dup
+      @retries = @retries.dup
+      @leases = @leases.dup
+    end
+
+    def to_a
+      @queue.reverse
     end
 
     def distributed?
