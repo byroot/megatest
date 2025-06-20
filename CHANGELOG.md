@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [0.3.0] - 2025-06-20
+
+- Added missing MIT license.
+- Add bisection support.
 - List slowest tests on success.
 
 ## [0.2.0] - 2024-08-26
