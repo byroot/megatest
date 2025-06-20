@@ -7,6 +7,7 @@ Gem::Specification.new do |spec|
   spec.version = Megatest::VERSION
   spec.authors = ["Jean Boussier"]
   spec.email = ["jean.boussier@gmail.com"]
+  spec.license = "MIT"
 
   spec.summary = "Modern test-unit style test framework"
   spec.description = "Largely API compatible with test-unit / minitest, but with lots of extra modern niceties like a proper CLI, test distribution, etc."
