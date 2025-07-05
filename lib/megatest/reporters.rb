@@ -113,8 +113,8 @@ module Megatest
           p99 = sorted_results[(size * 0.99).to_i].duration
 
           @out.puts "Finished in #{s(executor.wall_time.to_f)}, average: #{ms(average)}, median: #{ms(median)}, p90: #{ms(p90)}, p99: #{ms(p99)}"
-          cuttoff = p90 * 10
-          slowest_tests = sorted_results.last(5).select { |r| r.duration > cuttoff }
+          cutoff = p90 * 10
+          slowest_tests = sorted_results.last(5).select { |r| r.duration > cutoff }
           unless slowest_tests.empty?
             @out.puts "Slowest tests:"
             slowest_tests.reverse_each do |result|
