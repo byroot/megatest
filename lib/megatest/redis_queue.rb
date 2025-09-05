@@ -232,11 +232,14 @@ module Megatest
     def populate(test_cases)
       super
 
-      leader_key_set, = @redis.pipelined do |pipeline|
-        pipeline.call("setnx", key("leader-status"), "setup")
+      value = key("leader-setup", worker_id)
+      # NB: If we assumed redis 7+ this could be a single command: `SET <key> NX GET EX @ttl <value>`.
+      _, _, leader = @redis.multi do |pipeline|
+        pipeline.call("setnx", key("leader-status"), value)
         pipeline.call("expire", key("leader-status"), @ttl)
+        pipeline.call("get", key("leader-status"))
       end
-      @leader = leader_key_set == 1
+      @leader = leader == value
 
       if @leader
         @redis.multi do |transaction|
