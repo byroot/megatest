@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [0.4.0] - 2025-11-12
+
 - Allow configuring the test glob via `config.test_globs`.
 
 ## [0.3.0] - 2025-06-20
