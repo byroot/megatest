@@ -92,7 +92,7 @@ module Megatest
         end
       end
 
-      @config.selectors = Selector.parse(@argv)
+      @config.selectors = Selector.new(@config).parse(@argv)
       Megatest.load_config(@config)
       Megatest.init(@config)
       test_cases = Megatest.load_tests(@config)
@@ -125,7 +125,7 @@ module Megatest
       queue = @config.build_queue
       raise InvalidArgument, "Distributed queues can't be bisected" if queue.distributed?
 
-      @config.selectors = Selector.parse(@argv)
+      @config.selectors = Selector.new(@config).parse(@argv)
       Megatest.load_config(@config)
       Megatest.init(@config)
       test_cases = Megatest.load_tests(@config)

@@ -12,6 +12,7 @@ module Megatest
   ROOT = -File.expand_path("../", __FILE__)
   PWD = File.join(Dir.pwd, "/")
   IGNORED_ERRORS = [NoMemoryError, SignalException, SystemExit].freeze
+  DEFAULT_TEST_GLOB = "**/{test_*,*_test}.rb"
 
   class << self
     def fork?
@@ -90,12 +91,12 @@ module Megatest
     end
 
     if Dir.method(:glob).parameters.include?(%i(key sort)) # Ruby 2.7+
-      def glob(path)
-        Dir.glob(File.join(path, "**/{test_*,*_test}.rb"))
+      def glob(pattern)
+        Dir.glob(pattern)
       end
     else
-      def glob(path)
-        paths = Dir.glob(File.join(path, "**/{test_*,*_test}.rb"))
+      def glob(pattern)
+        paths = Dir.glob(pattern)
         paths.sort!
         paths
       end

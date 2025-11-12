@@ -139,7 +139,7 @@ module Megatest
     attr_accessor :queue_url, :retry_tolerance, :max_retries, :jobs_count, :job_index, :load_paths, :deprecations,
                   :build_id, :heartbeat_frequency, :minitest_compatibility, :ci, :selectors
     attr_reader :before_fork_callbacks, :global_setup_callbacks, :backtrace, :circuit_breaker, :seed,
-                :worker_id, :workers_count
+                :worker_id, :workers_count, :test_globs
     attr_writer :differ, :pretty_printer, :program_name, :colors
 
     def initialize(env)
@@ -168,12 +168,18 @@ module Megatest
       @pretty_printer = PrettyPrint.new(self)
       @minitest_compatibility = false
       @selectors = nil
+      @test_globs = [DEFAULT_TEST_GLOB]
       CIService.configure(self, env)
+    end
+
+    def test_globs=(patterns)
+      @test_globs = normalize_test_glob(patterns)
     end
 
     def initialize_dup(_)
       super
       @circuit_breaker = @circuit_breaker.dup
+      @test_globs = @test_globs.dup
     end
 
     def program_name
@@ -303,6 +309,16 @@ module Megatest
     def marshal_load(hash)
       hash.each do |name, value|
         instance_variable_set(name, value)
+      end
+    end
+
+    private
+
+    def normalize_test_glob(patterns)
+      if patterns
+        Array(patterns).compact.map(&:to_s)
+      else
+        [DEFAULT_TEST_GLOB]
       end
     end
   end
