@@ -2,13 +2,17 @@
 
 module Megatest
   class SelectorTest < MegaTestCase
+    setup do
+      @selector = Selector.new(@config)
+    end
+
     def test_parse_empty_selector
-      selector = Selector.parse([])
+      selector = @selector.parse([])
       assert_equal ["#{File.expand_path("test")}/"], selector.main_paths
     end
 
     def test_directory_path
-      selector = Selector.parse(["fixtures/simple"])
+      selector = @selector.parse(["fixtures/simple"])
       expected = [
         "fixtures/simple/assert_equal_test.rb",
         "fixtures/simple/error_test.rb",
@@ -30,8 +34,31 @@ module Megatest
       CLASSES
     end
 
+    def test_directory_path_respects_configured_glob
+      @config.test_globs = "**/callbacks_test.rb"
+
+      selector = @selector.parse(["fixtures"])
+      expected = [
+        "fixtures/callbacks/callbacks_test.rb",
+        "fixtures/context/callbacks_test.rb",
+      ]
+      assert_equal expected, relative(selector.paths(random: nil))
+    end
+
+    def test_directory_path_respects_glob_array
+      @config.test_globs = ["**/callbacks_test.rb", "**/error_test.rb"]
+
+      selector = @selector.parse(["fixtures"])
+      expected = [
+        "fixtures/callbacks/callbacks_test.rb",
+        "fixtures/context/callbacks_test.rb",
+        "fixtures/simple/error_test.rb",
+      ]
+      assert_equal expected, relative(selector.paths(random: nil))
+    end
+
     def test_negative_path_loading
-      selector = Selector.parse(["fixtures/simple", "!", "fixtures/simple/error_test.rb"])
+      selector = @selector.parse(["fixtures/simple", "!", "fixtures/simple/error_test.rb"])
       expected = [
         "fixtures/simple/assert_equal_test.rb",
         "fixtures/simple/simple_test.rb",
@@ -39,7 +66,7 @@ module Megatest
       ]
       assert_equal expected, relative(selector.paths(random: nil))
 
-      selector = Selector.parse(["fixtures", "!", "fixtures/simple", "fixtures/simple/error_test.rb"])
+      selector = @selector.parse(["fixtures", "!", "fixtures/simple", "fixtures/simple/error_test.rb"])
       expected = [
         "fixtures/callbacks/callbacks_test.rb",
         "fixtures/compat/compat_test.rb",
@@ -58,7 +85,7 @@ module Megatest
     end
 
     def test_directory_path_shuffling
-      selector = Selector.parse(["fixtures", "!", "fixtures/simple", "fixtures/simple/error_test.rb"])
+      selector = @selector.parse(["fixtures", "!", "fixtures/simple", "fixtures/simple/error_test.rb"])
       expected = [
         "fixtures/simple/error_test.rb",
         "fixtures/leak/leaky_test.rb",
@@ -77,7 +104,7 @@ module Megatest
     end
 
     def test_file_path_no_partials
-      selector = Selector.parse(["fixtures/simple/simple_test.rb"])
+      selector = @selector.parse(["fixtures/simple/simple_test.rb"])
       assert_equal [fixture("simple/simple_test.rb")], selector.paths(random: nil)
 
       load_fixture("simple/simple_test.rb")
@@ -94,7 +121,7 @@ module Megatest
     end
 
     def test_file_path_with_partials
-      selector = Selector.parse(["fixtures/simple/simple_test.rb", "fixtures/simple/error_test.rb:42"])
+      selector = @selector.parse(["fixtures/simple/simple_test.rb", "fixtures/simple/error_test.rb:42"])
       assert_equal ["fixtures/simple/error_test.rb", "fixtures/simple/simple_test.rb"], relative(selector.paths(random: nil))
 
       load_fixture("simple/simple_test.rb")
@@ -112,7 +139,7 @@ module Megatest
     end
 
     def test_file_path_and_line
-      selector = Selector.parse(["fixtures/simple/simple_test.rb:12"])
+      selector = @selector.parse(["fixtures/simple/simple_test.rb:12"])
       assert_equal [fixture("simple/simple_test.rb")], selector.paths(random: nil)
 
       load_fixture("simple/simple_test.rb")
@@ -123,7 +150,7 @@ module Megatest
         TestedApp::TruthTest#the truth
       CLASSES
 
-      selector = Selector.parse(["fixtures/simple/simple_test.rb:11"])
+      selector = @selector.parse(["fixtures/simple/simple_test.rb:11"])
       selected_test_cases = selector.select(@registry, random: nil)
       assert_equal <<~CLASSES.strip, selected_test_cases.map(&:id).join("\n")
         TestedApp::TruthTest#the truth
@@ -131,7 +158,7 @@ module Megatest
     end
 
     def test_negative_file_path_and_line
-      selector = Selector.parse(["fixtures/simple/simple_test.rb", "!", "fixtures/simple/simple_test.rb:12"])
+      selector = @selector.parse(["fixtures/simple/simple_test.rb", "!", "fixtures/simple/simple_test.rb:12"])
       assert_equal [fixture("simple/simple_test.rb")], selector.paths(random: nil)
       assert_equal [fixture("simple/simple_test.rb")], selector.main_paths
 
@@ -146,7 +173,7 @@ module Megatest
     end
 
     def test_file_path_line_and_index
-      selector = Selector.parse(["fixtures/large/large_test.rb:12~777", "fixtures/large/large_test.rb:12~888"])
+      selector = @selector.parse(["fixtures/large/large_test.rb:12~777", "fixtures/large/large_test.rb:12~888"])
       assert_equal [fixture("large/large_test.rb")], selector.paths(random: nil)
 
       load_fixture("large/large_test.rb")
@@ -159,7 +186,7 @@ module Megatest
     end
 
     def test_name
-      selector = Selector.parse(["fixtures/simple/simple_test.rb:#the truth"])
+      selector = @selector.parse(["fixtures/simple/simple_test.rb:#the truth"])
       assert_equal [fixture("simple/simple_test.rb")], selector.paths(random: nil)
 
       load_fixture("simple/simple_test.rb")
@@ -172,7 +199,7 @@ module Megatest
     end
 
     def test_full_name
-      selector = Selector.parse(["fixtures/simple/simple_test.rb:#TestedApp::TruthTest#the truth"])
+      selector = @selector.parse(["fixtures/simple/simple_test.rb:#TestedApp::TruthTest#the truth"])
       assert_equal [fixture("simple/simple_test.rb")], selector.paths(random: nil)
 
       load_fixture("simple/simple_test.rb")
@@ -185,7 +212,7 @@ module Megatest
     end
 
     def test_name_match
-      selector = Selector.parse(["fixtures/simple/simple_test.rb:/the [tl]"])
+      selector = @selector.parse(["fixtures/simple/simple_test.rb:/the [tl]"])
       assert_equal [fixture("simple/simple_test.rb")], selector.paths(random: nil)
 
       load_fixture("simple/simple_test.rb")
@@ -199,7 +226,7 @@ module Megatest
     end
 
     def test_tags
-      selector = Selector.parse(["fixtures/simple/simple_test.rb:@focus"])
+      selector = @selector.parse(["fixtures/simple/simple_test.rb:@focus"])
       assert_equal [fixture("simple/simple_test.rb")], selector.paths(random: nil)
 
       load_fixture("simple/simple_test.rb")
@@ -211,7 +238,7 @@ module Megatest
         TestedApp::TruthTest#the unexpected
       CLASSES
 
-      selector = Selector.parse([":@focus"])
+      selector = @selector.parse([":@focus"])
       selected_test_cases = selector.select(@registry, random: nil)
       assert_equal <<~CLASSES.strip, selected_test_cases.map(&:id).join("\n")
         TestedApp::TruthTest#the lie
@@ -220,7 +247,7 @@ module Megatest
     end
 
     def test_partial_selection_sorted
-      selector = Selector.parse(
+      selector = @selector.parse(
         [
           "fixtures/simple/simple_test.rb:#TestedApp::TruthTest#the truth",
           "fixtures/simple/simple_test.rb:#TestedApp::TruthTest#the void",

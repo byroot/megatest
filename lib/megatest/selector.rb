@@ -3,12 +3,12 @@
 # :stopdoc:
 
 module Megatest
-  module Selector
+  class Selector
     class List
-      def initialize(loaders, filters)
+      def initialize(config, loaders, filters)
         @loaders = loaders
         if loaders.empty?
-          @loaders = [Loader.new("test")]
+          @loaders = [Loader.new(config, "test")]
         end
         @filters = filters
       end
@@ -56,11 +56,11 @@ module Megatest
     class Loader
       attr_reader :path
 
-      def initialize(path, filter = nil)
+      def initialize(config, path, filter = nil)
         @path = File.expand_path(path)
         if @directory = File.directory?(@path)
           @path = File.join(@path, "/")
-          @paths = Megatest.glob(@path)
+          @paths = Megatest.glob(config.test_globs.map { |pattern| File.join(@path, pattern) })
         else
           @paths = [@path]
         end
@@ -244,54 +244,56 @@ module Megatest
       NameFilter,
     ].freeze
 
-    class << self
-      def parse(argv)
-        if argv.empty?
-          return List.new([], [])
-        end
+    def initialize(config)
+      @config = config
+    end
 
-        argv = argv.dup
-        loaders = []
-        filters = []
+    def parse(argv)
+      if argv.empty?
+        return List.new(@config, [], [])
+      end
 
-        negative = false
+      argv = argv.dup
+      loaders = []
+      filters = []
 
-        until argv.empty?
-          case argument = argv.shift
-          when "!"
-            negative = true
-          else
-            loader_str, filter_str = argument.split(":", 2)
-            loader_str = nil if loader_str.empty?
+      negative = false
 
-            filter = nil
-            if filter_str
-              FILTERS.each do |filter_class|
-                if filter = filter_class.parse(filter_str)
-                  break
-                end
+      until argv.empty?
+        case argument = argv.shift
+        when "!"
+          negative = true
+        else
+          loader_str, filter_str = argument.split(":", 2)
+          loader_str = nil if loader_str.empty?
+
+          filter = nil
+          if filter_str
+            FILTERS.each do |filter_class|
+              if filter = filter_class.parse(filter_str)
+                break
               end
-            end
-
-            if loader_str
-              loader = Loader.new(loader_str, filter)
-              if negative
-                loader = NegativeLoader.new(loader)
-                negative = false
-              end
-              loaders << loader
-            else
-              if negative
-                filter = NegativeFilter.new(filter)
-                negative = false
-              end
-              filters << filter
             end
           end
-        end
 
-        List.new(loaders, filters)
+          if loader_str
+            loader = Loader.new(@config, loader_str, filter)
+            if negative
+              loader = NegativeLoader.new(loader)
+              negative = false
+            end
+            loaders << loader
+          else
+            if negative
+              filter = NegativeFilter.new(filter)
+              negative = false
+            end
+            filters << filter
+          end
+        end
       end
+
+      List.new(@config, loaders, filters)
     end
   end
 end

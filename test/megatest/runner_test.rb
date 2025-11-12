@@ -4,7 +4,7 @@ module Megatest
   class RunnerTest < MegaTestCase
     setup do
       load_fixture("errors/isolated_test.rb")
-      @config.selectors = Selector.parse(["fixtures/errors/isolated_test.rb"])
+      @config.selectors = Selector.new(@config).parse(["fixtures/errors/isolated_test.rb"])
       @config.global_setup { 42 }
       @isolated = @registry.test_cases[0]
       @not_isolated = @registry.test_cases[1]

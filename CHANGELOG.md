@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+- Allow configuring the test glob via `config.test_globs`.
+
 ## [0.3.0] - 2025-06-20
 
 - Added missing MIT license.
