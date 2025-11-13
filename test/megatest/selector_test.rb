@@ -73,6 +73,7 @@ module Megatest
         "fixtures/context/callbacks_test.rb",
         "fixtures/context/context_test.rb",
         "fixtures/crash/crash_test.rb",
+        "fixtures/custom_glob/test_config.rb",
         "fixtures/errors/isolated_test.rb",
         "fixtures/generated_test.rb",
         "fixtures/inheritance/inheritance_test.rb",
@@ -88,17 +89,18 @@ module Megatest
       selector = @selector.parse(["fixtures", "!", "fixtures/simple", "fixtures/simple/error_test.rb"])
       expected = [
         "fixtures/simple/error_test.rb",
-        "fixtures/leak/leaky_test.rb",
-        "fixtures/callbacks/callbacks_test.rb",
         "fixtures/large/large_test.rb",
-        "fixtures/errors/isolated_test.rb",
+        "fixtures/callbacks/callbacks_test.rb",
+        "fixtures/inheritance/inheritance_test.rb",
+        "fixtures/custom_glob/test_config.rb",
         "fixtures/context/callbacks_test.rb",
         "fixtures/compat/compat_test.rb",
         "fixtures/tags/tagged_test.rb",
         "fixtures/crash/crash_test.rb",
-        "fixtures/inheritance/inheritance_test.rb",
-        "fixtures/context/context_test.rb",
         "fixtures/generated_test.rb",
+        "fixtures/leak/leaky_test.rb",
+        "fixtures/context/context_test.rb",
+        "fixtures/errors/isolated_test.rb",
       ]
       assert_equal expected, relative(selector.paths(random: Random.new(42)))
     end
