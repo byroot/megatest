@@ -57,13 +57,12 @@ module Megatest
       attr_reader :path
 
       def initialize(config, path, filter = nil)
+        @config = config
         @path = File.expand_path(path)
         if @directory = File.directory?(@path)
           @path = File.join(@path, "/")
-          @paths = Megatest.glob(config.test_globs.map { |pattern| File.join(@path, pattern) })
-        else
-          @paths = [@path]
         end
+        @paths = nil
         @filter = filter
       end
 
@@ -81,7 +80,7 @@ module Megatest
       end
 
       def append_paths(paths_to_load)
-        paths_to_load.concat(@paths)
+        paths_to_load.concat(paths)
       end
 
       def select(registry)
@@ -97,6 +96,16 @@ module Megatest
           @filter.select(test_cases)
         else
           test_cases
+        end
+      end
+
+      private
+
+      def paths
+        @paths ||= if @directory
+          Megatest.glob(@config.test_globs.map { |pattern| File.join(@path, pattern) })
+        else
+          [@path]
         end
       end
     end

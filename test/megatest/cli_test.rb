@@ -21,6 +21,14 @@ module Megatest
       assert_equal 1, cli.run
     end
 
+    def test_custom_test_glob
+      cli = new_cli(fixture("custom_glob/"))
+
+      assert_equal 0, cli.run
+
+      assert_includes @out.string, "Ran 1 cases, 1 assertions, 0 failures, 0 errors, 0 retries, 0 skips"
+    end
+
     private
 
     def new_cli(*argv, env: {})
