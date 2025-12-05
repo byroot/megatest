@@ -38,7 +38,7 @@ module Megatest
 
         @out.puts
         if result.bad?
-          @out.puts @out.colored(render_failure(result))
+          @out.puts @out.colored(render_failure(result: result))
         end
       end
     end

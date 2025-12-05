@@ -69,7 +69,7 @@ module Megatest
           line: line,
           assertions: result.assertions_count,
           time: result.duration || 0.0,
-          "run-command": run_command(result),
+          "run-command": run_command(result: result),
         }
 
         if result.success?
@@ -87,7 +87,7 @@ module Megatest
               tag_name = :failure
               message = "Assertion Failure"
             end
-            tag(tag_name, { type: result.failure.name, message: message }, text: cdata(render_failure(result, command: false)))
+            tag(tag_name, { type: result.failure.name, message: message }, text: cdata(render_failure(result: result, show_command: false)))
           end
         end
       end

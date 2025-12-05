@@ -26,45 +26,12 @@ module Megatest
 
       private
 
-      LABELS = {
-        retried: "Retried",
-        error: "Error",
-        failure: "Failure",
-        skipped: "Skipped",
-      }.freeze
-
-      def render_failure(result, command: true)
-        str = "#{LABELS.fetch(result.status)}: #{result.test_id}\n"
-        str = if result.retried? || result.skipped?
-          @out.yellow(str)
-        else
-          @out.red(str)
-        end
-        str = +str
-        str << "\n"
-
-        if result.error?
-          str << @out.indent("#{result.failure.cause.name}: #{@out.colored(result.failure.cause.message)}\n")
-        elsif result.failed?
-          str << @out.indent(@out.colored(result.failure.message.to_s))
-        end
-        str << "\n" unless str.end_with?("\n")
-        str << "\n"
-
-        @config.backtrace.clean(result.failure.backtrace)&.each do |frame|
-          str << "  #{@out.cyan(frame)}\n"
-        end
-
-        if command
-          str << "\n"
-          str << @out.yellow(run_command(result))
-        end
-
-        str
+      def render_failure(result:, show_command: true)
+        Announcements::Failure.new(config: @config, out: @out, result: result, show_command: show_command).to_s
       end
 
-      def run_command(result)
-        "#{@config.program_name} #{Megatest.relative_path(result.test_location)}"
+      def run_command(result:)
+        Snippets::CommandToRerun.new(config: @config, result: result).to_s
       end
     end
   end

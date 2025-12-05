@@ -33,7 +33,7 @@ module Megatest
           failures = failures.sort_by(&:test_id)
           failures.each_with_index do |result, index|
             @out.print "  #{index + 1}) "
-            @out.puts render_failure(result)
+            @out.puts render_failure(result: result)
             @out.puts
           end
         end
