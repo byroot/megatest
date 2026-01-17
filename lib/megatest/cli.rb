@@ -69,6 +69,8 @@ module Megatest
     end
 
     def configure
+      Megatest.running = true
+
       if @runner = RUNNERS[@argv.first]
         @argv.shift
       end
