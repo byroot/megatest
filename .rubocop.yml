@@ -147,6 +147,8 @@ Lint/SuppressedException:
 Lint/RedundantRequireStatement:
   Enabled: false # You're an idiot, I need to require "pp" to use PP.pretty_print
 
+Security/Eval:
+  Enabled: false
 
 Security/MarshalLoad:
   Enabled: false # I know what I'm doing, thanks.

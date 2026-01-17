@@ -540,6 +540,67 @@ module Megatest
       assert_equal 2, @result.assertions_count
     end
 
+    def test_assert_difference
+      assert_equal 0, @result.assertions_count
+
+      counter = 0
+      @case.assert_difference -> { counter } do
+        counter += 1
+      end
+      assert_equal 1, @result.assertions_count
+
+      matcher = if defined?(RubyVM::InstructionSequence)
+        "`counter` didn't change by 1, but by 2."
+      else
+        /Proc.* didn't change by 1, but by 2./
+      end
+
+      assert_failure_message(matcher) do
+        @case.assert_difference -> { counter } do
+          counter += 2
+        end
+      end
+      assert_equal 2, @result.assertions_count
+
+      assert_failure_message(/ didn't change by 3, but by 2./) do
+        @case.assert_difference -> { counter }, 3 do
+          counter += 2
+        end
+      end
+      assert_equal 3, @result.assertions_count
+
+      assert_failure_message(/ didn't change by 3, but by 2./) do
+        @case.assert_difference -> { counter }, 3 do
+          counter += 2
+        end
+      end
+      assert_equal 4, @result.assertions_count
+
+      assert_failure_message(/ didn't change by 1, but by 0./) do
+        @case.assert_difference [-> { counter }, "0"] do
+          counter += 1
+        end
+      end
+      assert_equal 5, @result.assertions_count
+
+      assert_failure_message(/ didn't change by 3, but by 0./) do
+        @case.assert_difference({ -> { counter } => 1, -> { 0 } => 3 }) do
+          counter += 1
+        end
+      end
+      assert_equal 6, @result.assertions_count
+    end
+
+    def test_yielding_assertion
+      assert_raises UnexpectedError do
+        @case.assert_raises NotImplementedError do
+          @case.assert_difference -> { 0 }, 2 do
+            raise NotImplementedError
+          end
+        end
+      end
+    end
+
     def test_assert_operator
       assert_equal 0, @result.assertions_count
 

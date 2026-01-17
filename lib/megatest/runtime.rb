@@ -139,12 +139,102 @@ module Megatest
       end
     end
 
+    def safe_yield
+      yield
+    rescue Assertion, *IGNORED_ERRORS
+      raise
+    rescue ::Exception => unexepected_exception
+      raise UnexpectedError, unexepected_exception
+    end
+
+    UNSET = BasicObject.new
+
+    def unset
+      UNSET
+    end
+
+    def unset?(arg)
+      UNSET.equal?(arg)
+    end
+
+    def set?(arg)
+      !UNSET.equal?(arg)
+    end
+
+    class Expression
+      attr_reader :string
+
+      def initialize(string, block)
+        @string = string
+        @block = block
+      end
+
+      def call
+        eval(@string, @block.binding)
+      end
+    end
+
+    def expression(expression, block)
+      if String === expression
+        Expression.new(expression, block)
+      else
+        expression
+      end
+    end
+
     def minitest_compatibility?
       @config.minitest_compatibility
     end
 
     def pp(object)
       @config.render_object(object)
+    end
+
+    def pp_expression(callable)
+      case callable
+      when Expression
+        callable.string
+      when Proc
+        # Logic borrowed from Active Support.
+        if defined?(RubyVM::InstructionSequence)
+          iseq = RubyVM::InstructionSequence.of(callable)
+          return pp(callable) unless iseq
+
+          source = if RubyVM::InstructionSequence.method_defined?(:script_lines) && iseq.script_lines
+            iseq.script_lines.join("\n")
+          elsif File.readable?(iseq.absolute_path)
+            File.read(iseq.absolute_path)
+          end
+          return pp(callable) unless source
+
+          location = iseq.to_a[4][:code_location]
+          return pp(callable) unless location
+
+          lines = source.lines[(location[0] - 1)..(location[2] - 1)]
+          lines[-1] = lines[-1].byteslice(0...location[3])
+          lines[0] = lines[0].byteslice(location[1]...-1)
+          source = lines.join.strip
+
+          # Ruby 4.1.0dev includes the `->`
+          source.delete_prefix!("->")
+          source.strip!
+
+          # We ignore procs defined with do/end as they are likely multi-line anyway.
+          if source.start_with?("{")
+            source.delete_suffix!("}")
+            source.delete_prefix!("{")
+            source.strip!
+            # It won't read nice if the callable contains multiple
+            # lines, and it should be a rare occurrence anyway.
+            # Same if it takes arguments.
+            if !source.include?("\n") && !source.start_with?("|")
+              return source
+            end
+          end
+        end
+      end
+
+      pp(callable)
     end
 
     def diff(expected, actual)

@@ -382,6 +382,35 @@ module Megatest
       end
     end
 
+    def assert_difference(expression, difference = @__m.unset, message: nil, &block)
+      expressions = if @__m.set?(difference)
+        Array(expression).to_h { |e| [e, difference] }
+      elsif Hash === expression
+        expression
+      else
+        Array(expression).to_h { |e| [e, 1] }
+      end
+
+      exps = expressions.keys.map { |e| @__m.expression(e, block) }
+
+      @__m.assert do
+        before = exps.map(&:call)
+
+        retval = @__m.safe_yield(&block)
+
+        expressions.zip(exps, before) do |(code, diff), exp, before_value|
+          actual = exp.call
+          expected = before_value + diff
+          unless expected == actual
+            error = "`#{@__m.pp_expression(code)}` didn't change by #{diff}, but by #{actual - before_value}."
+            @__m.fail(message, error)
+          end
+        end
+
+        retval
+      end
+    end
+
     def assert_in_delta(expected, actual, delta = 0.001, msg = nil, message: nil)
       message = @__m.msg(msg, message)
       @__m.assert do
