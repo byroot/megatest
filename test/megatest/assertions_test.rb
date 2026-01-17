@@ -98,6 +98,16 @@ module Megatest
       assert_equal 5, @result.assertions_count
     end
 
+    def test_assert_nothing_raised
+      @case.assert_nothing_raised { 1 + 1 }
+      assert_equal 1, @result.assertions_count
+
+      assert_raises UnexpectedError do
+        @case.assert_nothing_raised { 1.oops }
+      end
+      assert_equal 2, @result.assertions_count
+    end
+
     def test_assert
       assert_equal 0, @result.assertions_count
 

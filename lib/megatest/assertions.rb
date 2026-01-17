@@ -355,6 +355,16 @@ module Megatest
     end
     alias :assert_raise :assert_raises
 
+    def assert_nothing_raised
+      @__m.assert do
+        yield
+      rescue ::Megatest::Assertion, *::Megatest::IGNORED_ERRORS
+        raise # Pass through
+      rescue Exception => unexepected_exception
+        raise ::Megatest::UnexpectedError, unexepected_exception
+      end
+    end
+
     def assert_throws(thrown_object, msg = nil, message: nil)
       message = @__m.msg(msg, message)
       @__m.assert do
