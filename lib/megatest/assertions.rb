@@ -434,16 +434,37 @@ module Megatest
       end
     end
 
+    def refute_difference(expressions, message: nil, &block)
+      exps = Array(expressions).map { |e| @__m.expression(e, block) }
+
+      @__m.assert do
+        before = exps.map(&:call)
+
+        retval = @__m.safe_yield(&block)
+
+        exps.zip(before) do |exp, before_value|
+          actual = exp.call
+          unless before_value == actual
+            error = "Expected `#{@__m.pp_expression(exp)}` to not change, but it changed from #{@__m.pp(before_value)} to #{@__m.pp(actual)}."
+            @__m.fail(message, error)
+          end
+        end
+
+        retval
+      end
+    end
+    alias_method :assert_no_difference, :refute_difference
+
     def assert_changes(expression, msg = nil, message: nil, from: @__m.unset, to: @__m.unset, &block)
       message = @__m.msg(msg, message)
       exp = @__m.expression(expression, block)
       @__m.assert do
         before = exp.call
-        retval = assert_nothing_raised(&block)
-
         if @__m.set?(from) && !(from === before)
           @__m.fail(message, "Expected `#{@__m.pp_expression(exp)}` to starts from #{@__m.pp(from)}, but was #{@__m.pp(before)}")
         end
+
+        retval = assert_nothing_raised(&block)
 
         after = exp.call
 
@@ -469,6 +490,27 @@ module Megatest
         retval
       end
     end
+
+    def refute_changes(expression, msg = nil, message: nil, from: @__m.unset, &block)
+      message = @__m.msg(msg, message)
+      exp = @__m.expression(expression, block)
+      @__m.assert do
+        before = exp.call
+        if @__m.set?(from) && !(from === before)
+          @__m.fail(message, "Expected `#{@__m.pp_expression(exp)}` to start from #{@__m.pp(from)}, but was #{@__m.pp(before)}.")
+        end
+
+        retval = assert_nothing_raised(&block)
+
+        after = exp.call
+        unless before == after
+          @__m.fail(message, "Expected `#{@__m.pp_expression(exp)}` to not change, but it changed from #{@__m.pp(before)} to #{@__m.pp(after)}.")
+        end
+
+        retval
+      end
+    end
+    alias_method :assert_no_changes, :refute_changes
 
     def assert_in_delta(expected, actual, delta = 0.001, msg = nil, message: nil)
       message = @__m.msg(msg, message)
