@@ -601,6 +601,39 @@ module Megatest
       assert_equal 6, @result.assertions_count
     end
 
+    def test_assert_changes
+      assert_equal 0, @result.assertions_count
+
+      counter = 0
+      @case.assert_changes -> { counter } do
+        counter += 1
+      end
+      assert_equal 1, @result.assertions_count
+
+      assert_raises Assertion, match: /Expected .* to change, but it stayed 1/ do
+        @case.assert_changes -> { counter } do
+        end
+      end
+      assert_equal 2, @result.assertions_count
+
+      assert_raises Assertion, match: /Expected .* to starts from 0, but was 1/ do
+        @case.assert_changes -> { counter }, from: 0, to: 1 do
+        end
+      end
+      assert_equal 3, @result.assertions_count
+
+      assert_raises Assertion, match: /Expected .* to change to 2, but it stayed 1/ do
+        @case.assert_changes -> { counter }, from: 1, to: 2 do
+        end
+      end
+      assert_equal 4, @result.assertions_count
+
+      @case.assert_changes -> { counter }, from: 1, to: 2 do
+        counter += 1
+      end
+      assert_equal 5, @result.assertions_count
+    end
+
     def test_yielding_assertion
       assert_raises UnexpectedError do
         @case.assert_raises NotImplementedError do

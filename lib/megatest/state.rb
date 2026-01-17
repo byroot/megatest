@@ -101,7 +101,9 @@ module Megatest
       end
 
       def on_teardown(block)
-        raise Error, "The teardown block is already defined" if @teardown_callback
+        if @teardown_callback
+          raise Error, "The teardown block was already defined as #{@teardown_callback}"
+        end
         raise Error, "teardown blocks can't be defined in context blocks" if @current_context
 
         @teardown_callback = block
