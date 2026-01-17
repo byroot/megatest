@@ -28,14 +28,14 @@ module Megatest
     using Compat::StartWith unless Symbol.method_defined?(:start_with?)
 
     class Suite
-      attr_reader :setup_callback, :teardown_callback, :around_callback
+      attr_reader :setup_callbacks, :teardown_callbacks, :around_callbacks
 
       def initialize(registry)
         @registry = registry
         @tags = nil
-        @setup_callback = nil
-        @teardown_callback = nil
-        @around_callback = nil
+        @setup_callbacks = []
+        @teardown_callbacks = []
+        @around_callbacks = []
         @current_context = nil
         @current_tags = nil
       end
@@ -87,26 +87,21 @@ module Megatest
       end
 
       def on_setup(block)
-        raise Error, "The setup block is already defined" if @setup_callback
         raise Error, "setup blocks can't be defined in context blocks" if @current_context
 
-        @setup_callback = block
+        @setup_callbacks.unshift(block)
       end
 
       def on_around(block)
-        raise Error, "The around block is already defined" if @around_callback
         raise Error, "around blocks can't be defined in context blocks" if @current_context
 
-        @around_callback = block
+        @around_callbacks << block
       end
 
       def on_teardown(block)
-        if @teardown_callback
-          raise Error, "The teardown block was already defined as #{@teardown_callback}"
-        end
         raise Error, "teardown blocks can't be defined in context blocks" if @current_context
 
-        @teardown_callback = block
+        @teardown_callbacks << block
       end
     end
 
@@ -370,21 +365,19 @@ module Megatest
         cmp || 0
       end
 
-      def each_setup_callback
+      def each_setup_callback(&block)
         @test_suite.ancestors.reverse_each do |test_suite|
-          yield test_suite.setup_callback if test_suite.setup_callback
+          test_suite.setup_callbacks.each(&block)
         end
       end
 
-      using Compat::FilterMap unless Enumerable.method_defined?(:filter_map)
-
       def around_callbacks
-        @test_suite.ancestors.filter_map(&:around_callback)
+        @test_suite.ancestors.flat_map(&:around_callbacks)
       end
 
-      def each_teardown_callback
+      def each_teardown_callback(&block)
         @test_suite.ancestors.each do |test_suite|
-          yield test_suite.teardown_callback if test_suite.teardown_callback
+          test_suite.teardown_callbacks.each(&block)
         end
       end
 
