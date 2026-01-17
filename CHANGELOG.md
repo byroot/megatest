@@ -2,6 +2,7 @@
 
 - Adds `assert_nothing_raised`.
 - Adds `assert_difference`.
+- Adds `assert_changes`.
 - Adds `assert_not_*` aliases.
 - Adds `match:` argument to `assert_raises`.
 

@@ -434,6 +434,42 @@ module Megatest
       end
     end
 
+    def assert_changes(expression, msg = nil, message: nil, from: @__m.unset, to: @__m.unset, &block)
+      message = @__m.msg(msg, message)
+      exp = @__m.expression(expression, block)
+      @__m.assert do
+        before = exp.call
+        retval = assert_nothing_raised(&block)
+
+        if @__m.set?(from) && !(from === before)
+          @__m.fail(message, "Expected `#{@__m.pp_expression(exp)}` to starts from #{@__m.pp(from)}, but was #{@__m.pp(before)}")
+        end
+
+        after = exp.call
+
+        if before == after
+          details = "Expected `#{@__m.pp_expression(exp)}` to change"
+          if @__m.set?(to)
+            details = "#{details} to #{@__m.pp(to)}"
+          end
+
+          if before == to
+            details = "#{details}, but it was already #{@__m.pp(to)}."
+          else
+            details = "#{details}, but it stayed #{@__m.pp(before)}"
+          end
+
+          @__m.fail(message, details)
+        end
+
+        if @__m.set?(to) && !(to === after)
+          @__m.fail(message, "Expected `#{@__m.pp_expression(exp)}` to change to #{@__m.pp(to)}, got #{@__m.pp(after)}")
+        end
+
+        retval
+      end
+    end
+
     def assert_in_delta(expected, actual, delta = 0.001, msg = nil, message: nil)
       message = @__m.msg(msg, message)
       @__m.assert do
