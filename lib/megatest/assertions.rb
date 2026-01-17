@@ -353,6 +353,7 @@ module Megatest
         end
       end
     end
+    alias :assert_raise :assert_raises
 
     def assert_throws(thrown_object, msg = nil, message: nil)
       message = @__m.msg(msg, message)
