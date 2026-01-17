@@ -14,7 +14,11 @@ module Megatest
   IGNORED_ERRORS = [NoMemoryError, SignalException, SystemExit].freeze
   DEFAULT_TEST_GLOB = "**/{test_*,*_test}.rb"
 
+  @running = false
+
   class << self
+    attr_accessor :running
+
     def fork?
       Process.respond_to?(:fork) && !ENV["NO_FORK"]
     end

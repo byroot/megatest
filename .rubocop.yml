@@ -31,6 +31,9 @@ Style/ExpandPathArguments:
   # This cop is wrong, `__FILE__` and `__dir__` can't always be substitued
   Enabled: false
 
+Style/SpecialGlobalVars:
+  Enabled: false
+
 Style/CaseEquality:
   Enabled: false # I know what I'm doing, thanks.
 

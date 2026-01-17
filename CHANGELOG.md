@@ -1,5 +1,6 @@
 ## [Unreleased]
 
+- Adds `megatest/autorun`
 - Adds `assert_nothing_raised`.
 - Adds `assert_difference`.
 - Adds `assert_changes`.
