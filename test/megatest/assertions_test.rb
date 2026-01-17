@@ -91,6 +91,11 @@ module Megatest
         end
       end
       assert_equal 4, @result.assertions_count
+
+      @case.assert_raises(NotImplementedError, match: "token") do
+        raise NotImplementedError, "Contains some token."
+      end
+      assert_equal 5, @result.assertions_count
     end
 
     def test_assert

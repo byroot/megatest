@@ -295,20 +295,34 @@ module Megatest
       end
     end
 
-    def assert_raises(expected = StandardError, *expected_exceptions, message: nil)
+    def assert_raises(expected = StandardError, *expected_exceptions, match: nil, message: nil)
       msg = expected_exceptions.pop if expected_exceptions.last.is_a?(String)
       message = @__m.msg(msg, message)
+
+      matcher = if match
+        if ::String === match
+          ::Regexp.new(::Regexp.escape(match))
+        else
+          match
+        end
+      end
+
       @__m.assert do
         @__m.fail("assert_raises requires a block to capture errors.") unless block_given?
 
         begin
+          before_yield = __LINE__
           yield
         rescue expected, *expected_exceptions => exception
+          if matcher && !matcher.match?(exception.message)
+            @__m.fail(message, "Expected", @__m.pp(match), "to match", @__m.pp(exception.message))
+          end
+
           return exception
         rescue ::Megatest::Assertion, *::Megatest::IGNORED_ERRORS
           raise # Pass through
         rescue ::Exception => unexepected_exception
-          error = @__m.strip_backtrace(unexepected_exception, __FILE__, __LINE__ - 6, 0)
+          error = @__m.strip_backtrace(unexepected_exception, __FILE__, before_yield + 1, 0)
 
           expected_pp = if expected_exceptions.empty?
             @__m.pp(expected)
@@ -317,15 +331,15 @@ module Megatest
           end
 
           @__m.fail(message, "#{expected_pp} exception expected, not:\n#{@__m.pp(error)}")
-        end
-
-        expected_pp = if expected_exceptions.empty?
-          @__m.pp(expected)
         else
-          expected_exceptions.map { |e| @__m.pp(e) }.join(", ") << " or #{@__m.pp(expected)}"
-        end
+          expected_pp = if expected_exceptions.empty?
+            @__m.pp(expected)
+          else
+            expected_exceptions.map { |e| @__m.pp(e) }.join(", ") << " or #{@__m.pp(expected)}"
+          end
 
-        @__m.fail(message, "Expected", expected_pp, "but nothing was raised.")
+          @__m.fail(message, "Expected", expected_pp, "but nothing was raised.")
+        end
       end
     end
 
