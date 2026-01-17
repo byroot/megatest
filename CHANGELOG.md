@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [0.6.0] - 2025-01-17
+
 - Allow defining setup and teardown with method names.
 - Allow multiple `setup`, `around` and `teardown` blocks in the same test suite.
 
