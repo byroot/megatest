@@ -67,6 +67,7 @@ module Megatest
         end
       end
     end
+    alias_method :assert_not, :refute
 
     def assert_nil(actual, msg = nil, message: nil)
       message = @__m.msg(msg, message)
@@ -85,6 +86,7 @@ module Megatest
         end
       end
     end
+    alias_method :assert_not_nil, :refute_nil
 
     def assert_equal(expected, actual, msg = nil, message: nil, allow_nil: false)
       message = @__m.msg(msg, message)
@@ -116,6 +118,7 @@ module Megatest
         end
       end
     end
+    alias_method :assert_not_equal, :refute_equal
 
     def assert_includes(collection, object, msg = nil, message: nil)
       message = @__m.msg(msg, message)
@@ -134,6 +137,7 @@ module Megatest
         end
       end
     end
+    alias_method :assert_not_includes, :refute_includes
 
     def assert_empty(object, msg = nil, message: nil)
       message = @__m.msg(msg, message)
@@ -152,6 +156,7 @@ module Megatest
         end
       end
     end
+    alias_method :assert_not_empty, :refute_empty
 
     def assert_instance_of(klass, actual, msg = nil, message: nil)
       message = @__m.msg(msg, message)
@@ -170,6 +175,7 @@ module Megatest
         end
       end
     end
+    alias_method :assert_not_instance_of, :refute_instance_of
 
     def assert_kind_of(klass, actual, msg = nil, message: nil)
       message = @__m.msg(msg, message)
@@ -188,6 +194,7 @@ module Megatest
         end
       end
     end
+    alias_method :assert_not_kind_of, :refute_kind_of
 
     def assert_predicate(actual, predicate, msg = nil, message: nil)
       message = @__m.msg(msg, message)
@@ -206,6 +213,7 @@ module Megatest
         end
       end
     end
+    alias_method :assert_not_predicate, :refute_predicate
 
     def assert_match(original_matcher, obj, msg = nil, message: nil)
       message = @__m.msg(msg, message)
@@ -238,6 +246,7 @@ module Megatest
         end
       end
     end
+    alias_method :assert_not_match, :refute_match
 
     def assert_respond_to(object, method, msg = nil, message: nil, include_all: false)
       message = @__m.msg(msg, message)
@@ -256,6 +265,7 @@ module Megatest
         end
       end
     end
+    alias_method :assert_not_respond_to, :refute_respond_to
 
     def assert_same(expected, actual, msg = nil, message: nil)
       message = @__m.msg(msg, message)
@@ -294,6 +304,7 @@ module Megatest
         end
       end
     end
+    alias_method :assert_not_same, :refute_same
 
     def assert_raises(expected = StandardError, *expected_exceptions, match: nil, message: nil)
       msg = expected_exceptions.pop if expected_exceptions.last.is_a?(String)
@@ -381,6 +392,7 @@ module Megatest
         end
       end
     end
+    alias_method :assert_not_operator, :refute_operator
 
     def assert_difference(expression, difference = @__m.unset, message: nil, &block)
       expressions = if @__m.set?(difference)
@@ -430,6 +442,7 @@ module Megatest
         end
       end
     end
+    alias_method :assert_not_in_delta, :refute_in_delta
 
     def assert_in_epsilon(expected, actual, epsilon = 0.001, msg = nil, message: nil)
       message = @__m.msg(msg, message)
@@ -452,6 +465,7 @@ module Megatest
         end
       end
     end
+    alias_method :assert_not_epsilon, :refute_in_epsilon
 
     def skip(message = nil)
       message ||= "Skipped, no message given"
