@@ -4,18 +4,6 @@
 
 module Megatest
   module Compat
-    unless Enumerable.method_defined?(:filter_map) # RUBY_VERSION >= "2.7"
-      module FilterMap
-        refine Enumerable do
-          def filter_map(&block)
-            result = map(&block)
-            result.compact!
-            result
-          end
-        end
-      end
-    end
-
     unless Symbol.method_defined?(:start_with?) # RUBY_VERSION >= "2.7"
       module StartWith
         refine Symbol do

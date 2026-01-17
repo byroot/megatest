@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+- Allow multiple `setup`, `around` and `teardown` blocks in the same test suite.
+
 ## [0.5.0] - 2025-01-17
 
 - Adds `megatest/autorun`

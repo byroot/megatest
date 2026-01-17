@@ -13,8 +13,18 @@ module TestedApp
       TestedApp.order << :test_case_around_end
     end
 
+    around do |block|
+      TestedApp.order << :test_case_around_2_start
+      block.call
+      TestedApp.order << :test_case_around_2_end
+    end
+
     setup do
       TestedApp.order << :test_case_setup_block
+    end
+
+    setup do
+      TestedApp.order << :test_case_setup_block_2
     end
 
     def before_setup
@@ -34,6 +44,10 @@ module TestedApp
 
     teardown do
       TestedApp.order << :test_case_teardown_block
+    end
+
+    teardown do
+      TestedApp.order << :test_case_teardown_block_2
     end
 
     def before_teardown
@@ -59,8 +73,18 @@ module TestedApp
       TestedApp.order << :callbacks_test_around_end
     end
 
+    around do |block|
+      TestedApp.order << :callbacks_test_around_2_start
+      block.call
+      TestedApp.order << :callbacks_test_around_2_end
+    end
+
     setup do
       TestedApp.order << :callbacks_test_setup_block
+    end
+
+    setup do
+      TestedApp.order << :callbacks_test_setup_block_2
     end
 
     def before_setup
@@ -80,6 +104,10 @@ module TestedApp
 
     teardown do
       TestedApp.order << :callbacks_test_teardown_block
+    end
+
+    teardown do
+      TestedApp.order << :callbacks_test_teardown_block_2
     end
 
     def before_teardown
