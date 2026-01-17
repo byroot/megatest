@@ -246,7 +246,7 @@ module Megatest
         end
       end
     end
-    alias_method :assert_not_match, :refute_match
+    alias_method :assert_no_match, :refute_match
 
     def assert_respond_to(object, method, msg = nil, message: nil, include_all: false)
       message = @__m.msg(msg, message)
