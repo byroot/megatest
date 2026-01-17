@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+- Adds `assert_nothing_raised`.
+- Adds `assert_difference`.
+- Adds `assert_not_*` aliases.
+- Adds `match:` argument to `assert_raises`.
+
 ## [0.4.0] - 2025-11-12
 
 - Allow configuring the test glob via `config.test_globs`.
