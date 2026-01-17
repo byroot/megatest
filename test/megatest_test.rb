@@ -167,6 +167,7 @@ class MegatestTest < MegaTestCase
       callbacks_test_around_start
       test_case_before_setup
       callbacks_test_before_setup
+      test_case_setup_symbol
       test_case_setup_block_2
       test_case_setup_block
       callbacks_test_setup_block_2
@@ -181,6 +182,7 @@ class MegatestTest < MegaTestCase
       callbacks_test_teardown_block_2
       test_case_teardown_block
       test_case_teardown_block_2
+      test_case_teardown_symbol
       test_case_teardown_method
       callbacks_test_teardown_method
       test_case_after_teardown

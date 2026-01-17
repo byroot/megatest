@@ -27,6 +27,10 @@ module TestedApp
       TestedApp.order << :test_case_setup_block_2
     end
 
+    setup def setup_method
+      TestedApp.order << :test_case_setup_symbol
+    end
+
     def before_setup
       super
       TestedApp.order << :test_case_before_setup
@@ -48,6 +52,10 @@ module TestedApp
 
     teardown do
       TestedApp.order << :test_case_teardown_block_2
+    end
+
+    teardown def teardown_method
+      TestedApp.order << :test_case_teardown_symbol
     end
 
     def before_teardown
