@@ -10,7 +10,7 @@ module Megatest
 
     class << self
       def run!
-        program_name = $PROGRAM_NAME
+        program_name = ENV.fetch("MEGATEST_PROGRAM_NAME", $PROGRAM_NAME)
         if paths = ENV["PATH"]
           paths.split(":").each do |path|
             if program_name.start_with?(path)
