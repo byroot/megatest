@@ -9,8 +9,11 @@ gem "debug"
 
 gem "rake", "~> 13.0"
 
-gem "rubocop", "~> 1.21"
-gem "ostruct" # For rubocop
-gem "base64" # For rubocop
+group :rubocop do
+  gem "rubocop", "~> 1.21"
+  gem "benchmark" # For rubocop
+  gem "ostruct" # For rubocop
+  gem "base64" # For rubocop
+end
 
 gem "redis-client", ">= 0.22"
