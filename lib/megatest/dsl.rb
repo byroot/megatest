@@ -136,8 +136,14 @@ module Megatest
     end
 
     # Registers a block to be invoked before every test cases.
-    def setup(&block)
-      ::Megatest.registry.suite(self).on_setup(block)
+    def setup(*methods, &block)
+      suite = ::Megatest.registry.suite(self)
+      methods.each do |m|
+        suite.on_setup(-> { send(m) })
+      end
+      if block
+        suite.on_setup(block)
+      end
     end
 
     # Registers a block to be invoked around every test cases.
@@ -157,8 +163,14 @@ module Megatest
 
     # Registers a block to be invoked after every test cases,
     # regardless of whether it passed or failed.
-    def teardown(&block)
-      ::Megatest.registry.suite(self).on_teardown(block)
+    def teardown(*methods, &block)
+      suite = ::Megatest.registry.suite(self)
+      methods.each do |m|
+        suite.on_teardown(-> { send(m) })
+      end
+      if block
+        suite.on_teardown(block)
+      end
     end
   end
 end
