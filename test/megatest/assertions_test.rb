@@ -601,6 +601,22 @@ module Megatest
       assert_equal 6, @result.assertions_count
     end
 
+    def test_refute_difference
+      assert_equal 0, @result.assertions_count
+
+      counter = 0
+      @case.refute_difference -> { counter } do
+      end
+      assert_equal 1, @result.assertions_count
+
+      assert_raises Assertion, match: /Expected .* to not change, but it changed from 0 to 1./ do
+        @case.refute_difference -> { counter } do
+          counter += 1
+        end
+      end
+      assert_equal 2, @result.assertions_count
+    end
+
     def test_assert_changes
       assert_equal 0, @result.assertions_count
 
@@ -632,6 +648,28 @@ module Megatest
         counter += 1
       end
       assert_equal 5, @result.assertions_count
+    end
+
+    def test_refute_changes
+      assert_equal 0, @result.assertions_count
+
+      counter = 0
+      @case.refute_changes -> { counter } do
+      end
+      assert_equal 1, @result.assertions_count
+
+      assert_raises Assertion, match: /Expected .* to not change, but it changed from 0 to 1./ do
+        @case.refute_changes -> { counter } do
+          counter += 1
+        end
+      end
+      assert_equal 2, @result.assertions_count
+
+      assert_raises Assertion, match: /Expected .* to start from 2, but was 1./ do
+        @case.refute_changes -> { counter }, from: 2 do
+        end
+      end
+      assert_equal 3, @result.assertions_count
     end
 
     def test_yielding_assertion
