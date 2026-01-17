@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [0.5.0] - 2025-01-17
+
 - Adds `megatest/autorun`
 - Adds `assert_nothing_raised`.
 - Adds `assert_difference`.
