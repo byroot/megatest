@@ -295,7 +295,7 @@ module Megatest
       end
     end
 
-    def assert_raises(expected = StandardError, *expected_exceptions, message: nil)
+    def assert_raises(expected = StandardError, *expected_exceptions, match: nil, message: nil)
       msg = expected_exceptions.pop if expected_exceptions.last.is_a?(String)
       message = @__m.msg(msg, message)
       @__m.assert do
@@ -304,6 +304,9 @@ module Megatest
         begin
           yield
         rescue expected, *expected_exceptions => exception
+          if match
+            assert_match(match, exception.message)
+          end
           return exception
         rescue ::Megatest::Assertion, *::Megatest::IGNORED_ERRORS
           raise # Pass through
@@ -326,6 +329,14 @@ module Megatest
         end
 
         @__m.fail(message, "Expected", expected_pp, "but nothing was raised.")
+      end
+    end
+
+    def assert_nothing_raised
+      @__m.assert do
+        @__m.fail("assert_nothing_raised requires a block to capture errors.") unless block_given?
+
+        yield
       end
     end
 
@@ -366,6 +377,116 @@ module Megatest
           @__m.fail(message, "Expected", @__m.pp(left), "to not be #{operator}", @__m.pp(right))
         end
       end
+    end
+
+    def assert_changes(expression, message: nil, from: @__m.unset, to: @__m.unset, &block)
+      exp = expression.respond_to?(:call) ? expression : -> { eval(expression.to_s, block.binding) }
+      @__m.assert do
+        before = exp.call
+        retval = assert_nothing_raised(&block)
+
+        unless @__m.unset?(from)
+          rich_message = -> do
+            error = "Expected change from #{from.inspect}, got #{before.inspect}"
+            error = "#{message}.\n#{error}" if message
+            error
+          end
+          assert from === before, rich_message
+        end
+
+        after = exp.call
+
+        if before == after
+          details = "`#{expression}` didn't change" # TODO: implement callable to source string.
+          details = "#{details}. It was already #{@__m.pp(to)}." if before == to
+
+          @__m.fail(message, details)
+        end
+
+        refute_equal before, after, rich_message
+
+        unless @__m.unset?(to)
+          unless to == after
+            @__m.fail(message, "Expected change to #{@__m.pp(to)}, got #{@__m.pp(after)}")
+          end
+        end
+
+        retval
+      end
+    end
+
+    def refute_changes(expression, message: nil, from: @__m.unset, &block)
+      exp = expression.respond_to?(:call) ? expression : -> { eval(expression.to_s, block.binding) }
+      @__m.assert do
+        before = exp.call
+        retval = assert_nothing_raised(&block)
+
+        if @__m.set?(from) && from != before
+          @__m.fail(message)
+          rich_message = -> do
+            error = "Expected initial value of #{from.inspect}, got #{before.inspect}"
+            error = "#{message}.\n#{error}" if message
+            error
+          end
+          assert from === before, rich_message
+          
+        end
+
+        after = exp.call
+
+        rich_message = -> do
+          code_string = expression.respond_to?(:call) ? _callable_to_source_string(expression) : expression
+          error = "`#{code_string}` changed."
+          error = "#{message}.\n#{error}" if message
+          error = "#{error}\n#{diff before, after}" if Minitest::VERSION > "6"
+          error
+        end
+
+        if before.nil?
+          assert_nil after, rich_message
+        else
+          assert_equal before, after, rich_message
+        end
+
+        retval
+      end
+    end
+
+    def assert_difference(expression, difference = @__m.unset, message: nil, &block)
+      expressions = if @__m.set?(difference)
+        Array(expression).to_h { |e| [e, difference] }
+      elsif Hash === expression
+        expression
+      else
+        Array(expression).to_h { |e| [e, 1] }
+      end
+
+      exps = expressions.keys.map { |e|
+        e.respond_to?(:call) ? e : lambda { eval(e, block.binding) }
+      }
+
+      @__m.assert do
+        before = exps.map(&:call)
+
+        retval = assert_nothing_raised(&block)
+
+        expressions.zip(exps, before) do |(code, diff), exp, before_value|
+          actual = exp.call
+          expected = before_value + diff
+          unless expected == actual
+            code_string = code # FIXME: Implement callable_to_source_string
+            error = "`#{code_string}` didn't change by #{diff}, but by #{actual - before_value}."
+            @__.fail(message, error)
+          end
+        end
+
+        retval
+      end
+    end
+
+    def refute_difference(expression, message: nil, &block)
+      # FIXME: dedicated impl
+      assert_difference expression, 0, message: message, &block
     end
 
     def assert_in_delta(expected, actual, delta = 0.001, msg = nil, message: nil)
@@ -409,6 +530,22 @@ module Megatest
         end
       end
     end
+
+    alias :assert_raise :assert_raises
+    alias :assert_not :refute
+    alias :assert_not_empty :refute_empty
+    alias :assert_not_equal :refute_equal
+    alias :assert_not_in_delta :refute_in_delta
+    alias :assert_not_in_epsilon :refute_in_epsilon
+    alias :assert_not_includes :refute_includes
+    alias :assert_not_instance_of :refute_instance_of
+    alias :assert_not_kind_of :refute_kind_of
+    alias :assert_no_match :refute_match
+    alias :assert_not_nil :refute_nil
+    alias :assert_not_operator :refute_operator
+    alias :assert_not_predicate :refute_predicate
+    alias :assert_not_respond_to :refute_respond_to
+    alias :assert_not_same :refute_same
 
     def skip(message = nil)
       message ||= "Skipped, no message given"

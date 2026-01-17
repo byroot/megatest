@@ -4,6 +4,8 @@
 
 module Megatest
   class Runtime
+    UNSET = BasicObject.new
+
     attr_reader :config, :test_case, :result, :on_teardown
 
     def initialize(config, test_case, result)
@@ -149,6 +151,18 @@ module Megatest
 
     def diff(expected, actual)
       @config.diff(expected, actual)
+    end
+
+    def unset
+      UNSET
+    end
+
+    def unset?(arg)
+      UNSET.equal?(arg)
+    end
+
+    def set?(arg)
+      !UNSET.equal?(arg)
     end
 
     def teardown
