@@ -93,6 +93,12 @@ class MegaTestCase < Megatest::Test
     @config.queue_url = @redis_url = "#{redis_url}/#{db}"
     @redis = RedisClient.new(url: @redis_url)
     @redis.call("flushdb", "async")
+  rescue RedisClient::CannotConnectError
+    if ENV["CI"]
+      raise
+    else
+      skip("Need a redis server to run these tests")
+    end
   end
 
   def load_fixture(path)
