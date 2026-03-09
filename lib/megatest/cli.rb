@@ -261,7 +261,6 @@ module Megatest
     end
 
     def build_parser(runner)
-      runner = :run if runner.nil?
       OptionParser.new do |opts|
         case runner
         when :report
@@ -290,6 +289,7 @@ module Megatest
           opts.separator "\t\t\t  $ #{@program_name} bisect --queue path/to/test_order.log"
           opts.separator ""
         end
+        runner = :run if runner.nil?
 
         opts.separator ""
         opts.separator "Options:"
