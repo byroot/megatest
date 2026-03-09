@@ -261,7 +261,6 @@ module Megatest
     end
 
     def build_parser(runner)
-      runner = :run if runner.nil?
       OptionParser.new do |opts|
         case runner
         when :report
@@ -281,7 +280,7 @@ module Megatest
           opts.separator "\t\t\t  $ #{@program_name} test/my_test.rb:42 test/another_test.rb:36"
           opts.separator ""
 
-          opts.separator "\treport\t\tWait for the queue to be entirely processed and report the status"
+          opts.separator "\treport\t\tWait for the queue to be entirely processed and report the status."
           opts.separator "\t\t\t  $ #{@program_name} report --queue redis://ci-queue.example.com --build-id $CI_BUILD_ID"
           opts.separator ""
 
@@ -290,50 +289,51 @@ module Megatest
           opts.separator "\t\t\t  $ #{@program_name} bisect --queue path/to/test_order.log"
           opts.separator ""
         end
+        runner = :run if runner.nil?
 
         opts.separator ""
         opts.separator "Options:"
         opts.separator ""
 
-        opts.on("-I PATHS", "specify $LOAD_PATH directory (may be used more than once)") do |paths|
+        opts.on("-I PATHS", "Specify $LOAD_PATH directory (may be used more than once).") do |paths|
           paths.split(":").each do |path|
             $LOAD_PATH.unshift(path)
           end
         end
 
-        opts.on("-b", "--backtrace", "Print full backtraces") do
+        opts.on("-b", "--backtrace", "Print full backtraces.") do
           @config.backtrace.full!
         end
 
-        opts.on("-v", "--verbose", "Use the verbose reporter") do
+        opts.on("-v", "--verbose", "Use the verbose reporter.") do
           @verbose = true
         end
 
-        opts.on("--junit [PATH]", String, "Generate a junit.xml file") do |path|
+        opts.on("--junit [PATH]", String, "Generate a junit.xml file.") do |path|
           @junit = path
         end
 
         if %i[run bisect].include?(runner)
-          opts.on("--seed SEED", Integer, "The seed used to define run order") do |seed|
+          opts.on("--seed SEED", Integer, "The seed used to define run order.") do |seed|
             @config.seed = seed
           end
         end
 
         if runner == :run
-          opts.on("-j", "--jobs JOBS", Integer, "Number of processes to use") do |jobs|
+          opts.on("-j", "--jobs JOBS", Integer, "Number of processes to use.") do |jobs|
             @config.jobs_count = jobs
           end
 
-          help = "Number of consecutive failures before exiting. Default to 1"
+          help = "Number of consecutive failures before exiting. Defaults to 1."
           opts.on("-f", "--fail-fast [COUNT]", Integer, help) do |max|
             @config.max_consecutive_failures = (max || 1)
           end
 
-          opts.on("--max-retries COUNT", Integer, "How many times a given test may be retried") do |max_retries|
+          opts.on("--max-retries COUNT", Integer, "How many times a given test may be retried.") do |max_retries|
             @config.max_retries = max_retries
           end
 
-          opts.on("--retry-tolerance RATE", Float, "The proportion of tests that may be retried. e.g. 0.05 for 5% of retried tests") do |retry_tolerance|
+          opts.on("--retry-tolerance RATE", Float, "The proportion of tests that may be retried, e.g. 0.05 for 5% of retried tests.") do |retry_tolerance|
             @config.retry_tolerance = retry_tolerance
           end
         end
@@ -342,22 +342,22 @@ module Megatest
         opts.separator "Test distribution and sharding:"
         opts.separator ""
 
-        opts.on("--queue URL", String, "URL of queue server to use for test distribution. Default to $MEGATEST_QUEUE_URL") do |queue_url|
+        opts.on("--queue URL", String, "URL of queue server to use for test distribution. Default to $MEGATEST_QUEUE_URL.") do |queue_url|
           @config.queue_url = queue_url
         end
 
         if %i[run report].include?(runner)
-          opts.on("--build-id ID", String, "Unique identifier for the CI build") do |build_id|
+          opts.on("--build-id ID", String, "Unique identifier for the CI build.") do |build_id|
             @config.build_id = build_id
           end
         end
 
         if runner == :run
-          opts.on("--worker-id ID", String, "Unique identifier for the CI job") do |worker_id|
+          opts.on("--worker-id ID", String, "Unique identifier for the CI job.") do |worker_id|
             @config.worker_id = worker_id
           end
 
-          opts.on("--workers-count COUNT", Integer, "Number of CI jobs") do |workers_count|
+          opts.on("--workers-count COUNT", Integer, "Number of CI jobs.") do |workers_count|
             @config.workers_count = workers_count
           end
         end
