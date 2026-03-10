@@ -71,7 +71,9 @@ module Megatest
 
     class SimpleReporter < AbstractReporter
       def start(_executor, queue)
-        @out.puts("Running #{queue.size} test cases with --seed #{@config.seed}")
+        @out.print("Running #{queue.size} test cases with --seed #{@config.seed}")
+        @out.print(" in #{@config.jobs_count} processes") if @config.jobs_count > 1
+        @out.puts
         @out.puts
       end
 
