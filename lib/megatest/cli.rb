@@ -79,16 +79,15 @@ module Megatest
       @parser = build_parser
       @parser.parse!(@argv)
       @argv.shift if @argv.first == "--"
+      @queue = @config.build_queue
       @config
     end
 
     def run_tests
-      queue = @config.build_queue
-
-      if queue.distributed?
+      if @queue.distributed?
         raise InvalidArgument, "Distributed queues require a build-id" unless @config.build_id
         raise InvalidArgument, "Distributed queues require a worker-id" unless @config.worker_id
-      elsif queue.sharded?
+      elsif @queue.sharded?
         unless @config.valid_worker_index?
           raise InvalidArgument, "Splitting the queue requires a worker-id lower than workers-count, got: #{@config.worker_id.inspect}"
         end
@@ -104,42 +103,38 @@ module Megatest
         return 1
       end
 
-      queue.populate(test_cases)
-      executor.run(queue, default_reporters)
-      queue.success? ? 0 : 1
+      @queue.populate(test_cases)
+      executor.run(@queue, default_reporters)
+      @queue.success? ? 0 : 1
     end
 
     def report
-      queue = @config.build_queue
-
-      raise InvalidArgument, "Only distributed queues can be summarized" unless queue.distributed?
+      raise InvalidArgument, "Only distributed queues can be summarized" unless @queue.distributed?
       raise InvalidArgument, "Distributed queues require a build-id" unless @config.build_id
       raise InvalidArgument, @argv.join(" ") unless @argv.empty?
 
       Megatest.load_config(@argv)
 
-      QueueReporter.new(@config, queue, @out).run(default_reporters) ? 0 : 1
+      QueueReporter.new(@config, @queue, @out).run(default_reporters) ? 0 : 1
     end
 
     def bisect_tests
       require "megatest/multi_process"
-
-      queue = @config.build_queue
-      raise InvalidArgument, "Distributed queues can't be bisected" if queue.distributed?
+      raise InvalidArgument, "Distributed queues can't be bisected" if @queue.distributed?
 
       @config.selectors = Selector.new(@config).parse(@argv)
       Megatest.load_config(@config)
       Megatest.init(@config)
       test_cases = Megatest.load_tests(@config)
-      queue.populate(test_cases)
-      candidates = queue.dup
+      @queue.populate(test_cases)
+      candidates = @queue.dup
 
       if test_cases.empty?
         @err.puts "No tests to run"
         return 1
       end
 
-      unless failure = find_failing_test(queue)
+      unless failure = find_failing_test
         @err.puts "No failing test"
         return 1
       end
@@ -172,13 +167,13 @@ module Megatest
       reporters
     end
 
-    def find_failing_test(queue)
+    def find_failing_test
       @config.max_consecutive_failures = 1
       @config.jobs_count = 1
 
       executor = MultiProcess::Executor.new(@config.dup, @out)
-      executor.run(queue, default_reporters)
-      queue.summary.failures.first
+      executor.run(@queue, default_reporters)
+      @queue.summary.failures.first
     end
 
     def bisect_queue(queue, failing_test_id)
