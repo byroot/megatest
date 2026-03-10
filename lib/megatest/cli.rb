@@ -50,7 +50,7 @@ module Megatest
       case @runner
       when :report
         report
-      when nil, :run
+      when :run
         run_tests
       when :bisect
         bisect_tests
@@ -76,7 +76,7 @@ module Megatest
       end
 
       Megatest.config = @config
-      @parser = build_parser(@runner)
+      @parser = build_parser
       @parser.parse!(@argv)
       @argv.shift if @argv.first == "--"
       @config
@@ -260,9 +260,9 @@ module Megatest
       end
     end
 
-    def build_parser(runner)
+    def build_parser
       OptionParser.new do |opts|
-        case runner
+        case @runner
         when :report
           opts.banner = "Usage: #{@program_name} report [options]"
         when :run
@@ -289,7 +289,7 @@ module Megatest
           opts.separator "\t\t\t  $ #{@program_name} bisect --queue path/to/test_order.log"
           opts.separator ""
         end
-        runner = :run if runner.nil?
+        @runner ||= :run
 
         opts.separator ""
         opts.separator "Options:"
@@ -313,13 +313,13 @@ module Megatest
           @junit = path
         end
 
-        if %i[run bisect].include?(runner)
+        if %i[run bisect].include?(@runner)
           opts.on("--seed SEED", Integer, "The seed used to define run order.") do |seed|
             @config.seed = seed
           end
         end
 
-        if runner == :run
+        if @runner == :run
           opts.on("-j", "--jobs [JOBS]", Integer, "Number of processes to use. Defaults to the number of processors.") do |jobs|
             @config.jobs_count = jobs || :number_of_processors
           end
@@ -346,13 +346,13 @@ module Megatest
           @config.queue_url = queue_url
         end
 
-        if %i[run report].include?(runner)
+        if %i[run report].include?(@runner)
           opts.on("--build-id ID", String, "Unique identifier for the CI build.") do |build_id|
             @config.build_id = build_id
           end
         end
 
-        if runner == :run
+        if @runner == :run
           opts.on("--worker-id ID", String, "Unique identifier for the CI job.") do |worker_id|
             @config.worker_id = worker_id
           end
