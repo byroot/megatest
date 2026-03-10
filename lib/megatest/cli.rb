@@ -320,8 +320,8 @@ module Megatest
         end
 
         if runner == :run
-          opts.on("-j", "--jobs JOBS", Integer, "Number of processes to use.") do |jobs|
-            @config.jobs_count = jobs
+          opts.on("-j", "--jobs [JOBS]", Integer, "Number of processes to use. Defaults to the number of processors.") do |jobs|
+            @config.jobs_count = jobs || :number_of_processors
           end
 
           help = "Number of consecutive failures before exiting. Defaults to 1."
