@@ -32,6 +32,7 @@ module Megatest
         failure: "Failure",
         skipped: "Skipped",
       }.freeze
+      private_constant :LABELS
 
       def render_failure(result, command: true)
         str = "#{LABELS.fetch(result.status)}: #{result.test_id}\n"

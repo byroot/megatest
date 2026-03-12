@@ -285,7 +285,7 @@ module Megatest
     def record_result(original_result)
       result = original_result
       if result.failed?
-        if attempt_to_retry(result)
+        if attempt_to_retry?(result)
           result = result.retry
         else
           @success = false
@@ -381,8 +381,9 @@ module Megatest
 
       return true
     LUA
+    private_constant :REQUEUE
 
-    def attempt_to_retry(result)
+    def attempt_to_retry?(result)
       return false unless @config.retries?
 
       index = @config.random.rand(0..@redis.call("llen", key("queue")))

@@ -74,7 +74,9 @@ class MegaTestCase < Megatest::Test
     end
   end
 
-  FAILURE_YIELD_LINE = __LINE__ + 5 # runtime.record_failures do
+  FAILURE_YIELD_LINE = __LINE__ + 7 # runtime.record_failures do
+  private_constant :FAILURE_YIELD_LINE
+
   def build_result(test_case)
     result = Megatest::TestCaseResult.new(test_case)
     runtime = Megatest::Runtime.new(@config || Megatest::Config.new({}), test_case, result)

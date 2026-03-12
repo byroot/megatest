@@ -169,7 +169,7 @@ module Megatest
     alias_method :global_summary, :summary
 
     def initialize(config)
-      super(config)
+      super
 
       @queue = nil
       @summary = Summary.new
@@ -229,7 +229,7 @@ module Megatest
     def record_result(result)
       @leases.delete(result.test_id)
       if result.failed?
-        if attempt_to_retry(result)
+        if attempt_to_retry?(result)
           result = result.retry
         else
           @success &&= result.ok?
@@ -241,7 +241,7 @@ module Megatest
 
     private
 
-    def attempt_to_retry(result)
+    def attempt_to_retry?(result)
       return false unless @config.retries?
       return false unless @summary.retries_count < @config.total_max_retries(@size)
       return false unless @retries[result.test_id] < @config.max_retries
