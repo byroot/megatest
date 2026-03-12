@@ -98,6 +98,12 @@ Style/RedundantFreeze:
 Style/RescueStandardError:
   Enabled: false # Once again... You're wrong.
 
+Style/EmptyClassDefinition:
+  Enabled: false
+
+Style/OneClassPerFile:
+  Enabled: false
+
 
 Layout/CaseIndentation:
   EnforcedStyle: end
@@ -123,6 +129,9 @@ Naming/VariableNumber:
   Enabled: false # WTF? Mind your own business.
 
 Naming/MemoizedInstanceVariableName:
+  Enabled: false
+
+Naming/PredicateMethod:
   Enabled: false
 
 

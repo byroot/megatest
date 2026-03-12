@@ -38,7 +38,7 @@ module Megatest
       # Check whether the object_id +id+ is in the current buffer of objects
       # to be pretty printed. Used to break cycles in chains of objects to be
       # pretty printed.
-      def check_inspect_key(id)
+      def check_inspect_key?(id)
         @recursive_key&.include?(id)
       end
 
@@ -63,7 +63,7 @@ module Megatest
         # detection
         obj = obj.__getobj__ if defined?(::Delegator) && ::Delegator === obj
 
-        if check_inspect_key(obj)
+        if check_inspect_key?(obj)
           group { pretty_print_cycle(obj) }
           return
         end
