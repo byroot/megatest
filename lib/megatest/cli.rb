@@ -80,6 +80,7 @@ module Megatest
       @parser.parse!(@argv)
       @argv.shift if @argv.first == "--"
       @queue = @config.build_queue
+      @config.parallelize_maybe if @command == :run && !@queue.distributed? && !@queue.sharded?
       @config
     end
 

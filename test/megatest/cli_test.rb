@@ -27,7 +27,9 @@ module Megatest
       stub(Etc, :nprocessors, -> { test.flunk "Etc.nprocessors was unexpectedly called" }) do
         assert_equal 1, config("--jobs=1").jobs_count
         assert_equal 42, config("--jobs=42").jobs_count
-        assert_equal 1, config.jobs_count
+        # sharded and distributed queue runs are not automatically parallelized
+        assert_equal 1, config("--worker-id=1", "--workers-count=2").jobs_count
+        assert_equal 1, config("--queue=redis://[100::]:6379/1").jobs_count
       end
     end
 
@@ -35,6 +37,7 @@ module Megatest
       def test_jobs_count_fork_available
         stub(Etc, :nprocessors, -> { 3 }) do
           assert_equal 3, config("--jobs").jobs_count
+          assert_equal 3, config.jobs_count
         end
       end
     else
