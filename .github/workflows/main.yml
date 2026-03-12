@@ -47,6 +47,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: "Unlock dependencies"
+      if: ${{ contains(fromJSON('["2.6", "2.7", "3.0", "3.1"]'), matrix.ruby) }}
+      run: rm Gemfile.lock
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
       with:
