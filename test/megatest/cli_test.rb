@@ -10,7 +10,7 @@ module Megatest
     end
 
     def test_execute_directory
-      cli = new_cli(fixture("simple/"))
+      cli = new_cli(fixture("simple/"), "--jobs=1")
       assert_equal 1, cli.run
     end
 
@@ -21,7 +21,7 @@ module Megatest
     end
 
     def test_custom_test_glob
-      cli = new_cli(fixture("custom_glob/"))
+      cli = new_cli(fixture("custom_glob/"), "--jobs=1")
 
       assert_equal 0, cli.run
 
@@ -33,7 +33,9 @@ module Megatest
       stub(Etc, :nprocessors, -> { test.flunk "Etc.nprocessors was unexpectedly called" }) do
         assert_equal 1, config("--jobs=1").jobs_count
         assert_equal 42, config("--jobs=42").jobs_count
-        assert_equal 1, config.jobs_count
+        # sharded and distributed queue runs are not automatically parallelized
+        assert_equal 1, config("--worker-id=1", "--workers-count=2").jobs_count
+        assert_equal 1, config("--queue=redis://[100::]:6379/1").jobs_count
       end
     end
 
@@ -42,6 +44,7 @@ module Megatest
         stub(Etc, :nprocessors, -> { 3 }) do
           stub_any_instance_of(Megatest::Config, :cgroups_cpu_quota)
           assert_equal 3, config("--jobs").jobs_count
+          assert_equal 3, config.jobs_count
         end
       end
     else
