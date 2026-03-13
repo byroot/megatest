@@ -142,7 +142,7 @@ and will generally expose environment variables to help split the workload.
 
 ```yaml
 - label: "Run Unit Tests"
-  run: megatest --workers-count $CI_NODE_INDEX --worker-id $CI_NODE_TOTAL
+  run: megatest --workers-count $CI_NODE_TOTAL --worker-id $CI_NODE_INDEX
   parallel: 8
 ```
 
