@@ -136,11 +136,11 @@ module Megatest
   end
 
   class Config
-    attr_accessor :queue_url, :retry_tolerance, :max_retries, :jobs_count, :job_index, :load_paths, :deprecations,
+    attr_accessor :queue_url, :retry_tolerance, :max_retries, :job_index, :load_paths, :deprecations,
                   :build_id, :heartbeat_frequency, :minitest_compatibility, :ci, :selectors
     attr_reader :before_fork_callbacks, :global_setup_callbacks, :backtrace, :circuit_breaker, :seed,
                 :worker_id, :workers_count, :test_globs
-    attr_writer :differ, :pretty_printer, :program_name, :colors
+    attr_writer :jobs_count, :differ, :pretty_printer, :program_name, :colors
 
     def initialize(env)
       @load_paths = ["test"] # For easier transition from other frameworks
@@ -184,6 +184,21 @@ module Megatest
 
     def program_name
       @program_name || "megatest"
+    end
+
+    def jobs_count
+      if @jobs_count == :number_of_processors
+        if Megatest.fork?
+          require "etc"
+          nprocessors = Etc.nprocessors
+          jobs = [nprocessors, cgroups_cpu_quota&.to_i || nprocessors].min
+          @jobs_count = [jobs, 1].max
+        else
+          warn "megatest: cannot parallelize, fork is not available"
+          @jobs_count = 1
+        end
+      end
+      @jobs_count
     end
 
     def worker_id=(id)
@@ -313,6 +328,28 @@ module Megatest
     end
 
     private
+
+    def cgroups_cpu_quota
+      if RbConfig::CONFIG["target_os"].include?("linux")
+        if File.exist?("/sys/fs/cgroup/cpu.max")
+          # cgroups v2: https://docs.kernel.org/admin-guide/cgroup-v2.html#cpu-interface-files
+          cpu_max = File.read("/sys/fs/cgroup/cpu.max")
+          return nil if cpu_max.start_with?("max ") # no limit
+
+          max, period = cpu_max.split.map(&:to_f)
+          max / period
+        elsif File.exist?("/sys/fs/cgroup/cpu,cpuacct/cpu.cfs_quota_us")
+          # cgroups v1: https://kernel.googlesource.com/pub/scm/linux/kernel/git/glommer/memcg/+/cpu_stat/Documentation/cgroups/cpu.txt
+          max = File.read("/sys/fs/cgroup/cpu,cpuacct/cpu.cfs_quota_us").to_i
+          # If the cpu.cfs_quota_us is -1, cgroup does not adhere to any CPU time restrictions
+          # https://docs.kernel.org/scheduler/sched-bwc.html#management
+          return nil if max <= 0
+
+          period = File.read("/sys/fs/cgroup/cpu,cpuacct/cpu.cfs_period_us").to_f
+          max / period
+        end
+      end
+    end
 
     def normalize_test_glob(patterns)
       if patterns
