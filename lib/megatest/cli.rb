@@ -27,7 +27,7 @@ module Megatest
 
     undef_method :puts, :print # Should only use @out.puts or @err.puts
 
-    RUNNERS = {
+    COMMANDS = {
       "bisect" => :bisect,
       "report" => :report,
       "run" => :run,
@@ -40,17 +40,17 @@ module Megatest
       @processes = nil
       @config = Config.new(env)
       @program_name = @config.program_name = program_name
-      @runner = nil
+      @command = nil
       @verbose = false
       @junit = false
     end
 
     def run
       configure
-      case @runner
+      case @command
       when :report
         report
-      when nil, :run
+      when :run
         run_tests
       when :bisect
         bisect_tests
@@ -71,24 +71,24 @@ module Megatest
     def configure
       Megatest.running = true
 
-      if @runner = RUNNERS[@argv.first]
+      if @command = COMMANDS[@argv.first]
         @argv.shift
       end
 
       Megatest.config = @config
-      @parser = build_parser(@runner)
+      @parser = build_parser
       @parser.parse!(@argv)
       @argv.shift if @argv.first == "--"
+      @queue = @config.build_queue
+      @config.parallelize_maybe if @command == :run && !@queue.distributed? && !@queue.sharded?
       @config
     end
 
     def run_tests
-      queue = @config.build_queue
-
-      if queue.distributed?
+      if @queue.distributed?
         raise InvalidArgument, "Distributed queues require a build-id" unless @config.build_id
         raise InvalidArgument, "Distributed queues require a worker-id" unless @config.worker_id
-      elsif queue.sharded?
+      elsif @queue.sharded?
         unless @config.valid_worker_index?
           raise InvalidArgument, "Splitting the queue requires a worker-id lower than workers-count, got: #{@config.worker_id.inspect}"
         end
@@ -104,42 +104,38 @@ module Megatest
         return 1
       end
 
-      queue.populate(test_cases)
-      executor.run(queue, default_reporters)
-      queue.success? ? 0 : 1
+      @queue.populate(test_cases)
+      executor.run(@queue, default_reporters)
+      @queue.success? ? 0 : 1
     end
 
     def report
-      queue = @config.build_queue
-
-      raise InvalidArgument, "Only distributed queues can be summarized" unless queue.distributed?
+      raise InvalidArgument, "Only distributed queues can be summarized" unless @queue.distributed?
       raise InvalidArgument, "Distributed queues require a build-id" unless @config.build_id
       raise InvalidArgument, @argv.join(" ") unless @argv.empty?
 
       Megatest.load_config(@argv)
 
-      QueueReporter.new(@config, queue, @out).run(default_reporters) ? 0 : 1
+      QueueReporter.new(@config, @queue, @out).run(default_reporters) ? 0 : 1
     end
 
     def bisect_tests
       require "megatest/multi_process"
-
-      queue = @config.build_queue
-      raise InvalidArgument, "Distributed queues can't be bisected" if queue.distributed?
+      raise InvalidArgument, "Distributed queues can't be bisected" if @queue.distributed?
 
       @config.selectors = Selector.new(@config).parse(@argv)
       Megatest.load_config(@config)
       Megatest.init(@config)
       test_cases = Megatest.load_tests(@config)
-      queue.populate(test_cases)
-      candidates = queue.dup
+      @queue.populate(test_cases)
+      candidates = @queue.dup
 
       if test_cases.empty?
         @err.puts "No tests to run"
         return 1
       end
 
-      unless failure = find_failing_test(queue)
+      unless failure = find_failing_test
         @err.puts "No failing test"
         return 1
       end
@@ -172,13 +168,13 @@ module Megatest
       reporters
     end
 
-    def find_failing_test(queue)
+    def find_failing_test
       @config.max_consecutive_failures = 1
       @config.jobs_count = 1
 
       executor = MultiProcess::Executor.new(@config.dup, @out)
-      executor.run(queue, default_reporters)
-      queue.summary.failures.first
+      executor.run(@queue, default_reporters)
+      @queue.summary.failures.first
     end
 
     def bisect_queue(queue, failing_test_id)
@@ -260,9 +256,9 @@ module Megatest
       end
     end
 
-    def build_parser(runner)
+    def build_parser
       OptionParser.new do |opts|
-        case runner
+        case @command
         when :report
           opts.banner = "Usage: #{@program_name} report [options]"
         when :run
@@ -289,7 +285,7 @@ module Megatest
           opts.separator "\t\t\t  $ #{@program_name} bisect --queue path/to/test_order.log"
           opts.separator ""
         end
-        runner = :run if runner.nil?
+        @command ||= :run
 
         opts.separator ""
         opts.separator "Options:"
@@ -313,15 +309,15 @@ module Megatest
           @junit = path
         end
 
-        if %i[run bisect].include?(runner)
+        if %i[run bisect].include?(@command)
           opts.on("--seed SEED", Integer, "The seed used to define run order.") do |seed|
             @config.seed = seed
           end
         end
 
-        if runner == :run
-          opts.on("-j", "--jobs JOBS", Integer, "Number of processes to use.") do |jobs|
-            @config.jobs_count = jobs
+        if @command == :run
+          opts.on("-j", "--jobs [JOBS]", Integer, "Number of processes to use. Defaults to the number of processors.") do |jobs|
+            @config.jobs_count = jobs || :number_of_processors
           end
 
           help = "Number of consecutive failures before exiting. Defaults to 1."
@@ -346,13 +342,13 @@ module Megatest
           @config.queue_url = queue_url
         end
 
-        if %i[run report].include?(runner)
+        if %i[run report].include?(@command)
           opts.on("--build-id ID", String, "Unique identifier for the CI build.") do |build_id|
             @config.build_id = build_id
           end
         end
 
-        if runner == :run
+        if @command == :run
           opts.on("--worker-id ID", String, "Unique identifier for the CI job.") do |worker_id|
             @config.worker_id = worker_id
           end
