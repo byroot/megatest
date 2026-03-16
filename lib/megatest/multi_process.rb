@@ -35,7 +35,7 @@ module Megatest
 
       def read
         Marshal.load(@socket)
-      rescue EOFError
+      rescue EOFError, Errno::ECONNRESET
         nil # Other side was closed
       end
 
