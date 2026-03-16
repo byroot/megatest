@@ -128,7 +128,7 @@ module Megatest
           end
         end
 
-        @out.puts format(
+        @out.print format(
           "Ran %d cases, %d assertions, %d failures, %d errors, %d retries, %d skips",
           summary.runs_count,
           summary.assertions_count,
@@ -137,6 +137,8 @@ module Megatest
           summary.retries_count,
           summary.skips_count,
         )
+        @out.print(" in #{@config.jobs_count} processes") if @config.jobs_count > 1
+        @out.puts
       end
 
       def s(duration)

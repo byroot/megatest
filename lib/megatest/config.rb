@@ -153,7 +153,7 @@ module Megatest
       @build_id = nil
       @worker_id = nil
       @workers_count = 1
-      @jobs_count = 1
+      @jobs_count = nil
       @colors = nil # auto
       @before_fork_callbacks = []
       @global_setup_callbacks = []
@@ -197,7 +197,12 @@ module Megatest
           @jobs_count = 1
         end
       end
-      @jobs_count
+      @jobs_count ||= 1
+    end
+
+    def parallelize_maybe
+      @jobs_count ||= :number_of_processors if Megatest.fork?
+      self
     end
 
     def worker_id=(id)
