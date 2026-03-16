@@ -154,7 +154,7 @@ very large test suites containing lots of slow test cases being sharded as one u
 If you are using CircleCI, Buildkite or HerokuCI, the workers count and worker id
 will be automatically inferred from the environment.
 
-### Redis Distribution
+#### Redis Distribution
 
 A more efficient way to parallelize tests on CI is to use a Redis server to act as a queue.
 
