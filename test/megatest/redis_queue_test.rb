@@ -79,10 +79,10 @@ module Megatest
     end
 
     def test_heartbeat
-      poped_tests = 2.times.map { @queue.pop_test }
+      popped_tests = 2.times.map { @queue.pop_test }
 
       running_key = @queue.send(:key, "running")
-      first_deadline, second_deadline = @redis.call("zmscore", running_key, poped_tests.map(&:id))
+      first_deadline, second_deadline = popped_tests.map { |test| @redis.call("zscore", running_key, test.id) }
       assert_instance_of Float, first_deadline
       assert_instance_of Float, second_deadline
 
@@ -90,7 +90,7 @@ module Megatest
         @queue.heartbeat
       end
 
-      first, second = @redis.call("zmscore", running_key, poped_tests.map(&:id))
+      first, second = popped_tests.map { |test| @redis.call("zscore", running_key, test.id) }
       assert first > first_deadline
       assert second > second_deadline
     end
