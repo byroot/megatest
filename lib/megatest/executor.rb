@@ -3,7 +3,26 @@
 # :stopdoc:
 
 module Megatest
-  class Executor
+  class AbstractExecutor
+    def initialize(config, out)
+      @config = config
+      @out = Output.new(out, colors: @config.colors(out))
+    end
+
+    def run(queue, reporters)
+      raise NotImplementedError
+    end
+
+    def concurrent?
+      raise NotImplementedError
+    end
+
+    def wall_time
+      raise NotImplementedError
+    end
+  end
+
+  class Executor < AbstractExecutor
     class ExternalMonitor
       def initialize(config)
         require "rbconfig"
@@ -47,11 +66,6 @@ module Megatest
     end
 
     attr_reader :wall_time
-
-    def initialize(config, out)
-      @config = config
-      @out = Output.new(out, colors: @config.colors)
-    end
 
     def concurrent?
       false

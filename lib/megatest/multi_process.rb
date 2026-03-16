@@ -203,12 +203,11 @@ module Megatest
       end
     end
 
-    class Executor
+    class Executor < AbstractExecutor
       attr_reader :wall_time
 
-      def initialize(config, out, managed: false)
-        @config = config
-        @out = Output.new(out, colors: config.colors)
+      def initialize(*args, managed: false)
+        super(*args)
         @managed = managed
       end
 

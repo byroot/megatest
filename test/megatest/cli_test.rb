@@ -14,6 +14,12 @@ module Megatest
       assert_equal 1, cli.run
     end
 
+    def test_fail_fast_and_colors
+      cli = new_cli("--fail-fast", "--jobs=1", fixture("simple/simple_test.rb:/lie"))
+      assert_equal 1, cli.run
+      assert_not_includes @out.string, "\e"
+    end
+
     def test_custom_test_glob
       cli = new_cli(fixture("custom_glob/"))
 

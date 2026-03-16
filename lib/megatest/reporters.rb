@@ -9,7 +9,7 @@ module Megatest
 
       def initialize(config, out)
         @config = config
-        @out = Output.new(out, colors: config.colors)
+        @out = Output.new(out, colors: config.colors(out))
       end
 
       def start(_executor, _queue)
