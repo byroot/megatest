@@ -108,11 +108,11 @@ module Megatest
     #    end
     #  end
     #
-    # Setup and teardown callbacks are not allowed withing a context blocks,
+    # Setup and teardown callbacks are not allowed within a context blocks,
     # as it too easily lead to "write only" tests. It's only meant to help
     # group test cases together.
     #
-    # If you need a common setup procedure, just define a helper method, and explictly call it.
+    # If you need a common setup procedure, just define a helper method, and explicitly call it.
     #
     # Example:
     #
@@ -147,7 +147,7 @@ module Megatest
     end
 
     # Registers a block to be invoked around every test cases.
-    # The block will recieve a Proc as first argument and MUST
+    # The block will receive a Proc as first argument and MUST
     # call it.
     #
     # Example:

@@ -13,7 +13,7 @@ module Megatest
   #
   # - "leader-status": String, either `setup` or `ready`
   #
-  # - "queue": List, contains the test ids that haven't yet been poped.
+  # - "queue": List, contains the test ids that haven't yet been popped.
   #
   # - "running": SortedSet, members are the test ids currently being processed.
   #    Scores are the lease expiration timestamp. If the score is lower than
@@ -436,7 +436,7 @@ module Megatest
     end
 
     def worker_id
-      @worker_id or raise Error, "RedisQueue not configued with a worker id"
+      @worker_id or raise Error, "RedisQueue not configured with a worker id"
     end
 
     class RetryQueue < Queue

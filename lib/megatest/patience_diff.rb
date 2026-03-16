@@ -122,7 +122,7 @@ module Megatest
         last_b_pos = b_lo - 1
 
         longest_unique_subsequence(a[a_lo...a_hi], b[b_lo...b_hi]).each do |(a_pos, b_pos)|
-          # recurse betwen unique lines
+          # recurse between unique lines
           a_pos += a_lo
           b_pos += b_lo
           if (last_a_pos + 1 != a_pos) || (last_b_pos + 1 != b_pos)
