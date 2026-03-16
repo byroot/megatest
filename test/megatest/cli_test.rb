@@ -20,6 +20,11 @@ module Megatest
       assert_not_includes @out.string, "\e"
     end
 
+    def test_report
+      setup_redis
+      assert_equal 1, new_cli("report", "--queue=#{@redis_url}", "--build-id=build-id").run
+    end
+
     def test_custom_test_glob
       cli = new_cli(fixture("custom_glob/"))
 

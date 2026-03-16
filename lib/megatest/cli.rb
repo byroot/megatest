@@ -116,7 +116,8 @@ module Megatest
       raise InvalidArgument, "Distributed queues require a build-id" unless @config.build_id
       raise InvalidArgument, @argv.join(" ") unless @argv.empty?
 
-      Megatest.load_config(@argv)
+      @config.selectors = Selector.new(@config).parse(@argv)
+      Megatest.load_config(@config)
 
       QueueReporter.new(@config, queue, @out).run(default_reporters) ? 0 : 1
     end
