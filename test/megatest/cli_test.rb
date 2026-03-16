@@ -39,6 +39,15 @@ module Megatest
       end
     end
 
+    def test_jobs_count_for_single_test
+      stub(Etc, :nprocessors, -> { 3 }) do
+        stub_any_instance_of(Megatest::Config, :cgroups_cpu_quota)
+        cli = new_cli(fixture("simple/simple_test.rb:9"))
+        assert_equal 0, cli.run
+        assert_equal 1, cli.instance_variable_get(:@config).jobs_count
+      end
+    end
+
     if Megatest.fork?
       def test_jobs_count_fork_available
         stub(Etc, :nprocessors, -> { 3 }) do

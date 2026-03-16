@@ -102,6 +102,8 @@ module Megatest
       if test_cases.empty?
         @err.puts "No tests to run"
         return 1
+      elsif test_cases.size == 1
+        @config.jobs_count = 1
       end
 
       @queue.populate(test_cases)
