@@ -98,7 +98,7 @@ module Megatest
       elsif !keyword.nil?
         raise ArgumentError, "Can't pass both a positional and keyword assertion message"
       else
-        positional # TODO: deprecation mecanism
+        positional # TODO: deprecation mechanism
       end
     end
 

@@ -73,14 +73,14 @@ module Megatest
     end
 
     def load_files(paths, name)
-      scaned = {}
+      scanned = {}
       paths.each do |path|
         path = File.dirname(path) unless File.directory?(path)
 
         while path.start_with?(PWD)
-          break if scaned[path]
+          break if scanned[path]
 
-          scaned[path] = true
+          scanned[path] = true
 
           config_path = File.join(path, name)
           if File.exist?(config_path)

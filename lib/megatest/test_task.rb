@@ -105,7 +105,7 @@ module Megatest # :nodoc:
     end
 
     def define # :nodoc:
-      desc "Run the test suite. Use N, X, A, and TESTOPTS to add flags/args."
+      desc "Run the test suite."
       task name => Array(deps) do
         sh(*make_test_cmd, verbose: verbose)
       end
