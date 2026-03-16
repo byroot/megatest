@@ -228,7 +228,7 @@ module Megatest
 
     def record_result(result)
       @leases.delete(result.test_id)
-      if result.failed?
+      if result.failed? && !result.skipped?
         if attempt_to_retry?(result)
           result = result.retry
         else

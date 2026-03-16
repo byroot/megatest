@@ -284,7 +284,7 @@ module Megatest
 
     def record_result(original_result)
       result = original_result
-      if result.failed?
+      if result.failed? && !result.skipped?
         if attempt_to_retry?(result)
           result = result.retry
         else

@@ -46,5 +46,15 @@ module Megatest
       recorded_result = @queue.record_result(build_error(@test_cases.first))
       assert_predicate recorded_result, :retried?
     end
+
+    def test_skip_test
+      config.max_retries = 2
+      config.retry_tolerance = 1.0
+      @queue = build_queue
+      @queue.populate(@test_cases)
+
+      recorded_result = @queue.record_result(build_skip(@test_cases.first))
+      refute_predicate recorded_result, :retried?
+    end
   end
 end
