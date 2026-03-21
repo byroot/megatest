@@ -1,11 +1,18 @@
 ## [Unreleased]
 
-## [0.6.0] - 2025-01-17
+## [0.7.0] - 2026-03-21
+
+- Automatic parallelization using cgroups or nprocs.
+- Don't output escape codes when output is not a TTY.
+- Don't retry skipped tests.
+- Improve help message.
+
+## [0.6.0] - 2026-01-17
 
 - Allow defining setup and teardown with method names.
 - Allow multiple `setup`, `around` and `teardown` blocks in the same test suite.
 
-## [0.5.0] - 2025-01-17
+## [0.5.0] - 2026-01-17
 
 - Adds `megatest/autorun`
 - Adds `assert_nothing_raised`.
