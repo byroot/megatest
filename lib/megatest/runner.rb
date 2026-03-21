@@ -10,9 +10,7 @@ module Megatest
 
     def execute(test_case)
       if test_case.tag(:isolated)
-        isolate(test_case) do
-          run(test_case)
-        end
+        isolate(test_case)
       else
         run(test_case)
       end
@@ -23,7 +21,7 @@ module Megatest
         read, write = IO.pipe.each(&:binmode)
         pid = Process.fork do
           read.close
-          result = yield
+          result = run(test_case)
           Marshal.dump(result, write)
           write.close
           # We don't want to run at_exit hooks the app may have
