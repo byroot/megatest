@@ -627,7 +627,7 @@ module Megatest
     end
 
     def bad?
-      !@retried && !@failures.empty?
+      !@retried && !skipped? && !@failures.empty?
     end
 
     def status
