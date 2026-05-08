@@ -386,8 +386,13 @@ module Megatest
       end
     end
 
-    def assert_operator(left, operator, right, msg = nil, message: nil)
+    def assert_operator(left, operator, right = @__m.unset, msg = nil, message: nil)
       message = @__m.msg(msg, message)
+
+      unless @__m.set?(right)
+        return assert_predicate(left, operator, message: message)
+      end
+
       @__m.assert do
         unless left.__send__(operator, right)
           @__m.fail(message, "Expected", @__m.pp(left), "to be #{operator}", @__m.pp(right))
@@ -395,8 +400,13 @@ module Megatest
       end
     end
 
-    def refute_operator(left, operator, right, msg = nil, message: nil)
+    def refute_operator(left, operator, right = @__m.unset, msg = nil, message: nil)
       message = @__m.msg(msg, message)
+
+      unless @__m.set?(right)
+        return refute_predicate(left, operator, message: message)
+      end
+
       @__m.assert do
         if left.__send__(operator, right)
           @__m.fail(message, "Expected", @__m.pp(left), "to not be #{operator}", @__m.pp(right))

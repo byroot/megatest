@@ -697,6 +697,9 @@ module Megatest
         @case.assert_operator 1, :>, 2
       end
       assert_equal 2, @result.assertions_count
+
+      @case.assert_operator 2, :even?
+      assert_equal 3, @result.assertions_count
     end
 
     def test_refute_operator
@@ -709,6 +712,9 @@ module Megatest
         @case.refute_operator 1, :<, 2
       end
       assert_equal 2, @result.assertions_count
+
+      @case.refute_operator 2, :odd?
+      assert_equal 3, @result.assertions_count
     end
 
     def test_assert_in_delta
