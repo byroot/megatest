@@ -5,6 +5,8 @@
 module Megatest
   class Selector
     class List
+      attr_accessor :loaders
+
       def initialize(config, loaders, filters)
         @loaders = loaders
         if loaders.empty?
