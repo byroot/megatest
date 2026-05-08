@@ -95,7 +95,7 @@ module Megatest
           @__m.fail(nil, "Use assert_nil if expecting nil, or pass `allow_nil: true`")
         end
 
-        if expected != actual
+        unless expected == actual
           @__m.fail(
             message,
             @__m.diff(expected, actual) ||
