@@ -44,9 +44,9 @@ module Megatest
         str = +str
         str << "\n"
 
-        if result.error?
+        if result.error?(include_retry: true)
           str << @out.indent("#{result.failure.cause.name}: #{@out.colored(result.failure.cause.message)}\n")
-        elsif result.failed?
+        elsif result.failure?(include_retry: true)
           str << @out.indent(@out.colored(result.failure.message.to_s))
         end
         str << "\n" unless str.end_with?("\n")

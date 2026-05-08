@@ -673,12 +673,12 @@ module Megatest
       !@failures.empty?
     end
 
-    def failure?
-      !@retried && !skipped? && !@failures.empty? && @failures.first&.name != UnexpectedError.name
+    def failure?(include_retry: false)
+      (include_retry || !@retried) && !skipped? && !@failures.empty? && @failures.first&.name != UnexpectedError.name
     end
 
-    def error?
-      !@retried && @failures.first&.name == UnexpectedError.name
+    def error?(include_retry: false)
+      (include_retry || !@retried) && @failures.first&.name == UnexpectedError.name
     end
 
     def lost?

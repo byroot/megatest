@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+- Improve rendering of retried failures so they're actionable.
+
 ## [0.7.0] - 2026-03-21
 
 - Automatic parallelization using cgroups or nprocs.
