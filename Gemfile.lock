@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    megatest (0.7.0)
+    megatest (0.8.0)
 
 GEM
   remote: https://rubygems.org/

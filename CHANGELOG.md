@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [0.8.0] - 2026-05-08
+
 - Improve rendering of retried failures so they're actionable.
 
 ## [0.7.0] - 2026-03-21
