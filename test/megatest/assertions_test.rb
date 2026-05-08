@@ -599,6 +599,11 @@ module Megatest
         end
       end
       assert_equal 6, @result.assertions_count
+
+      @case.assert_difference("counter" => 1) do
+        counter += 1
+      end
+      assert_equal 7, @result.assertions_count
     end
 
     def test_refute_difference

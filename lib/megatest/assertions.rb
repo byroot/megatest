@@ -405,7 +405,11 @@ module Megatest
     end
     alias_method :assert_not_operator, :refute_operator
 
-    def assert_difference(expression, difference = @__m.unset, message: nil, &block)
+    def assert_difference(expression = @__m.unset, difference = @__m.unset, message: nil, **kwargs, &block)
+      if !@__m.set?(expression) && !kwargs.empty?
+        expression = kwargs
+      end
+
       expressions = if @__m.set?(difference)
         Array(expression).to_h { |e| [e, difference] }
       elsif Hash === expression
@@ -434,7 +438,7 @@ module Megatest
       end
     end
 
-    def refute_difference(expressions, message: nil, &block)
+    def refute_difference(expressions = @__m.unset, message: nil, &block)
       exps = Array(expressions).map { |e| @__m.expression(e, block) }
 
       @__m.assert do
