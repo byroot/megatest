@@ -25,12 +25,12 @@ class MegaTestCase < Megatest::Test
   DEFAULT_CONFIG = Megatest::Config.new({}).freeze
   FIXTURES_PATH = File.expand_path("../../fixtures", __FILE__)
 
-  setup do
+  def before_setup
     @registry = Megatest::Registry.new
     @config = DEFAULT_CONFIG.dup
   end
 
-  teardown do
+  def after_teardown
     Object.send(:remove_const, :TestedApp) if defined?(::TestedApp)
     $LOADED_FEATURES.reject! { |f| f.start_with?(FIXTURES_PATH) }
   end
