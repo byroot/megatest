@@ -167,24 +167,24 @@ class MegatestTest < MegaTestCase
       callbacks_test_around_start
       test_case_before_setup
       callbacks_test_before_setup
-      test_case_setup_symbol
-      test_case_setup_block_2
       test_case_setup_block
-      callbacks_test_setup_block_2
+      test_case_setup_block_2
+      test_case_setup_symbol
       callbacks_test_setup_block
+      callbacks_test_setup_block_2
       test_case_setup_method
       callbacks_test_setup_method
       test_case_after_setup
       callbacks_test_after_setup
       test_case_before_teardown
       callbacks_test_before_teardown
-      callbacks_test_teardown_block
-      callbacks_test_teardown_block_2
-      test_case_teardown_block
-      test_case_teardown_block_2
-      test_case_teardown_symbol
       test_case_teardown_method
       callbacks_test_teardown_method
+      callbacks_test_teardown_block_2
+      callbacks_test_teardown_block
+      test_case_teardown_symbol
+      test_case_teardown_block_2
+      test_case_teardown_block
       test_case_after_teardown
       callbacks_test_after_teardown
       callbacks_test_around_end

@@ -91,14 +91,17 @@ module Megatest
           runtime.record_failures do
             instance.before_teardown
           end
+
+          runtime.record_failures do
+            instance.teardown
+          end
+
           test_case.each_teardown_callback do |callback|
             runtime.record_failures(downlevel: 2) do
               instance.instance_exec(&callback)
             end
           end
-          runtime.record_failures do
-            instance.teardown
-          end
+
           runtime.record_failures do
             instance.after_teardown
           end

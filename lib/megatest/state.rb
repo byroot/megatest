@@ -89,7 +89,7 @@ module Megatest
       def on_setup(block)
         raise Error, "setup blocks can't be defined in context blocks" if @current_context
 
-        @setup_callbacks.unshift(block)
+        @setup_callbacks << block
       end
 
       def on_around(block)
@@ -377,7 +377,7 @@ module Megatest
 
       def each_teardown_callback(&block)
         @test_suite.ancestors.each do |test_suite|
-          test_suite.teardown_callbacks.each(&block)
+          test_suite.teardown_callbacks.reverse_each(&block)
         end
       end
 
