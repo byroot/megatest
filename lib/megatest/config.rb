@@ -255,7 +255,9 @@ module Megatest
     end
 
     def seed=(seed)
-      @seed = Integer(seed)
+      if seed
+        @seed = Integer(seed)
+      end
     end
 
     def build_queue
