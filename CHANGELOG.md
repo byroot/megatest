@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [0.10.0] - 2026-05-09
+
+- Improve reporting when running in Buildkite.
+
 ## [0.9.1] - 2026-05-09
 
 - `Config#seed=` noop if argument is `nil`.
