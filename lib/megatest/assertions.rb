@@ -630,5 +630,30 @@ module Megatest
         $stderr = orig_stderr
       end
     end
+
+    def capture_subprocess_io
+      require "tempfile" unless defined?(::Tempfile)
+
+      captured_stdout, captured_stderr = Tempfile.new("out"), Tempfile.new("err")
+
+      orig_stdout, orig_stderr = $stdout.dup, $stderr.dup
+      $stdout.reopen captured_stdout
+      $stderr.reopen captured_stderr
+
+      yield
+
+      $stdout.rewind
+      $stderr.rewind
+
+      [captured_stdout.read, captured_stderr.read]
+    ensure
+      $stdout.reopen orig_stdout
+      $stderr.reopen orig_stderr
+
+      orig_stdout.close
+      orig_stderr.close
+      captured_stdout.close!
+      captured_stderr.close!
+    end
   end
 end
