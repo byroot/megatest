@@ -9,7 +9,7 @@ module Megatest
 
       def initialize(config, out)
         @config = config
-        @out = Output.new(out, colors: config.colors(out))
+        @out = Output.new(config, out, colors: config.colors(out))
       end
 
       def start(_executor, _queue)
@@ -71,9 +71,9 @@ module Megatest
 
     class SimpleReporter < AbstractReporter
       def start(_executor, queue)
-        @out.print("Running #{queue.size} test cases with --seed #{@config.seed}")
-        @out.print(" in #{@config.jobs_count} processes") if @config.jobs_count > 1
-        @out.puts
+        title = "Running #{queue.size} test cases with --seed #{@config.seed}"
+        title += " in #{@config.jobs_count} processes" if @config.jobs_count > 1
+        @out.step(title)
         @out.puts
       end
 
@@ -96,6 +96,19 @@ module Megatest
         @out.puts
 
         failures = summary.failures.reject(&:skipped?)
+
+        summary_title = format(
+          "Ran %d cases, %d assertions, %d failures, %d errors, %d retries, %d skips",
+          summary.runs_count,
+          summary.assertions_count,
+          summary.failures_count,
+          summary.errors_count,
+          summary.retries_count,
+          summary.skips_count,
+        )
+        summary_title += " in #{@config.jobs_count} processes" if @config.jobs_count > 1
+        @out.step(summary_title, open: !failures.empty?)
+
         unless failures.empty?
           failures = failures.sort_by(&:test_id)
           failures.each_with_index do |result, index|
@@ -115,9 +128,11 @@ module Megatest
           p90 = sorted_results[(size * 0.9).to_i].duration
           p99 = sorted_results[(size * 0.99).to_i].duration
 
-          @out.puts "Finished in #{s(executor.wall_time.to_f)}, average: #{ms(average)}, median: #{ms(median)}, p90: #{ms(p90)}, p99: #{ms(p99)}"
           cutoff = p90 * 10
           slowest_tests = sorted_results.last(5).select { |r| r.duration > cutoff }
+
+          stats = "Finished in #{s(executor.wall_time.to_f)}, average: #{ms(average)}, median: #{ms(median)}, p90: #{ms(p90)}, p99: #{ms(p99)}"
+          @out.step(stats, open: !slowest_tests.empty?)
           unless slowest_tests.empty?
             @out.puts "Slowest tests:"
             slowest_tests.reverse_each do |result|
@@ -127,18 +142,6 @@ module Megatest
             @out.puts ""
           end
         end
-
-        @out.print format(
-          "Ran %d cases, %d assertions, %d failures, %d errors, %d retries, %d skips",
-          summary.runs_count,
-          summary.assertions_count,
-          summary.failures_count,
-          summary.errors_count,
-          summary.retries_count,
-          summary.skips_count,
-        )
-        @out.print(" in #{@config.jobs_count} processes") if @config.jobs_count > 1
-        @out.puts
       end
 
       def s(duration)
@@ -153,6 +156,7 @@ module Megatest
     class VerboseReporter < SimpleReporter
       def start(executor, _queue)
         @concurrent = executor.concurrent?
+        super
       end
 
       def before_test_case(_queue, test_case)

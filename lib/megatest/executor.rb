@@ -6,7 +6,7 @@ module Megatest
   class AbstractExecutor
     def initialize(config, out)
       @config = config
-      @out = Output.new(out, colors: @config.colors(out))
+      @out = Output.new(config, out, colors: config.colors(out))
     end
 
     def run(queue, reporters)

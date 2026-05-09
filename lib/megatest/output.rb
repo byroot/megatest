@@ -70,9 +70,10 @@ module Megatest
 
     attr_reader :color
 
-    def initialize(io, colors: nil)
+    def initialize(config, io, colors: nil)
       raise ArgumentError, "don't nest outputs" if io.is_a?(Output)
 
+      @config = config
       @io = io
       colors = io.tty? if colors.nil?
       case colors
@@ -117,6 +118,19 @@ module Megatest
 
     def print(*args)
       @io.print(*args)
+    end
+
+    def step(title, open: false)
+      case @config.output_profile
+      when :buildkite
+        if open
+          puts("+++ #{title}")
+        else
+          puts("--- #{title}")
+        end
+      else
+        puts("* #{title}")
+      end
     end
 
     def <<(str)

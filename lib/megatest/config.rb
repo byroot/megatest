@@ -67,6 +67,7 @@ module Megatest
           config.build_id = env["BUILDKITE_BUILD_ID"]
           config.worker_id = env["BUILDKITE_PARALLEL_JOB"]
           config.workers_count = env["BUILDKITE_PARALLEL_JOB_COUNT"]
+          config.output_profile = :buildkite
           config.seed = env["BUILDKITE_COMMIT"]&.first(4)&.to_i(16)
         end
       end
@@ -137,7 +138,8 @@ module Megatest
 
   class Config
     attr_accessor :queue_url, :retry_tolerance, :max_retries, :job_index, :load_paths, :deprecations,
-                  :build_id, :heartbeat_frequency, :minitest_compatibility, :ci, :selectors
+                  :build_id, :heartbeat_frequency, :minitest_compatibility, :ci, :selectors,
+                  :output_profile
     attr_reader :before_fork_callbacks, :global_setup_callbacks, :backtrace, :circuit_breaker, :seed,
                 :worker_id, :workers_count, :test_globs
     attr_writer :jobs_count, :differ, :pretty_printer, :program_name, :colors
@@ -169,6 +171,7 @@ module Megatest
       @minitest_compatibility = false
       @selectors = nil
       @test_globs = [DEFAULT_TEST_GLOB]
+      @output_profile = nil
       CIService.configure(self, env)
     end
 

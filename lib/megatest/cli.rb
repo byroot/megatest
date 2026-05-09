@@ -165,7 +165,7 @@ module Megatest
 
       if @junit != false
         junit_file = open_file(@junit || "log/junit.xml")
-        reporters << Reporters::JUnitReporter.new(@config, Megatest::Output.new(junit_file, colors: true))
+        reporters << Reporters::JUnitReporter.new(@config, Megatest::Output.new(@config, junit_file, colors: true))
       end
 
       reporters
@@ -181,7 +181,7 @@ module Megatest
     end
 
     def bisect_queue(queue, failing_test_id)
-      err = Output.new(@err)
+      err = Output.new(@config, @err)
       tests = queue.to_a
       failing_test_index = tests.index { |test| test.id == failing_test_id }
       failing_test = tests[failing_test_index]
