@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [0.9.1] - 2026-05-09
+
+- `Config#seed=` noop if argument is `nil`.
+
 ## [0.9.0] - 2026-05-09
 
 - Implement `capture_subprocess_io`.
