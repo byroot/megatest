@@ -1,5 +1,14 @@
 ## [Unreleased]
 
+## [0.9.0] - 2026-05-09
+
+- Implement `capture_subprocess_io`.
+- Change setup/teadown callbacks order to be more consistent with `ActiveSupport::TestCase`.
+- Don't consider skips as failure when running with `--fail-fast`.
+- `assert_equal` now use `==` instead of `!=` to compare objects
+- `assert_operator` now calls `assert_predicate` if there no third argument (mimick Minitest).
+- Support `assert_difference("expr" => 1)` like `ActiveSupport::TestCase`
+
 ## [0.8.0] - 2026-05-08
 
 - Improve rendering of retried failures so they're actionable.
