@@ -23,8 +23,13 @@ module Megatest
   class UnexpectedError < Assertion
     attr_reader :cause
 
-    def initialize(cause)
-      super("Unexpected exception")
+    def initialize(cause, method = nil)
+      if method
+        super("Unexpected exception in #{method} block")
+      else
+        super("Unexpected exception")
+      end
+      @method = method
       @cause = cause
     end
 
@@ -355,13 +360,9 @@ module Megatest
     end
     alias :assert_raise :assert_raises
 
-    def assert_nothing_raised
+    def assert_nothing_raised(&block)
       @__m.assert do
-        yield
-      rescue ::Megatest::Assertion, *::Megatest::IGNORED_ERRORS
-        raise # Pass through
-      rescue Exception => unexepected_exception
-        raise ::Megatest::UnexpectedError, unexepected_exception
+        @__m.safe_yield(__callee__, &block)
       end
     end
 
@@ -433,7 +434,7 @@ module Megatest
       @__m.assert do
         before = exps.map(&:call)
 
-        retval = @__m.safe_yield(&block)
+        retval = @__m.safe_yield(__callee__, &block)
 
         expressions.zip(exps, before) do |(code, diff), exp, before_value|
           actual = exp.call
@@ -454,7 +455,7 @@ module Megatest
       @__m.assert do
         before = exps.map(&:call)
 
-        retval = @__m.safe_yield(&block)
+        retval = @__m.safe_yield(__callee__, &block)
 
         exps.zip(before) do |exp, before_value|
           actual = exp.call

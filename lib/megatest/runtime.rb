@@ -139,12 +139,12 @@ module Megatest
       end
     end
 
-    def safe_yield
+    def safe_yield(method)
       yield
     rescue Assertion, *IGNORED_ERRORS
       raise
-    rescue ::Exception => unexepected_exception
-      raise UnexpectedError, unexepected_exception
+    rescue ::Exception => unexpected_exception
+      raise UnexpectedError.new(unexpected_exception, method)
     end
 
     UNSET = BasicObject.new
