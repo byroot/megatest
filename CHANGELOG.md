@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [0.11.0] - 2026-05-10
+
 - Allow to forward `MEGATEST_PWD` for monorepos.
 
 ## [0.10.0] - 2026-05-09
