@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+- Allow to forward `MEGATEST_PWD` for monorepos.
+
 ## [0.10.0] - 2026-05-09
 
 - Improve reporting when running in Buildkite.

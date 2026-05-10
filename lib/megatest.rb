@@ -10,7 +10,7 @@ module Megatest
   # :stopdoc:
 
   ROOT = -File.expand_path("../", __FILE__)
-  PWD = File.join(Dir.pwd, "/")
+  PWD = File.join(File.expand_path(ENV.fetch("MEGATEST_PWD") { Dir.pwd }), "/")
   IGNORED_ERRORS = [NoMemoryError, SignalException, SystemExit].freeze
   DEFAULT_TEST_GLOB = "**/{test_*,*_test}.rb"
 

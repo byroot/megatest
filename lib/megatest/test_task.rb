@@ -81,6 +81,10 @@ module Megatest # :nodoc:
 
     attr_accessor :full_backtrace
 
+    ##
+    # Base directory from which to display paths
+    attr_accessor :pwd
+
     # Task prerequisites.
     attr_accessor :deps
 
@@ -98,6 +102,7 @@ module Megatest # :nodoc:
       @verbose = Rake.application.options.trace || Rake.verbose == true
       @warning = true
       @deps = []
+      @pwd = nil
       if @name.is_a?(Hash)
         @deps = @name.values.first
         @name = @name.keys.first
@@ -107,7 +112,7 @@ module Megatest # :nodoc:
     def define # :nodoc:
       desc "Run the test suite."
       task name => Array(deps) do
-        sh(*make_test_cmd, verbose: verbose)
+        sh(cmd_env, *make_test_cmd, verbose: verbose)
       end
 
       desc "Print out the test command. Good for profiling and other tools."
@@ -127,6 +132,12 @@ module Megatest # :nodoc:
       cmd.concat(extra_args)
       cmd.concat(tests)
       cmd
+    end
+
+    def cmd_env
+      env = {}
+      env["MEGATEST_PWD"] = pwd if pwd
+      env
     end
   end
 end
